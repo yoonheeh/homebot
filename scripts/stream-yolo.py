@@ -32,6 +32,17 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
            'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
            'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
+# YOLOv5 anchors
+ANCHORS = [
+    [[10, 13], [16, 30], [33, 23]],      # P3/8
+    [[30, 61], [62, 45], [59, 119]],     # P4/16
+    [[116, 90], [156, 198], [373, 326]]  # P5/32
+]
+
+
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
 
 def preprocess(img, input_size):
     """Resize and normalize image for YOLO input"""
@@ -42,58 +53,113 @@ def preprocess(img, input_size):
     return img
 
 
-def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45, debug=True):
-    """Process YOLO outputs to get bounding boxes, scores, and classes"""
-    # YOLOv5 output shape: (1, 25200, 85) for 640x640
-    # 85 = 4 (box) + 1 (conf) + 80 (classes)
+def decode_output(output, anchors, stride, conf_thresh=0.25):
+    """Decode YOLOv5 feature map to detections"""
+    batch, channel, height, width = output.shape
+    num_anchors = len(anchors)
+    num_classes = 80
 
-    predictions = outputs[0][0]  # Remove batch dimension
+    # Reshape: (1, 255, H, W) -> (1, 3, 85, H, W) -> (1, 3, H, W, 85)
+    output = output.reshape(batch, num_anchors, 5 + num_classes, height, width)
+    output = output.transpose(0, 1, 3, 4, 2)
+
+    # Create grid
+    xv, yv = np.meshgrid(np.arange(width), np.arange(height))
+    grid = np.stack((xv, yv), axis=2).reshape(1, 1, height, width, 2)
+
+    detections = []
+
+    for a in range(num_anchors):
+        anchor = anchors[a]
+
+        # Extract predictions for this anchor
+        pred = output[0, a, :, :, :]  # (H, W, 85)
+
+        # Sigmoid for objectness and class scores
+        pred[..., 4:] = sigmoid(pred[..., 4:])
+
+        # Find predictions above threshold
+        objectness = pred[..., 4]
+        mask = objectness > conf_thresh
+
+        if not np.any(mask):
+            continue
+
+        # Get positions where mask is True
+        ys, xs = np.where(mask)
+
+        for y, x in zip(ys, xs):
+            # Decode box
+            bx = (sigmoid(pred[y, x, 0]) * 2 - 0.5 + x) * stride
+            by = (sigmoid(pred[y, x, 1]) * 2 - 0.5 + y) * stride
+            bw = (sigmoid(pred[y, x, 2]) * 2) ** 2 * anchor[0]
+            bh = (sigmoid(pred[y, x, 3]) * 2) ** 2 * anchor[1]
+
+            # Convert to corners
+            x1 = bx - bw / 2
+            y1 = by - bh / 2
+            x2 = bx + bw / 2
+            y2 = by + bh / 2
+
+            conf = pred[y, x, 4]
+            class_scores = pred[y, x, 5:]
+            class_id = np.argmax(class_scores)
+            class_score = class_scores[class_id]
+            score = conf * class_score
+
+            if score > conf_thresh:
+                detections.append([x1, y1, x2, y2, score, class_id])
+
+    return detections
+
+
+def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45, debug=True):
+    """Process YOLO outputs - Rockchip format with 3 feature maps"""
+
+    strides = [8, 16, 32]
+
+    all_detections = []
 
     if debug:
-        print(f"[DEBUG] Output shape: {outputs[0].shape}")
-        print(f"[DEBUG] Total predictions: {len(predictions)}")
-        print(f"[DEBUG] Sample pred[0]: {predictions[0][:10] if len(predictions) > 0 else 'N/A'}")
+        print(f"[DEBUG] Number of outputs: {len(outputs)}")
+        for i, out in enumerate(outputs):
+            print(f"[DEBUG] Output[{i}] shape: {out.shape}")
+
+    # Decode each feature map
+    for i, output in enumerate(outputs):
+        detections = decode_output(output, ANCHORS[i], strides[i], conf_thresh)
+        all_detections.extend(detections)
+
+    if debug:
+        print(f"[DEBUG] Total detections before NMS: {len(all_detections)}")
+
+    if len(all_detections) == 0:
+        return []
+
+    # Scale to original image size
+    scale_x = orig_shape[1] / input_size[0]
+    scale_y = orig_shape[0] / input_size[1]
 
     boxes = []
     scores = []
     class_ids = []
 
-    scale_x = orig_shape[1] / input_size[0]
-    scale_y = orig_shape[0] / input_size[1]
+    for det in all_detections:
+        x1, y1, x2, y2, score, class_id = det
+        x1 = int(x1 * scale_x)
+        y1 = int(y1 * scale_y)
+        x2 = int(x2 * scale_x)
+        y2 = int(y2 * scale_y)
 
-    raw_confident = 0
-    for pred in predictions:
-        # YOLOv5 format: x_center, y_center, width, height, conf, class_probs...
-        if len(pred) < 85:
-            continue
-
-        conf = pred[4]
-        if conf < conf_thresh:
-            continue
-        raw_confident += 1
-
-        class_scores = pred[5:85]
-        class_id = np.argmax(class_scores)
-        class_score = class_scores[class_id]
-
-        score = conf * class_score
-        if score < conf_thresh:
-            continue
-
-        # Convert center format to corner format
-        cx, cy, w, h = pred[0], pred[1], pred[2], pred[3]
-        x1 = int((cx - w / 2) * scale_x)
-        y1 = int((cy - h / 2) * scale_y)
-        x2 = int((cx + w / 2) * scale_x)
-        y2 = int((cy + h / 2) * scale_y)
+        # Clamp to image bounds
+        x1 = max(0, min(x1, orig_shape[1] - 1))
+        y1 = max(0, min(y1, orig_shape[0] - 1))
+        x2 = max(0, min(x2, orig_shape[1] - 1))
+        y2 = max(0, min(y2, orig_shape[0] - 1))
 
         boxes.append([x1, y1, x2, y2])
         scores.append(score)
-        class_ids.append(class_id)
-
-    if debug:
-        print(f"[DEBUG] Predictions with conf > {conf_thresh}: {raw_confident}")
-        print(f"[DEBUG] Boxes after class filter: {len(boxes)}")
+        class_ids.append(int(class_id))
 
     # Apply NMS
     final_detections = []
@@ -101,7 +167,8 @@ def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.
         indices = cv2.dnn.NMSBoxes(boxes, scores, conf_thresh, nms_thresh)
         if len(indices) > 0:
             indices = indices.flatten() if hasattr(indices, 'flatten') else indices
-            final_detections = [(boxes[i], scores[i], class_ids[i]) for i in indices]
+            for i in indices:
+                final_detections.append((boxes[i], scores[i], class_ids[i]))
 
     if debug:
         print(f"[DEBUG] Detections after NMS: {len(final_detections)}")
@@ -131,6 +198,7 @@ def draw_detections(frame, detections):
                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
 
     return frame
+
 
 def print_detection_summary(detections):
     for (box, score, class_id) in detections:
@@ -247,7 +315,6 @@ class YOLOStreamer:
 
         capture_t.start()
         infer_t.start()
-
 
         print("Streaming started. Press 'q' to quit, 's' to save snapshot")
 
