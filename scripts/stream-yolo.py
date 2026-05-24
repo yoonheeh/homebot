@@ -54,61 +54,75 @@ def preprocess(img, input_size):
 
 
 def decode_output(output, anchors, stride, conf_thresh=0.25):
-    """Decode YOLOv5 feature map to detections"""
+    """Decode YOLOv5 feature map to detections - based on Rockchip official example"""
+    # output shape: (1, 255, H, W) where 255 = 3 anchors * 85 values
     batch, channel, height, width = output.shape
     num_anchors = len(anchors)
     num_classes = 80
 
-    # Reshape: (1, 255, H, W) -> (1, 3, 85, H, W) -> (1, 3, H, W, 85)
-    output = output.reshape(batch, num_anchors, 5 + num_classes, height, width)
-    output = output.transpose(0, 1, 3, 4, 2)
+    # Reshape: (1, 255, H, W) -> (3, 85, H, W)
+    output = output.reshape(num_anchors, 5 + num_classes, height, width)
 
-    # Create grid
-    xv, yv = np.meshgrid(np.arange(width), np.arange(height))
-    grid = np.stack((xv, yv), axis=2).reshape(1, 1, height, width, 2)
+    # Transpose: (3, 85, H, W) -> (H, W, 3, 85)
+    output = np.transpose(output, (2, 3, 0, 1))
 
-    detections = []
+    # Now output is (H, W, 3, 85) - same as official example
+
+    boxes = []
+    obj_probs = []
+    class_ids = []
 
     for a in range(num_anchors):
         anchor = anchors[a]
 
-        # Extract predictions for this anchor
-        pred = output[0, a, :, :, :]  # (H, W, 85)
+        # Extract predictions for this anchor: (H, W, 85)
+        pred = output[:, :, a, :]
 
-        # Sigmoid for objectness and class scores
-        pred[..., 4:] = sigmoid(pred[..., 4:])
+        # Get objectness score
+        obj_score = pred[:, :, 4]
 
         # Find predictions above threshold
-        objectness = pred[..., 4]
-        mask = objectness > conf_thresh
-
+        mask = obj_score > conf_thresh
         if not np.any(mask):
             continue
 
-        # Get positions where mask is True
+        # Get grid positions
         ys, xs = np.where(mask)
 
         for y, x in zip(ys, xs):
-            # Decode box
-            bx = (sigmoid(pred[y, x, 0]) * 2 - 0.5 + x) * stride
-            by = (sigmoid(pred[y, x, 1]) * 2 - 0.5 + y) * stride
-            bw = (sigmoid(pred[y, x, 2]) * 2) ** 2 * anchor[0]
-            bh = (sigmoid(pred[y, x, 3]) * 2) ** 2 * anchor[1]
+            # Decode box (following official example exactly)
+            # box_xy = pred[..., :2] * 2 - 0.5
+            bx = (pred[y, x, 0] * 2 - 0.5 + x) * stride
+            by = (pred[y, x, 1] * 2 - 0.5 + y) * stride
 
-            # Convert to corners
+            # box_wh = (pred[..., 2:4] * 2) ** 2 * anchors
+            bw = ((pred[y, x, 2] * 2) ** 2) * anchor[0]
+            bh = ((pred[y, x, 3] * 2) ** 2) * anchor[1]
+
+            # Convert to corner format
             x1 = bx - bw / 2
             y1 = by - bh / 2
             x2 = bx + bw / 2
             y2 = by + bh / 2
 
+            # Get confidence and class
             conf = pred[y, x, 4]
             class_scores = pred[y, x, 5:]
             class_id = np.argmax(class_scores)
             class_score = class_scores[class_id]
+
+            # Final score = obj_conf * class_conf
             score = conf * class_score
 
             if score > conf_thresh:
-                detections.append([x1, y1, x2, y2, score, class_id])
+                boxes.append([x1, y1, x2, y2])
+                obj_probs.append(score)
+                class_ids.append(class_id)
+
+    # Convert to format expected by rest of code
+    detections = []
+    for box, score, class_id in zip(boxes, obj_probs, class_ids):
+        detections.append([box[0], box[1], box[2], box[3], score, class_id])
 
     return detections
 
