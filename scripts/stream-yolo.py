@@ -1,12 +1,10 @@
-# /// script
-# dependencies = [
-#   "opencv-python",
-#   "numpy",
-# ]
-# ///
+"""
+YOLO streaming script for ESP32-CAM + RK3588 NPU
 
-# NOTE: rknn-toolkit-lite2 must be installed separately:
-# uv pip install ./rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl
+Prerequisites:
+  uv pip install opencv-python numpy
+  uv pip install ./rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl
+"""
 
 import cv2
 import numpy as np
