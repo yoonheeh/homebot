@@ -2,9 +2,11 @@
 # dependencies = [
 #   "opencv-python",
 #   "numpy",
-#   "rknn-toolkit-lite2 @ file:../rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl",
 # ]
 # ///
+
+# NOTE: rknn-toolkit-lite2 must be installed separately:
+# uv pip install ./rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl
 
 import cv2
 import numpy as np
