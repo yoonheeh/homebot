@@ -1,5 +1,5 @@
 """
-Test YOLO inference on a single image
+Test YOLO inference on a single image - Exact Rockchip implementation
 
 Usage:
   uv run scripts/test_inference.py path/to/image.jpg
@@ -33,13 +33,6 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
            'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
            'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
-# YOLOv5 anchors
-ANCHORS = [
-    [[10, 13], [16, 30], [33, 23]],      # P3/8
-    [[30, 61], [62, 45], [59, 119]],     # P4/16
-    [[116, 90], [156, 198], [373, 326]]  # P5/32
-]
-
 
 def preprocess(img, input_size):
     """Resize and normalize image for YOLO input"""
@@ -50,127 +43,157 @@ def preprocess(img, input_size):
     return img
 
 
-def decode_output(output, anchors, stride, conf_thresh=0.25):
-    """Decode YOLOv5 feature map to detections"""
-    batch, channel, height, width = output.shape
-    num_anchors = len(anchors)
-    num_classes = 80
-
-    # Reshape: (1, 255, H, W) -> (3, 85, H, W)
-    output = output.reshape(num_anchors, 5 + num_classes, height, width)
-
-    # Transpose: (3, 85, H, W) -> (H, W, 3, 85)
-    output = np.transpose(output, (2, 3, 0, 1))
-
-    boxes = []
-    obj_probs = []
-    class_ids = []
-
-    for a in range(num_anchors):
-        anchor = anchors[a]
-        pred = output[:, :, a, :]
-        obj_score = pred[:, :, 4]
-        mask = obj_score > conf_thresh
-
-        if not np.any(mask):
-            continue
-
-        ys, xs = np.where(mask)
-
-        for y, x in zip(ys, xs):
-            bx = (pred[y, x, 0] * 2 - 0.5 + x) * stride
-            by = (pred[y, x, 1] * 2 - 0.5 + y) * stride
-            bw = ((pred[y, x, 2] * 2) ** 2) * anchor[0]
-            bh = ((pred[y, x, 3] * 2) ** 2) * anchor[1]
-
-            x1 = bx - bw / 2
-            y1 = by - bh / 2
-            x2 = bx + bw / 2
-            y2 = by + bh / 2
-
-            conf = pred[y, x, 4]
-            class_scores = pred[y, x, 5:]
-            class_id = np.argmax(class_scores)
-            class_score = class_scores[class_id]
-            score = conf * class_score
-
-            if score > conf_thresh:
-                boxes.append([x1, y1, x2, y2])
-                obj_probs.append(score)
-                class_ids.append(class_id)
-
-    detections = []
-    for box, score, class_id in zip(boxes, obj_probs, class_ids):
-        detections.append([box[0], box[1], box[2], box[3], score, class_id])
-
-    return detections
+def xywh2xyxy(x):
+    """Convert [x, y, w, h] to [x1, y1, x2, y2]"""
+    y = np.copy(x)
+    y[:, 0] = x[:, 0] - x[:, 2] / 2  # top left x
+    y[:, 1] = x[:, 1] - x[:, 3] / 2  # top left y
+    y[:, 2] = x[:, 0] + x[:, 2] / 2  # bottom right x
+    y[:, 3] = x[:, 1] + x[:, 3] / 2  # bottom right y
+    return y
 
 
-def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45):
-    """Process YOLO outputs"""
-    strides = [8, 16, 32]
-    all_detections = []
+def process(input_data, mask, anchors):
+    """Exact copy from Rockchip test.py"""
+    anchors = [anchors[i] for i in mask]
+    grid_h, grid_w = map(int, input_data.shape[0:2])
 
-    for i, output in enumerate(outputs):
-        detections = decode_output(output, ANCHORS[i], strides[i], conf_thresh)
-        all_detections.extend(detections)
+    box_confidence = input_data[..., 4]
+    box_confidence = np.expand_dims(box_confidence, axis=-1)
 
-    if len(all_detections) == 0:
-        return []
+    box_class_probs = input_data[..., 5:]
 
-    # Scale to original image size
-    scale_x = orig_shape[1] / input_size[0]
-    scale_y = orig_shape[0] / input_size[1]
+    box_xy = input_data[..., :2]*2 - 0.5
 
-    boxes = []
-    scores = []
-    class_ids = []
+    col = np.tile(np.arange(0, grid_w), grid_w).reshape(-1, grid_w)
+    row = np.tile(np.arange(0, grid_h).reshape(-1, 1), grid_h)
+    col = col.reshape(grid_h, grid_w, 1, 1).repeat(3, axis=-2)
+    row = row.reshape(grid_h, grid_w, 1, 1).repeat(3, axis=-2)
+    grid = np.concatenate((col, row), axis=-1)
+    box_xy += grid
+    box_xy *= int(INPUT_SIZE[0]/grid_h)
 
-    for det in all_detections:
-        x1, y1, x2, y2, score, class_id = det
-        x1 = int(x1 * scale_x)
-        y1 = int(y1 * scale_y)
-        x2 = int(x2 * scale_x)
-        y2 = int(y2 * scale_y)
+    box_wh = pow(input_data[..., 2:4]*2, 2)
+    box_wh = box_wh * anchors
 
-        x1 = max(0, min(x1, orig_shape[1] - 1))
-        y1 = max(0, min(y1, orig_shape[0] - 1))
-        x2 = max(0, min(x2, orig_shape[1] - 1))
-        y2 = max(0, min(y2, orig_shape[0] - 1))
+    box = np.concatenate((box_xy, box_wh), axis=-1)
 
-        boxes.append([x1, y1, x2, y2])
-        scores.append(score)
-        class_ids.append(int(class_id))
-
-    # Apply NMS
-    final_detections = []
-    if len(boxes) > 0:
-        indices = cv2.dnn.NMSBoxes(boxes, scores, conf_thresh, nms_thresh)
-        if len(indices) > 0:
-            indices = indices.flatten() if hasattr(indices, 'flatten') else indices
-            for i in indices:
-                final_detections.append((boxes[i], scores[i], class_ids[i]))
-
-    return final_detections
+    return box, box_confidence, box_class_probs
 
 
-def draw_detections(frame, detections):
-    """Draw bounding boxes and labels on frame"""
-    for (box, score, class_id) in detections:
-        x1, y1, x2, y2 = box
-        color = (0, 255, 0)
-        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+def filter_boxes(boxes, box_confidences, box_class_probs, conf_thresh=0.25):
+    """Exact copy from Rockchip test.py"""
+    boxes = boxes.reshape(-1, 4)
+    box_confidences = box_confidences.reshape(-1)
+    box_class_probs = box_class_probs.reshape(-1, box_class_probs.shape[-1])
 
-        label = f"{CLASSES[class_id]}: {score:.2f}"
-        label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
-        label_y = max(y1, label_size[1] + 10)
+    _box_pos = np.where(box_confidences >= conf_thresh)
+    boxes = boxes[_box_pos]
+    box_confidences = box_confidences[_box_pos]
+    box_class_probs = box_class_probs[_box_pos]
 
-        cv2.rectangle(frame, (x1, label_y - label_size[1] - 10),
-                     (x1 + label_size[0], label_y), color, -1)
-        cv2.putText(frame, label, (x1, label_y - 5),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+    class_max_score = np.max(box_class_probs, axis=-1)
+    classes = np.argmax(box_class_probs, axis=-1)
+    _class_pos = np.where(class_max_score >= conf_thresh)
 
-    return frame
+    boxes = boxes[_class_pos]
+    classes = classes[_class_pos]
+    scores = (class_max_score * box_confidences)[_class_pos]
+
+    return boxes, classes, scores
+
+
+def nms_boxes(boxes, scores, nms_thresh=0.45):
+    """Exact copy from Rockchip test.py"""
+    x = boxes[:, 0]
+    y = boxes[:, 1]
+    w = boxes[:, 2] - boxes[:, 0]
+    h = boxes[:, 3] - boxes[:, 1]
+
+    areas = w * h
+    order = scores.argsort()[::-1]
+
+    keep = []
+    while order.size > 0:
+        i = order[0]
+        keep.append(i)
+
+        xx1 = np.maximum(x[i], x[order[1:]])
+        yy1 = np.maximum(y[i], y[order[1:]])
+        xx2 = np.minimum(x[i] + w[i], x[order[1:]] + w[order[1:]])
+        yy2 = np.minimum(y[i] + h[i], x[order[1:]] + y[order[1:]])
+
+        w1 = np.maximum(0.0, xx2 - xx1 + 0.00001)
+        h1 = np.maximum(0.0, yy2 - yy1 + 0.00001)
+        inter = w1 * h1
+
+        ovr = inter / (areas[i] + areas[order[1:]] - inter)
+        inds = np.where(ovr <= nms_thresh)[0]
+        order = order[inds + 1]
+    keep = np.array(keep)
+    return keep
+
+
+def yolov5_post_process(input_data):
+    """Exact copy from Rockchip test.py"""
+    masks = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
+    anchors = [[10, 13], [16, 30], [33, 23], [30, 61], [62, 45],
+               [59, 119], [116, 90], [156, 198], [373, 326]]
+
+    boxes, classes, scores = [], [], []
+    for input, mask in zip(input_data, masks):
+        b, c, s = process(input, mask, anchors)
+        b, c, s = filter_boxes(b, c, s)
+        boxes.append(b)
+        classes.append(c)
+        scores.append(s)
+
+    boxes = np.concatenate(boxes)
+    boxes = xywh2xyxy(boxes)
+    classes = np.concatenate(classes)
+    scores = np.concatenate(scores)
+
+    nboxes, nclasses, nscores = [], [], []
+    for c in set(classes):
+        inds = np.where(classes == c)
+        b = boxes[inds]
+        c = classes[inds]
+        s = scores[inds]
+
+        keep = nms_boxes(b, s)
+
+        nboxes.append(b[keep])
+        nclasses.append(c[keep])
+        nscores.append(s[keep])
+
+    if not nclasses and not nscores:
+        return None, None, None
+
+    boxes = np.concatenate(nboxes)
+    classes = np.concatenate(nclasses)
+    scores = np.concatenate(nscores)
+
+    return boxes, classes, scores
+
+
+def draw(image, boxes, scores, classes):
+    """Draw the boxes on the image - from Rockchip test.py"""
+    print("\n{:^12} {:^12}  {}".format('class', 'score', 'xmin, ymin, xmax, ymax'))
+    print('-' * 50)
+    for box, score, cl in zip(boxes, scores, classes):
+        top, left, right, bottom = box
+        top = int(top)
+        left = int(left)
+        right = int(right)
+        bottom = int(bottom)
+
+        cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
+        cv2.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
+                    (top, left - 6),
+                    cv2.FONT_HERSHEY_SIMPLEX,
+                    0.6, (0, 0, 255), 2)
+
+        print("{:^12} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(CLASSES[cl], score, top, left, right, bottom))
 
 
 def main():
@@ -221,20 +244,37 @@ def main():
     inference_time = (time.time() - start) * 1000
     print(f"Inference time: {inference_time:.1f}ms")
 
-    print(f"Output shapes: {[o.shape for o in outputs]}")
+    print(f"Raw output shapes: {[o.shape for o in outputs]}")
+
+    # Reshape like Rockchip does
+    print("Reshaping outputs...")
+    input0_data = outputs[0]
+    input1_data = outputs[1]
+    input2_data = outputs[2]
+
+    input0_data = input0_data.reshape([3, -1]+list(input0_data.shape[-2:]))
+    input1_data = input1_data.reshape([3, -1]+list(input1_data.shape[-2:]))
+    input2_data = input2_data.reshape([3, -1]+list(input2_data.shape[-2:]))
+
+    input_data = list()
+    input_data.append(np.transpose(input0_data, (2, 3, 0, 1)))
+    input_data.append(np.transpose(input1_data, (2, 3, 0, 1)))
+    input_data.append(np.transpose(input2_data, (2, 3, 0, 1)))
+
+    print(f"Reshaped: {[d.shape for d in input_data]}")
 
     # Postprocess
     print("Postprocessing...")
-    detections = postprocess(outputs, orig_shape, INPUT_SIZE, CONF_THRESH, NMS_THRESH)
+    boxes, classes, scores = yolov5_post_process(input_data)
 
-    print(f"Detections found: {len(detections)}")
-    for (box, score, class_id) in detections:
-        print(f"  -> {CLASSES[class_id]}: {score:.2f} at {box}")
-
-    # Draw and save
-    result = draw_detections(img.copy(), detections)
-    cv2.imwrite(OUTPUT_IMAGE, result)
-    print(f"Saved result to: {OUTPUT_IMAGE}")
+    if boxes is None:
+        print("No detections found!")
+    else:
+        print(f"Detections found: {len(boxes)}")
+        # Draw and save
+        draw(img, boxes, scores, classes)
+        cv2.imwrite(OUTPUT_IMAGE, img)
+        print(f"\nSaved result to: {OUTPUT_IMAGE}")
 
     rknn.release()
 
