@@ -2,7 +2,7 @@
 # dependencies = [
 #   "opencv-python",
 #   "numpy",
-#   "/home/yoonhee/developments/homebot/rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl",
+#   "rknn-toolkit-lite2 @ file:../rknn_toolkit_lite2-1.6.0-cp310-cp310-linux_aarch64.whl",
 # ]
 # ///
 
