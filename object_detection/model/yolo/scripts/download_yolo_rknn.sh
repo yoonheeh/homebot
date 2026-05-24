@@ -7,8 +7,8 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MODEL_DIR="$(dirname "$SCRIPT_DIR")"
-MODEL_NAME="yolov5s.rknn"
-MODEL_URL="https://github.com/rockchip-linux/rknpu2/raw/master/examples/rknn_yolov5_demo/model/RK3588/yolov5s.rknn"
+MODEL_NAME="yolov5s-640-640.rknn"
+MODEL_URL="https://github.com/rockchip-linux/rknpu2/raw/master/examples/rknn_yolov5_demo/model/RK3588/yolov5s-640-640.rknn"
 
 echo "Downloading YOLOv5s RKNN model for RK3588..."
 echo "Source: $MODEL_URL"

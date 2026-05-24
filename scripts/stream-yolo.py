@@ -15,7 +15,7 @@ from rknnlite.api import RKNNLite
 
 # Configuration
 STREAM_URL = 'http://192.168.4.1:81/stream'
-MODEL_PATH = '../object_detection/model/yolo/yolov5s.rknn'
+MODEL_PATH = '../object_detection/model/yolo/yolov5s-640-640.rknn'
 INPUT_SIZE = (640, 640)
 CONF_THRESH = 0.25
 NMS_THRESH = 0.45
