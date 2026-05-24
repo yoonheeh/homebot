@@ -42,12 +42,17 @@ def preprocess(img, input_size):
     return img
 
 
-def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45):
+def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45, debug=True):
     """Process YOLO outputs to get bounding boxes, scores, and classes"""
     # YOLOv5 output shape: (1, 25200, 85) for 640x640
     # 85 = 4 (box) + 1 (conf) + 80 (classes)
 
     predictions = outputs[0][0]  # Remove batch dimension
+
+    if debug:
+        print(f"[DEBUG] Output shape: {outputs[0].shape}")
+        print(f"[DEBUG] Total predictions: {len(predictions)}")
+        print(f"[DEBUG] Sample pred[0]: {predictions[0][:10] if len(predictions) > 0 else 'N/A'}")
 
     boxes = []
     scores = []
@@ -56,6 +61,7 @@ def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.
     scale_x = orig_shape[1] / input_size[0]
     scale_y = orig_shape[0] / input_size[1]
 
+    raw_confident = 0
     for pred in predictions:
         # YOLOv5 format: x_center, y_center, width, height, conf, class_probs...
         if len(pred) < 85:
@@ -64,6 +70,7 @@ def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.
         conf = pred[4]
         if conf < conf_thresh:
             continue
+        raw_confident += 1
 
         class_scores = pred[5:85]
         class_id = np.argmax(class_scores)
@@ -84,14 +91,24 @@ def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.
         scores.append(score)
         class_ids.append(class_id)
 
+    if debug:
+        print(f"[DEBUG] Predictions with conf > {conf_thresh}: {raw_confident}")
+        print(f"[DEBUG] Boxes after class filter: {len(boxes)}")
+
     # Apply NMS
+    final_detections = []
     if len(boxes) > 0:
         indices = cv2.dnn.NMSBoxes(boxes, scores, conf_thresh, nms_thresh)
         if len(indices) > 0:
             indices = indices.flatten() if hasattr(indices, 'flatten') else indices
-            return [(boxes[i], scores[i], class_ids[i]) for i in indices]
+            final_detections = [(boxes[i], scores[i], class_ids[i]) for i in indices]
 
-    return []
+    if debug:
+        print(f"[DEBUG] Detections after NMS: {len(final_detections)}")
+        for (box, score, class_id) in final_detections:
+            print(f"[DEBUG]   -> {CLASSES[class_id]}: {score:.2f} at {box}")
+
+    return final_detections
 
 
 def draw_detections(frame, detections):
