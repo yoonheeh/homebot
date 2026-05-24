@@ -15,7 +15,7 @@ from rknnlite.api import RKNNLite
 
 # Configuration
 STREAM_URL = 'http://192.168.4.1:81/stream'
-MODEL_PATH = '../object_detection/model/yolo/yolov5s-640-640.rknn'
+MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
 INPUT_SIZE = (640, 640)
 CONF_THRESH = 0.25
 NMS_THRESH = 0.45
@@ -115,6 +115,11 @@ def draw_detections(frame, detections):
 
     return frame
 
+def print_detection_summary(detections):
+    for (box, score, class_id) in detections:
+        label = f"{CLASSES[class_id]}: {score:.2f}"
+        print(label)
+
 
 class YOLOStreamer:
     def __init__(self, stream_url, model_path):
@@ -126,6 +131,7 @@ class YOLOStreamer:
         self.result_queue = queue.Queue(maxsize=1)
         self.running = False
         self.fps = 0
+        self.draw_bounding_box = False
 
     def init_camera(self):
         """Initialize video capture from ESP32-CAM"""
@@ -225,6 +231,7 @@ class YOLOStreamer:
         capture_t.start()
         infer_t.start()
 
+
         print("Streaming started. Press 'q' to quit, 's' to save snapshot")
 
         try:
@@ -235,25 +242,29 @@ class YOLOStreamer:
                 except queue.Empty:
                     continue
 
-                # Draw detections
-                display = draw_detections(frame, detections)
+                if self.draw_bounding_box:
+                    # Draw detections
+                    display = draw_detections(frame, detections)
 
-                # Draw FPS
-                cv2.putText(display, f"FPS: {self.fps:.1f}", (10, 30),
-                           cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    # Draw FPS
+                    cv2.putText(display, f"FPS: {self.fps:.1f}", (10, 30),
+                               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
 
-                # Show frame
-                cv2.imshow('YOLO + ESP32-CAM', display)
+                    # Show frame
+                    cv2.imshow('YOLO + ESP32-CAM', display)
 
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord('q'):
-                    print("Quitting...")
-                    break
-                elif key == ord('s'):
-                    timestamp = time.strftime("%Y%m%d_%H%M%S")
-                    filename = f"snapshot_{timestamp}.jpg"
-                    cv2.imwrite(filename, display)
-                    print(f"Saved: {filename}")
+                    key = cv2.waitKey(1) & 0xFF
+                    if key == ord('q'):
+                        print("Quitting...")
+                        break
+                    elif key == ord('s'):
+                        timestamp = time.strftime("%Y%m%d_%H%M%S")
+                        filename = f"snapshot_{timestamp}.jpg"
+                        cv2.imwrite(filename, display)
+                        print(f"Saved: {filename}")
+                else:
+                    # print instead of drawing detection
+                    print_detection_summary(detections)
 
         except KeyboardInterrupt:
             print("Interrupted by user")
@@ -268,7 +279,8 @@ class YOLOStreamer:
             if self.rknn:
                 self.rknn.release()
 
-            cv2.destroyAllWindows()
+            if self.draw_bounding_box:
+                cv2.destroyAllWindows()
             print("Cleanup complete")
 
 
