@@ -61,6 +61,36 @@
 - Source: https://github.com/rockchip-linux/rknn-toolkit2
 
 
+## Model Evaluation
+
+To verify model accuracy quantitatively against a COCO-mini subset (50 images):
+
+1. **Setup Dataset** (first time only):
+   ```bash
+   ssh firefly@88.88.88.165 "cd homebot && /home/firefly/.local/bin/uv run scripts/setup_eval_dataset.py"
+   ```
+2. **Run Evaluation**:
+   ```bash
+   ssh firefly@88.88.88.165 "cd homebot && /home/firefly/.local/bin/uv run scripts/evaluate_model.py"
+   ```
+
+### Current Baseline (yolov5s-640-640.rknn)
+- **mAP@0.5**: 49.62%
+- **Precision**: 61.05%
+- **Recall**: 54.97%
+- **Latency**: ~45ms (inference), ~73ms (total)
+
+## Code Architecture
+
+### Centralized Engine
+Core YOLO logic is centralized in `object_detection/yolo_engine.py`. Always use the `YoloEngine` class for inference to ensure consistency between evaluation and production.
+
+```python
+from object_detection.yolo_engine import YoloEngine
+engine = YoloEngine("path/to/model.rknn")
+boxes, classes, scores = engine.predict(image)
+```
+
 ## Development Workflow
 
 To develop and test on the Rockchip (Firefly) board:
