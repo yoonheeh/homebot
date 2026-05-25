@@ -1,5 +1,6 @@
 """
 YOLO streaming script for ESP32-CAM + RK3588 NPU
+Uses centralized YoloEngine for consistent inference.
 
 Prerequisites:
   uv pip install opencv-python numpy
@@ -11,198 +12,34 @@ import numpy as np
 import threading
 import queue
 import time
-from rknnlite.api import RKNNLite
+import os
+import sys
+
+# Add project root to path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from object_detection.yolo_engine import YoloEngine
 
 # Configuration
 STREAM_URL = 'http://192.168.4.1:81/stream'
 MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
-INPUT_SIZE = (640, 640)
 CONF_THRESH = 0.25
 NMS_THRESH = 0.45
 
-# COCO class names
-CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-           'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-           'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-           'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-           'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-           'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-           'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-           'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-           'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-           'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
-
-# YOLOv5 anchors
-ANCHORS = [
-    [[10, 13], [16, 30], [33, 23]],      # P3/8
-    [[30, 61], [62, 45], [59, 119]],     # P4/16
-    [[116, 90], [156, 198], [373, 326]]  # P5/32
-]
-
-
-def sigmoid(x):
-    return 1 / (1 + np.exp(-x))
-
-
-def preprocess(img, input_size):
-    """Resize and prepare image for YOLO input - RKNN models usually expect uint8"""
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, input_size)
-    # Most RKNN models have normalization baked in, so they expect uint8 [0, 255]
-    img = np.expand_dims(img, axis=0)
-    return img
-
-
-def decode_output(output, anchors, stride, conf_thresh=0.25):
-    """Decode YOLOv5 feature map to detections - based on Rockchip official example"""
-    # output shape: (1, 255, H, W) where 255 = 3 anchors * 85 values
-    batch, channel, height, width = output.shape
-    num_anchors = len(anchors)
-    num_classes = 80
-
-    # Reshape: (1, 255, H, W) -> (3, 85, H, W)
-    output = output.reshape(num_anchors, 5 + num_classes, height, width)
-
-    # Transpose: (3, 85, H, W) -> (H, W, 3, 85)
-    output = np.transpose(output, (2, 3, 0, 1))
-
-    # Now output is (H, W, 3, 85) - same as official example
-
-    boxes = []
-    obj_probs = []
-    class_ids = []
-
-    for a in range(num_anchors):
-        anchor = anchors[a]
-
-        # Extract predictions for this anchor: (H, W, 85)
-        pred = output[:, :, a, :]
-
-        # Get objectness score
-        obj_score = pred[:, :, 4]
-
-        # Find predictions above threshold
-        mask = obj_score > conf_thresh
-        if not np.any(mask):
-            continue
-
-        # Get grid positions
-        ys, xs = np.where(mask)
-
-        for y, x in zip(ys, xs):
-            # Decode box (following official example exactly)
-            # box_xy = pred[..., :2] * 2 - 0.5
-            bx = (pred[y, x, 0] * 2 - 0.5 + x) * stride
-            by = (pred[y, x, 1] * 2 - 0.5 + y) * stride
-
-            # box_wh = (pred[..., 2:4] * 2) ** 2 * anchors
-            bw = ((pred[y, x, 2] * 2) ** 2) * anchor[0]
-            bh = ((pred[y, x, 3] * 2) ** 2) * anchor[1]
-
-            # Convert to corner format
-            x1 = bx - bw / 2
-            y1 = by - bh / 2
-            x2 = bx + bw / 2
-            y2 = by + bh / 2
-
-            # Get confidence and class
-            conf = pred[y, x, 4]
-            class_scores = pred[y, x, 5:]
-            class_id = np.argmax(class_scores)
-            class_score = class_scores[class_id]
-
-            # Final score = obj_conf * class_conf
-            score = conf * class_score
-
-            if score > conf_thresh:
-                boxes.append([x1, y1, x2, y2])
-                obj_probs.append(score)
-                class_ids.append(class_id)
-
-    # Convert to format expected by rest of code
-    detections = []
-    for box, score, class_id in zip(boxes, obj_probs, class_ids):
-        detections.append([box[0], box[1], box[2], box[3], score, class_id])
-
-    return detections
-
-
-def postprocess(outputs, orig_shape, input_size, conf_thresh=0.25, nms_thresh=0.45, debug=True):
-    """Process YOLO outputs - Rockchip format with 3 feature maps"""
-
-    strides = [8, 16, 32]
-
-    all_detections = []
-
-    if debug:
-        print(f"[DEBUG] Number of outputs: {len(outputs)}")
-        for i, out in enumerate(outputs):
-            print(f"[DEBUG] Output[{i}] shape: {out.shape}")
-
-    # Decode each feature map
-    for i, output in enumerate(outputs):
-        detections = decode_output(output, ANCHORS[i], strides[i], conf_thresh)
-        all_detections.extend(detections)
-
-    if debug:
-        print(f"[DEBUG] Total detections before NMS: {len(all_detections)}")
-
-    if len(all_detections) == 0:
-        return []
-
-    # Scale to original image size
-    scale_x = orig_shape[1] / input_size[0]
-    scale_y = orig_shape[0] / input_size[1]
-
-    boxes = []
-    scores = []
-    class_ids = []
-
-    for det in all_detections:
-        x1, y1, x2, y2, score, class_id = det
-        x1 = int(x1 * scale_x)
-        y1 = int(y1 * scale_y)
-        x2 = int(x2 * scale_x)
-        y2 = int(y2 * scale_y)
-
-        # Clamp to image bounds
-        x1 = max(0, min(x1, orig_shape[1] - 1))
-        y1 = max(0, min(y1, orig_shape[0] - 1))
-        x2 = max(0, min(x2, orig_shape[1] - 1))
-        y2 = max(0, min(y2, orig_shape[0] - 1))
-
-        boxes.append([x1, y1, x2, y2])
-        scores.append(score)
-        class_ids.append(int(class_id))
-
-    # Apply NMS
-    final_detections = []
-    if len(boxes) > 0:
-        indices = cv2.dnn.NMSBoxes(boxes, scores, conf_thresh, nms_thresh)
-        if len(indices) > 0:
-            indices = indices.flatten() if hasattr(indices, 'flatten') else indices
-            for i in indices:
-                final_detections.append((boxes[i], scores[i], class_ids[i]))
-
-    if debug:
-        print(f"[DEBUG] Detections after NMS: {len(final_detections)}")
-        for (box, score, class_id) in final_detections:
-            print(f"[DEBUG]   -> {CLASSES[class_id]}: {score:.2f} at {box}")
-
-    return final_detections
-
-
-def draw_detections(frame, detections):
+def draw_detections(frame, detections, class_names):
     """Draw bounding boxes and labels on frame"""
-    for (box, score, class_id) in detections:
-        x1, y1, x2, y2 = box
+    boxes, classes, scores = detections
+    if boxes is None:
+        return frame
+
+    for box, score, class_id in zip(boxes, scores, classes):
+        x1, y1, x2, y2 = map(int, box)
 
         # Draw box
         color = (0, 255, 0)
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
 
         # Draw label
-        label = f"{CLASSES[class_id]}: {score:.2f}"
+        label = f"{class_names[class_id]}: {score:.2f}"
         label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
         label_y = max(y1, label_size[1] + 10)
 
@@ -214,23 +51,28 @@ def draw_detections(frame, detections):
     return frame
 
 
-def print_detection_summary(detections):
-    for (box, score, class_id) in detections:
-        label = f"{CLASSES[class_id]}: {score:.2f}"
+def print_detection_summary(detections, class_names):
+    boxes, classes, scores = detections
+    if boxes is None:
+        return
+    for _, score, class_id in zip(boxes, scores, classes):
+        label = f"{class_names[class_id]}: {score:.2f}"
         print(label)
 
 
 class YOLOStreamer:
-    def __init__(self, stream_url, model_path):
+    def __init__(self, stream_url, model_path, conf_thresh=0.25, nms_thresh=0.45):
         self.stream_url = stream_url
         self.model_path = model_path
+        self.conf_thresh = conf_thresh
+        self.nms_thresh = nms_thresh
         self.cap = None
-        self.rknn = None
+        self.engine = None
         self.frame_queue = queue.Queue(maxsize=2)
         self.result_queue = queue.Queue(maxsize=1)
         self.running = False
         self.fps = 0
-        self.draw_bounding_box = False
+        self.draw_bounding_box = True # Default to True for streaming
 
     def init_camera(self):
         """Initialize video capture from ESP32-CAM"""
@@ -242,19 +84,14 @@ class YOLOStreamer:
         self.cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         print(f"Connected to stream: {self.stream_url}")
 
-    def init_model(self):
-        """Initialize RKNN model"""
-        self.rknn = RKNNLite()
-        ret = self.rknn.load_rknn(self.model_path)
-        if ret != 0:
-            raise RuntimeError(f"Failed to load RKNN model: {ret}")
-
-        # Use all NPU cores for maximum performance
-        ret = self.rknn.init_runtime(core_mask=RKNNLite.NPU_CORE_AUTO)
-        if ret != 0:
-            raise RuntimeError(f"Failed to init RKNN runtime: {ret}")
-
-        print(f"Loaded model: {self.model_path}")
+    def init_engine(self):
+        """Initialize YoloEngine"""
+        print(f"Initializing YoloEngine with model: {self.model_path}")
+        self.engine = YoloEngine(
+            self.model_path, 
+            conf_thresh=self.conf_thresh, 
+            nms_thresh=self.nms_thresh
+        )
 
     def capture_thread(self):
         """Continuously capture frames from camera"""
@@ -287,17 +124,8 @@ class YOLOStreamer:
             except queue.Empty:
                 continue
 
-            orig_shape = frame.shape[:2]
-
-            # Preprocess
-            input_img = preprocess(frame, INPUT_SIZE)
-
-            # Inference on NPU
-            outputs = self.rknn.inference(inputs=[input_img])
-
-            # Postprocess
-            detections = postprocess(outputs, orig_shape, INPUT_SIZE,
-                                    CONF_THRESH, NMS_THRESH)
+            # Inference using centralized engine
+            boxes, classes, scores = self.engine.predict(frame)
 
             # Update result queue (keep latest)
             if self.result_queue.full():
@@ -305,7 +133,7 @@ class YOLOStreamer:
                     self.result_queue.get_nowait()
                 except queue.Empty:
                     pass
-            self.result_queue.put((frame.copy(), detections))
+            self.result_queue.put((frame.copy(), (boxes, classes, scores)))
 
             # Calculate FPS
             frame_count += 1
@@ -321,7 +149,7 @@ class YOLOStreamer:
 
         # Initialize
         self.init_camera()
-        self.init_model()
+        self.init_engine()
 
         # Start threads
         capture_t = threading.Thread(target=self.capture_thread)
@@ -342,7 +170,7 @@ class YOLOStreamer:
 
                 if self.draw_bounding_box:
                     # Draw detections
-                    display = draw_detections(frame, detections)
+                    display = draw_detections(frame, detections, self.engine.CLASSES)
 
                     # Draw FPS
                     cv2.putText(display, f"FPS: {self.fps:.1f}", (10, 30),
@@ -362,7 +190,7 @@ class YOLOStreamer:
                         print(f"Saved: {filename}")
                 else:
                     # print instead of drawing detection
-                    print_detection_summary(detections)
+                    print_detection_summary(detections, self.engine.CLASSES)
 
         except KeyboardInterrupt:
             print("Interrupted by user")
@@ -374,21 +202,19 @@ class YOLOStreamer:
 
             if self.cap:
                 self.cap.release()
-            if self.rknn:
-                self.rknn.release()
+            if self.engine:
+                self.engine.release()
 
-            if self.draw_bounding_box:
-                cv2.destroyAllWindows()
+            cv2.destroyAllWindows()
             print("Cleanup complete")
 
 
 if __name__ == '__main__':
     # Verify model path exists
-    import os
     if not os.path.exists(MODEL_PATH):
         print(f"Model not found: {MODEL_PATH}")
         print("Please update MODEL_PATH to point to your .rknn model")
         exit(1)
 
-    streamer = YOLOStreamer(STREAM_URL, MODEL_PATH)
+    streamer = YOLOStreamer(STREAM_URL, MODEL_PATH, conf_thresh=CONF_THRESH, nms_thresh=NMS_THRESH)
     streamer.run()
