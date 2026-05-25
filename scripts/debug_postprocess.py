@@ -112,6 +112,13 @@ def main():
 
     for i, out in enumerate(outputs):
         debug_output(out[0], f"Output[{i}]")  # Remove batch dim
+        
+        # Check max confidence
+        # Reshape to [3, 85, H, W]
+        h, w = out.shape[-2:]
+        reshaped = out.reshape(3, 85, h, w)
+        conf_channel = reshaped[:, 4, :, :]
+        print(f"  Max confidence in Output[{i}]: {conf_channel.max():.4f}")
 
     # Now let's try reshaping like Rockchip does
     print("\n" + "="*50)

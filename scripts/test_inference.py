@@ -35,10 +35,12 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
 
 
 def preprocess(img, input_size):
-    """Resize and normalize image for YOLO input"""
+    """Resize and prepare image for YOLO input - RKNN models usually expect uint8"""
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, input_size)
-    img = img.astype(np.float32) / 255.0
+    # Most RKNN models have normalization baked in, so they expect uint8 [0, 255]
+    # If the model expects float32 [0, 1], uncomment the following lines:
+    # img = img.astype(np.float32) / 255.0
     img = np.expand_dims(img, axis=0)
     return img
 
@@ -62,6 +64,9 @@ def process(input_data, mask, anchors):
     box_confidence = np.expand_dims(box_confidence, axis=-1)
 
     box_class_probs = input_data[..., 5:]
+
+    # Debug: print max confidence for this layer
+    print(f"  Layer {grid_h}x{grid_w} max confidence: {np.max(box_confidence):.4f}")
 
     box_xy = input_data[..., :2]*2 - 0.5
 
@@ -121,7 +126,7 @@ def nms_boxes(boxes, scores, nms_thresh=0.45):
         xx1 = np.maximum(x[i], x[order[1:]])
         yy1 = np.maximum(y[i], y[order[1:]])
         xx2 = np.minimum(x[i] + w[i], x[order[1:]] + w[order[1:]])
-        yy2 = np.minimum(y[i] + h[i], x[order[1:]] + y[order[1:]])
+        yy2 = np.minimum(y[i] + h[i], y[order[1:]] + h[order[1:]])
 
         w1 = np.maximum(0.0, xx2 - xx1 + 0.00001)
         h1 = np.maximum(0.0, yy2 - yy1 + 0.00001)
