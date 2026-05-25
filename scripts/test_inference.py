@@ -65,9 +65,6 @@ def process(input_data, mask, anchors):
 
     box_class_probs = input_data[..., 5:]
 
-    # Debug: print max confidence for this layer
-    print(f"  Layer {grid_h}x{grid_w} max confidence: {np.max(box_confidence):.4f}")
-
     box_xy = input_data[..., :2]*2 - 0.5
 
     col = np.tile(np.arange(0, grid_w), grid_w).reshape(-1, grid_w)
