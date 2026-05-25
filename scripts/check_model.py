@@ -48,10 +48,11 @@ def check_model(model_path):
 
     for shape in test_shapes:
         try:
-            dummy_input = np.zeros(shape, dtype=np.float32)
+            # RKNN models usually expect uint8
+            dummy_input = np.zeros(shape, dtype=np.uint8)
             outputs = rknn.inference(inputs=[dummy_input])
             used_shape = shape
-            print(f"  Input shape: {list(shape)} (NHWC format)")
+            print(f"  Input shape: {list(shape)} (NHWC format, uint8)")
             break
         except Exception as e:
             continue

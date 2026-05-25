@@ -26,10 +26,10 @@ CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
 
 
 def preprocess(img, input_size):
-    """Resize and normalize image for YOLO input"""
+    """Resize and prepare image for YOLO input - RKNN models usually expect uint8"""
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = cv2.resize(img, input_size)
-    img = img.astype(np.float32) / 255.0
+    # Most RKNN models have normalization baked in, so they expect uint8 [0, 255]
     img = np.expand_dims(img, axis=0)
     return img
 
