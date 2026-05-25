@@ -182,23 +182,23 @@ def yolov5_post_process(input_data):
 
 
 def draw(image, boxes, scores, classes):
-    """Draw the boxes on the image - from Rockchip test.py"""
+    """Draw the boxes on the image"""
     print("\n{:^12} {:^12}  {}".format('class', 'score', 'xmin, ymin, xmax, ymax'))
     print('-' * 50)
     for box, score, cl in zip(boxes, scores, classes):
-        top, left, right, bottom = box
-        top = int(top)
-        left = int(left)
-        right = int(right)
-        bottom = int(bottom)
+        xmin, ymin, xmax, ymax = box
+        xmin = int(xmin)
+        ymin = int(ymin)
+        xmax = int(xmax)
+        ymax = int(ymax)
 
-        cv2.rectangle(image, (top, left), (right, bottom), (255, 0, 0), 2)
+        cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
         cv2.putText(image, '{0} {1:.2f}'.format(CLASSES[cl], score),
-                    (top, left - 6),
+                    (xmin, ymin - 6),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.6, (0, 0, 255), 2)
 
-        print("{:^12} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(CLASSES[cl], score, top, left, right, bottom))
+        print("{:^12} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(CLASSES[cl], score, xmin, ymin, xmax, ymax))
 
 
 def main():
@@ -276,6 +276,17 @@ def main():
         print("No detections found!")
     else:
         print(f"Detections found: {len(boxes)}")
+        
+        # Rescale boxes to original image size
+        # boxes are in (640, 640) space
+        scale_h = orig_shape[0] / INPUT_SIZE[1]
+        scale_w = orig_shape[1] / INPUT_SIZE[0]
+        
+        boxes[:, 0] *= scale_w  # xmin
+        boxes[:, 1] *= scale_h  # ymin
+        boxes[:, 2] *= scale_w  # xmax
+        boxes[:, 3] *= scale_h  # ymax
+        
         # Draw and save
         draw(img, boxes, scores, classes)
         cv2.imwrite(OUTPUT_IMAGE, img)
