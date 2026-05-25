@@ -55,7 +55,7 @@ def evaluate():
         ground_truth = json.load(f)
 
     print(f"Initializing YoloEngine with model: {MODEL_PATH}")
-    engine = YoloEngine(MODEL_PATH)
+    engine = YoloEngine(MODEL_PATH, conf_thresh=0.001)
 
     all_results = []
     total_gt_objects = 0
