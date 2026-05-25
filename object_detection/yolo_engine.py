@@ -15,7 +15,7 @@ class YoloEngine:
                'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
                'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
 
-    def __init__(self, model_path, input_size=(640, 640), conf_thresh=0.25, nms_thresh=0.45):
+    def __init__(self, model_path, input_size=(640, 640), conf_thresh=0.001, nms_thresh=0.45):
         self.model_path = model_path
         self.input_size = input_size
         self.conf_thresh = conf_thresh
