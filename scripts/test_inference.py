@@ -69,15 +69,6 @@ def main():
     else:
         print(f"Detections found: {len(boxes)}")
         
-        # Rescale boxes to original image size
-        scale_h = orig_shape[0] / engine.input_size[1]
-        scale_w = orig_shape[1] / engine.input_size[0]
-        
-        boxes[:, 0] *= scale_w  # xmin
-        boxes[:, 1] *= scale_h  # ymin
-        boxes[:, 2] *= scale_w  # xmax
-        boxes[:, 3] *= scale_h  # ymax
-        
         # Draw and save
         draw(img, boxes, scores, classes, engine.CLASSES)
         cv2.imwrite(OUTPUT_IMAGE, img)

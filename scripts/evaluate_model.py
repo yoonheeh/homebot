@@ -87,14 +87,6 @@ def evaluate():
         if pred_boxes is None:
             continue
 
-        # Rescale predictions to original image size
-        scale_h = orig_h / engine.input_size[1]
-        scale_w = orig_w / engine.input_size[0]
-        pred_boxes[:, 0] *= scale_w
-        pred_boxes[:, 1] *= scale_h
-        pred_boxes[:, 2] *= scale_w
-        pred_boxes[:, 3] *= scale_h
-
         # Match predictions to ground truth
         # Sort predictions by score descending
         indices = np.argsort(pred_scores)[::-1]
