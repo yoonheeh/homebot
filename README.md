@@ -1,8 +1,9 @@
 # Homebot Workspace
 
 This repository is the central workspace for the **Homebot** robotics platform. It contains:
-1. **Host Software:** Python and C++ high-level nodes running on the primary Linux SBC, built and managed using **Bazel**.
-2. **Pico Firmware (pico_firmware):** Low-level motor control, encoder readings, and telemetry feedback running on the Raspberry Pi Pico (RP2040), built using **CMake**.
+1. **Host C++ Code:** High-level robot algorithms and native drivers built and managed using **Bazel**.
+2. **Host Python Code:** High-level robotic behaviors, machine learning, and automation managed using **uv**.
+3. **Pico Firmware (pico_firmware):** Low-level motor control and sensor feedback running on the Raspberry Pi Pico (RP2040), built as a standalone **CMake** project.
 
 ---
 
@@ -12,12 +13,14 @@ This repository is the central workspace for the **Homebot** robotics platform. 
 homebot/
 ├── BUILD.bazel          # Top-level Bazel build targets
 ├── MODULE.bazel         # Bazel modules and dependency definitions
-├── src/                 # Host C++/Python source files
+├── src/                 # Host C++ and Python source files
 ├── object_detection/    # Object detection machine learning pipeline
 ├── pico_firmware/       # Raspberry Pi Pico embedded C/C++ firmware
-│   ├── CMakeLists.txt   # Firmware-specific CMake definition
-│   ├── main.cpp         # Low-level controller loop, PIO encoder setup, EKF outputs
+│   ├── CMakeLists.txt   # Standalone firmware CMake definition
+│   ├── main.cpp         # Low-level controller loop, PIO encoder setup, sensor queries
 │   └── build/           # Build output folder
+├── pyproject.toml       # Python package configuration (uv compatible)
+├── uv.lock              # Strict Python lockfile managed by uv
 └── README.md            # This workspace documentation
 </pre>
 
@@ -73,18 +76,49 @@ Deploying the compiled code onto your Raspberry Pi Pico is quick and easy:
 
 ---
 
-## 3. High-Level Host Software (Bazel)
+## 3. High-Level C++ Host Software (Bazel)
 
-All software running on the main robot computer is built and executed using **Bazel**.
+All high-level C++ applications running on the main robot computer (e.g. SLAM, planners, and hardware node bridges) are compiled and executed using **Bazel**.
 
-### Build and Run commands
+### Build Commands
 
-To build the primary host software:
+To build all host C++ packages and binaries:
 <pre>
 bazel build //...
 </pre>
 
-To run the main Python entry node:
+To run a specific C++ target:
 <pre>
-bazel run //:main
+bazel run //src:state_estimator
+</pre>
+
+---
+
+## 4. Host Python Software (uv)
+
+Python applications (such as object detection, machine learning, and high-level behavioral scripts) are managed using **uv**, an extremely fast, modern Python package installer and virtual environment manager.
+
+### Setting Up the Environment
+
+The project contains a standard <code>pyproject.toml</code> and <code>uv.lock</code> file specifying all Python dependencies. 
+
+To set up your local virtual environment and install all packages:
+<pre>
+# Install uv if you do not have it
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Sync the virtual environment and install dependencies
+uv sync
+</pre>
+
+### Running Python Scripts
+
+To run the main python node:
+<pre>
+uv run main.py
+</pre>
+
+To run scripts inside the virtual environment:
+<pre>
+uv run python path/to/script.py
 </pre>
