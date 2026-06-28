@@ -1,0 +1,6 @@
+# Build all C++ as C++17.
+build --cxxopt=-std=c++17
+
+# `--config=arm64` cross-compiles to the Firefly aarch64 board.
+# (cc toolchain resolution is on by default in Bazel 7+, so no extra flag needed.)
+build:arm64 --platforms=//platforms:aarch64_linux

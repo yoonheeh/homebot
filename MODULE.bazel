@@ -1,0 +1,48 @@
+module(name = "homebot", version = "0.1.0")
+
+# C++ build dependencies only.
+# Python is managed by uv (pyproject.toml + uv.lock), NOT Bazel — see ADR-001 in NOTES.md.
+
+bazel_dep(name = "platforms", version = "0.0.10")
+bazel_dep(name = "rules_cc", version = "0.2.17")
+
+# Hermetic LLVM toolchain for cross-compiling to the Firefly aarch64 board.
+bazel_dep(name = "toolchains_llvm", version = "1.8.0")
+
+# Pinned aarch64 Linux sysroot (target headers + libc/libstdc++) for cross-compilation.
+# Debian Stretch (glibc 2.24) — older than the board's Ubuntu 22.04 (glibc 2.35),
+# so binaries built against it run on the board. See ADR-001.
+http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
+
+http_archive(
+    name = "sysroot_linux_aarch64",
+    build_file_content = """
+filegroup(
+    name = "sysroot",
+    srcs = glob(["*/**"]),
+    visibility = ["//visibility:public"],
+)
+""",
+    sha256 = "e39b700d8858d18868544c8c84922f6adfa8419f3f42471b92024ba38eff7aca",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2202c161310ffde63729f29d27fe7bb24a0bc540/debian_stretch_arm64_sysroot.tar.xz"],
+)
+
+llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
+llvm.toolchain(
+    name = "llvm_toolchain",
+    # 17.0.6 ships an Ubuntu-22.04 prebuilt that links libtinfo.so.6 (the host lib).
+    # Older versions (e.g. 16.0.0) only have an 18.04 build needing libtinfo.so.5,
+    # which is absent on Ubuntu 22.04+ and breaks the compiler. See ADR-001.
+    llvm_version = "17.0.6",
+)
+
+# Bind the sysroot to the aarch64 target so an aarch64 cc toolchain gets registered.
+llvm.sysroot(
+    name = "llvm_toolchain",
+    label = "@sysroot_linux_aarch64//:sysroot",
+    targets = ["linux-aarch64"],
+)
+use_repo(llvm, "llvm_toolchain")
+
+# Register the toolchains so Bazel can resolve them (incl. the aarch64 cross target).
+register_toolchains("@llvm_toolchain//:all")

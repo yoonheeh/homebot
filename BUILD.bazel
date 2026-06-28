@@ -1,0 +1,3 @@
+# Root package.
+# Python dependencies are managed by uv (pyproject.toml + uv.lock), not Bazel — see ADR-001.
+# C++ targets live under //src; the aarch64 cross-compile platform is //platforms.

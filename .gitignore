@@ -1,1 +1,4 @@
 *.rknn
+
+# Bazel convenience symlinks (point into the build cache)
+/bazel-*

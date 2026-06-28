@@ -1,5 +1,39 @@
 # Homebot Project Notes
 
+## Architecture Decisions
+
+### ADR-001: Bazel for C++, uv for Python (decoupled at runtime via IPC)
+
+**Status:** Accepted (2026-06-28)
+
+**Context.** homebot is a polyglot codebase. Performance-critical components
+(control, state estimation, the serial/IPC bridge) are written in C++ and run on
+the Firefly aarch64 board; Python is used for scripting, ML/perception (RKNN),
+and visualization. We need a build/dependency story for both languages.
+
+**Decision.**
+- **C++ → Bazel.** Bazel gives us hermetic, reproducible cross-compilation from
+  an x86 dev machine to the aarch64 board via a pinned LLVM toolchain, removing
+  the need to build on the slow board.
+- **Python → uv.** uv owns Python dependency management (`pyproject.toml` +
+  `uv.lock`). Python is **not** managed through Bazel (no `rules_python` /
+  `pip.parse`). uv handles messy native/ML wheels (numpy, opencv, RKNN) far
+  better than Bazel does.
+- **The two never link.** C++ and Python communicate only over IPC (serial
+  frames / ZeroMQ / stdout pipes) — i.e. across process boundaries. Neither
+  imports nor links the other at build time, so there is no build-time
+  dependency for a single build system to coordinate.
+
+**Consequences.**
+- No build-time seam → two independent build systems is clean, not a compromise.
+- The IPC wire format (see the message-frame table below) is the **only** shared
+  artifact between the languages, and neither build system enforces it. Treat it
+  as a hand-maintained, versioned interface.
+- **Revisit if** Python ever needs to link C++ at build time — e.g. pybind11
+  extension modules, or shared protobuf/gRPC codegen. At that point pull only the
+  shared contract into Bazel (`cc_proto_library` + `py_proto_library`) and keep
+  the rest of Python on uv.
+
 ## Model Files
 
 ### YOLOv5s (RK3588 NPU)
@@ -89,6 +123,22 @@ Core YOLO logic is centralized in `object_detection/yolo_engine.py`. Always use 
 from object_detection.yolo_engine import YoloEngine
 engine = YoloEngine("path/to/model.rknn")
 boxes, classes, scores = engine.predict(image)
+```
+
+## Building
+
+C++ is built with Bazel; Python deps are managed with uv (see ADR-001).
+
+```bash
+# C++ — host (x86_64), for local dev/testing
+bazel build //src:system_node
+
+# C++ — cross-compile to the Firefly aarch64 board
+bazel build --config=arm64 //src:system_node
+# -> bazel-bin/src/system_node  (ELF aarch64; scp to the board to run)
+
+# Python — set up / update the virtualenv from uv.lock
+uv sync
 ```
 
 ## Development Workflow
