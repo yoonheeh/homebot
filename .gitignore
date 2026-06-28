@@ -2,3 +2,6 @@
 
 # Bazel convenience symlinks (point into the build cache)
 /bazel-*
+
+# pico_firmware build files
+pico_firmware/build
