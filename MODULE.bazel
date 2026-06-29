@@ -5,6 +5,7 @@ module(name = "homebot", version = "0.1.0")
 
 bazel_dep(name = "platforms", version = "0.0.10")
 bazel_dep(name = "rules_cc", version = "0.2.17")
+bazel_dep(name = "rules_shell", version = "0.6.1")
 
 # Hermetic LLVM toolchain for cross-compiling to the Firefly aarch64 board.
 bazel_dep(name = "toolchains_llvm", version = "1.8.0")
