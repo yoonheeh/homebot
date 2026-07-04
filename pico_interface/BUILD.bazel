@@ -1,0 +1,51 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+
+cc_library(
+    name = "pico_interface_lib",
+    hdrs = glob(["include/pico_interface/**/*.hpp"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "pico_interface",
+    srcs = ["main.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":pico_interface_lib",
+    ],
+)
+
+cc_binary(
+    name = "test_suite",
+    srcs = ["test_suite.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":pico_interface_lib",
+    ],
+)
+
+cc_binary(
+    name = "control",
+    srcs = ["control.cpp"],
+    copts = ["-std=c++20"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":pico_interface_lib",
+    ],
+)
+
+cc_binary(
+    name = "calibrate_encoders",
+    srcs = ["calibrate_encoders.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":pico_interface_lib",
+    ],
+)

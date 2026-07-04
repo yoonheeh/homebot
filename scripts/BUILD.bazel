@@ -1,0 +1,12 @@
+load("@rules_shell//shell:sh_binary.bzl", "sh_binary")
+
+sh_binary(
+    name = "ship_to_board",
+    srcs = ["ship_to_board.sh"],
+    data = [
+        "//pico_interface:calibrate_encoders",
+        "//pico_interface:control",
+        "//pico_interface:pico_interface",
+        "//pico_interface:test_suite",
+    ],
+)

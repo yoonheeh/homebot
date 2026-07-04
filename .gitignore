@@ -5,3 +5,6 @@
 
 # pico_firmware build files
 pico_firmware/build
+
+# pico_interface build files
+pico_interface/build

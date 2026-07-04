@@ -1,0 +1,141 @@
+#include <iostream>
+#include <fstream>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <vector>
+#include <iomanip>
+#include <chrono>
+#include <thread>
+#include <atomic>
+#include <unistd.h>
+#include <csignal>
+#include "pico_interface/TelemetryDefs.hpp"
+#include "pico_interface/TelemetryQueue.hpp"
+#include "pico_interface/PicoInterface.hpp"
+#include "pico_interface/StateEstimator.hpp"
+
+// Global flag to control program lifetime
+std::atomic<bool> run_program(true);
+
+// Signal handler for clean termination on Ctrl+C
+void signal_handler(int signal) {
+    if (signal == SIGINT) {
+        run_program = false;
+    }
+}
+
+// Background thread to print EKF estimated pose at 1Hz
+void pose_printer_thread_func(StateEstimator& estimator, std::atomic<bool>& run_printer) {
+    while (run_printer) {
+        sleep(1); // 1Hz output
+        RobotPose pose = estimator.get_pose();
+        std::clog << "\n================ ESTIMATED ROBOT POSE (1Hz) ================\n";
+        std::clog << std::fixed << std::setprecision(4);
+        std::clog << "Pose X     -> " << std::setw(8) << pose.x << " m\n";
+        std::clog << "Pose Y     -> " << std::setw(8) << pose.y << " m\n";
+        std::clog << "Pose Theta -> " << std::setw(8) << pose.theta << " rad (" 
+                  << std::setw(6) << std::setprecision(2) << (pose.theta * 180.0 / PI) << " deg)\n";
+        std::clog << "============================================================\n\n";
+    }
+}
+
+// Background thread to stream EKF estimated pose to stdout
+void pose_publisher_thread_func(StateEstimator& estimator, std::atomic<bool>& run_publisher) {
+    while (run_publisher) {
+        // 20Hz output
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        RobotPose pose = estimator.get_pose();
+        std::cout << pose.x << "," << pose.y << "," << pose.theta << std::endl;
+    }
+}
+
+// RAII class to redirect std::clog to a file inside a designated folder
+struct ClogRedirector {
+    std::ofstream file;
+    std::streambuf* old_buf;
+
+    ClogRedirector(const std::string& path) : old_buf(nullptr) {
+        // Create standard "logs" directory if it's missing (POSIX mkdir)
+        mkdir("logs", 0777);
+        file.open(path);
+        if (file.is_open()) {
+            old_buf = std::clog.rdbuf(file.rdbuf());
+        } else {
+            std::cerr << "Warning: Could not open log file: " << path << "\n";
+        }
+    }
+
+    ~ClogRedirector() {
+        if (old_buf) {
+            std::clog.rdbuf(old_buf);
+        }
+    }
+};
+
+int main() {
+    // Redirect std::clog to logs/estimator.log and auto-create directories
+    ClogRedirector redirector("logs/estimator.log");
+
+    // Register the POSIX signal handler
+    std::signal(SIGINT, signal_handler);
+
+    const char* port_name = "/dev/ttyACM0"; 
+    
+    // Configure robot physical calibration parameters
+    RobotConfig calib_config;
+    calib_config.wheel_radius  = 0.0325; // 32.5mm calibrated radius
+    calib_config.wheel_base    = 0.13;   // 130mm calibrated track width
+    calib_config.ticks_per_rev = 4320.0; // Default to 4X Quadrature. Change to 1080.0 if 1X used.
+
+    // Instantiate thread-safe queue and interface objects
+    TelemetryQueue<EncoderIMUTelemetry> telemetry_queue;
+    PicoInterface pico_interface(port_name, telemetry_queue);
+    StateEstimator state_estimator(telemetry_queue, calib_config);
+
+    std::clog << "Connecting to Pico on " << port_name << " in passive estimation-only mode...\n";
+    std::clog << "Using Calibrated Geometry:\n";
+    std::clog << std::fixed << std::setprecision(4);
+    std::clog << "  - Wheel Radius : " << calib_config.wheel_radius << " m\n";
+    std::clog << "  - Base Width   : " << calib_config.wheel_base << " m\n";
+    std::clog << "  - Ticks / Rev  : " << calib_config.ticks_per_rev << "\n\n";
+
+    if (!pico_interface.start()) {
+        std::cerr << "Failed to initialize Pico interface. Exiting.\n";
+        return 1;
+    }
+    std::clog << "Connected. Starting State Estimator...\n";
+    state_estimator.start();
+
+    // Start 1Hz printer thread (outputs to logs / std::clog)
+    std::atomic<bool> run_printer(true);
+    std::thread printer_thread(pose_printer_thread_func, std::ref(state_estimator), std::ref(run_printer));
+
+    // Start 20Hz publisher thread (outputs only x,y,theta to std::cout)
+    std::atomic<bool> run_publisher(true);
+    std::thread publisher_thread(pose_publisher_thread_func, std::ref(state_estimator), std::ref(run_publisher));
+
+    std::clog << "\nState estimator running continuously. Press Ctrl+C to stop.\n\n";
+    
+    // Block main thread until SIGINT/Ctrl+C is captured
+    while (run_program) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+
+    std::clog << "\nSIGINT received. Initiating clean shutdown...\n";
+
+    // Stop and clean up
+    run_printer = false;
+    run_publisher = false;
+    if (printer_thread.joinable()) {
+        printer_thread.join();
+    }
+    if (publisher_thread.joinable()) {
+        publisher_thread.join();
+    }
+
+    state_estimator.stop();
+    pico_interface.stop();
+
+    std::clog << "Shutdown complete. Safely stopped threads and closed serial interface.\n";
+    return 0;
+}
