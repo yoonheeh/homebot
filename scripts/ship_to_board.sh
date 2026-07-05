@@ -31,8 +31,6 @@ if [[ $# -ge 1 ]]; then
     if [[ "$1" == *@* ]]; then
         BOARD_USER="${1%%@*}"
         BOARD_HOST="${1#*@}"
-        echo "User: $BOARD_USER"
-        echo "Host: $BOARD_HOST"
     else
         echo "ERROR: destination must be in user@host format" >&2
         usage

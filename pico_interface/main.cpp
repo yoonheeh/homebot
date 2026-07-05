@@ -13,6 +13,7 @@
 #include "pico_interface/TelemetryQueue.hpp"
 #include "pico_interface/PicoInterface.hpp"
 #include "pico_interface/StateEstimator.hpp"
+#include "pico_interface/RobotConfigIO.hpp"
 
 // Global flag to control program lifetime
 std::atomic<bool> run_program(true);
@@ -72,20 +73,26 @@ struct ClogRedirector {
     }
 };
 
-int main() {
+int main(int argc, char* argv[]) {
     // Redirect std::clog to logs/estimator.log and auto-create directories
     ClogRedirector redirector("logs/estimator.log");
 
     // Register the POSIX signal handler
     std::signal(SIGINT, signal_handler);
 
-    const char* port_name = "/dev/ttyACM0"; 
-    
+    const char* port_name = "/dev/ttyACM0";
+    std::string calib_file = (argc > 1) ? argv[1] : "data/robot_calibration.txt";
+
     // Configure robot physical calibration parameters
     RobotConfig calib_config;
-    calib_config.wheel_radius  = 0.0325; // 32.5mm calibrated radius
-    calib_config.wheel_base    = 0.13;   // 130mm calibrated track width
-    calib_config.ticks_per_rev = 4320.0; // Default to 4X Quadrature. Change to 1080.0 if 1X used.
+    calib_config.wheel_radius  = 0.0325;  // 32.5mm calibrated radius
+    calib_config.wheel_base    = 0.16;    // 160mm default track width
+    calib_config.ticks_per_rev = 4320.0;  // Default to 4X Quadrature
+
+    std::clog << "Loading calibration from: " << calib_file << "\n";
+    if (!load_robot_config(calib_file, calib_config)) {
+        std::clog << "WARNING: failed to load calibration file. Using default values.\n";
+    }
 
     // Instantiate thread-safe queue and interface objects
     TelemetryQueue<EncoderIMUTelemetry> telemetry_queue;
@@ -95,9 +102,11 @@ int main() {
     std::clog << "Connecting to Pico on " << port_name << " in passive estimation-only mode...\n";
     std::clog << "Using Calibrated Geometry:\n";
     std::clog << std::fixed << std::setprecision(4);
-    std::clog << "  - Wheel Radius : " << calib_config.wheel_radius << " m\n";
-    std::clog << "  - Base Width   : " << calib_config.wheel_base << " m\n";
-    std::clog << "  - Ticks / Rev  : " << calib_config.ticks_per_rev << "\n\n";
+    std::clog << "  - Wheel Radius       : " << calib_config.wheel_radius << " m\n";
+    std::clog << "  - Scale Factor       : " << calib_config.scale_factor << "\n";
+    std::clog << "  - Effective Radius   : " << calib_config.effective_wheel_radius() << " m\n";
+    std::clog << "  - Base Width         : " << calib_config.wheel_base << " m\n";
+    std::clog << "  - Ticks / Rev        : " << calib_config.ticks_per_rev << "\n\n";
 
     if (!pico_interface.start()) {
         std::cerr << "Failed to initialize Pico interface. Exiting.\n";

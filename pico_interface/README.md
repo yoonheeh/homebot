@@ -41,7 +41,7 @@ This generates four main executables under `bazel-bin/pico_interface/`:
 * **`pico_interface`:** The passive state estimator. Reads sensor telemetry from the Pico at high-frequency, runs EKF, writes human-readable status to `stderr` (logs), and streams raw poses (`x,y,theta`) on `stdout` at 20Hz.
 * **`test_suite`:** Executes the full unit test suite, verifying threading safety, queue stress tests, and EKF mathematical correctness.
 * **`control`:** Sends manual wheel velocity commands (rad/sec) to the Pico over USB.
-* **`calibrate_encoders`:** An interactive tool to calibrate wheel encoder tick targets.
+* **`calibrate_encoders`:** Automated wheel-base calibration by in-place spin. See [`docs/calibration.md`](docs/calibration.md) for the step-by-step procedure.
 
 #### Option B: Standalone Build with CMake (Legacy)
 
@@ -55,6 +55,34 @@ make -j$(nproc)
 ```
 
 The same four executables are produced inside `pico_interface/build/`.
+
+### Running a binary on the board via Bazel
+
+The `//scripts:remote_run.bzl` rule packages an executable, copies it to a remote board, and runs it over SSH. This is useful for the state estimator, controller, or calibration helper.
+
+```bash
+# Cross-compile for aarch64 and run on the board
+bazel run --config=arm64 //pico_interface:run_state_estimator -- user@board-host
+
+# Run with arguments forwarded to the remote binary
+bazel run --config=arm64 //pico_interface:run_control -- user@board-host 1.0 -1.0
+
+# Calibrate on the board (writes data/robot_calibration.txt on the board)
+bazel run --config=arm64 //pico_interface:run_calibrate_encoders -- user@board-host
+```
+
+The `pico_interface` state estimator reads `data/robot_calibration.txt` by default. If you ran calibration in a different directory or saved the file elsewhere, pass the path as the first argument:
+
+```bash
+bazel run --config=arm64 //pico_interface:run_state_estimator -- user@board-host /path/to/robot_calibration.txt
+```
+
+Available `remote_run` targets:
+* `//pico_interface:run_state_estimator`
+* `//pico_interface:run_control`
+* `//pico_interface:run_calibrate_encoders`
+
+The binary is copied to `~/homebot/bin/<binary_name>` on the board by default and executed there. The directory is created automatically if it does not exist.
 
 ### Running the State Estimator and Logging
 
