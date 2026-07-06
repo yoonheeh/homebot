@@ -1,5 +1,5 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-load("//scripts:remote_run.bzl", "remote_run")
+load("//scripts:deploy.bzl", "deploy")
 
 cc_library(
     name = "pico_interface_lib",
@@ -52,17 +52,17 @@ cc_binary(
     data = [":control"],
 )
 
-remote_run(
-    name = "run_state_estimator",
+deploy(
+    name = "deploy_state_estimator",
     binary = ":pico_interface",
 )
 
-remote_run(
-    name = "run_control",
+deploy(
+    name = "deploy_control",
     binary = ":control",
 )
 
-remote_run(
-    name = "run_calibrate_encoders",
+deploy(
+    name = "deploy_calibrate_encoders",
     binary = ":calibrate_encoders",
 )

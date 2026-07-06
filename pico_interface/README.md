@@ -58,17 +58,20 @@ The same four executables are produced inside `pico_interface/build/`.
 
 ### Running a binary on the board via Bazel
 
-The `//scripts:remote_run.bzl` rule packages an executable, copies it to a remote board, and runs it over SSH. This is useful for the state estimator, controller, or calibration helper.
+The `//scripts:deploy.bzl` rule packages an executable and copies it to a remote board over SSH. This is useful for the state estimator, controller, or calibration helper.
 
 ```bash
-# Cross-compile for aarch64 and run on the board
-bazel run --config=arm64 //pico_interface:run_state_estimator -- user@board-host
+# Cross-compile for aarch64 and deploy on the board
+bazel run --config=arm64 //pico_interface:deploy_state_estimator -- user@board-host
 
 # Run with arguments forwarded to the remote binary
-bazel run --config=arm64 //pico_interface:run_control -- user@board-host 1.0 -1.0
+bazel run --config=arm64 //pico_interface:deploy_control -- user@board-host 1.0 -1.0
 
-# Calibrate on the board (writes data/robot_calibration.txt on the board)
-bazel run --config=arm64 //pico_interface:run_calibrate_encoders -- user@board-host
+# Deploy calibrate binary to the board (writes data/robot_calibration.txt on the board)
+bazel run --config=arm64 //pico_interface:deploy_calibrate_encoders -- user@board-host
+
+# Run calibration
+./path/to/calibrate_encoders 
 ```
 
 The `pico_interface` state estimator reads `data/robot_calibration.txt` by default. If you ran calibration in a different directory or saved the file elsewhere, pass the path as the first argument:
