@@ -3,36 +3,53 @@
 #include <cstdlib>
 #include <iomanip>
 #include <unistd.h>
+#include <cstring>
+#include <termios.h>
+#include <fcntl.h>
 #include "pico_interface/TelemetryDefs.hpp"
 
-void print_usage(const char* prog_name) {
-    std::clog << "Usage: " << prog_name << " <left_rad_sec> <right_rad_sec> [port_name]\n";
-    std::clog << "Example: " << prog_name << " -2.5 2.5 /dev/ttyACM0\n";
-    std::clog << "Default port_name is /dev/ttyACM0\n";
+// Base speed variables (adjust these to fit your robot's physical capabilities)
+const float LINEAR_SPEED = 9.0f;  // rad/sec for straight lines
+const float TURN_SPEED = 8.5f;   // rad/sec for turns
+
+// Non-blocking keyboard read configuration
+void set_terminal_raw_mode(bool enable) {
+    static struct termios oldt, newt;
+    if (enable) {
+        tcgetattr(STDIN_FILENO, &oldt);
+        newt = oldt;
+        newt.c_lflag &= ~(ICANON | ECHO); // Disable buffering and echoing
+        newt.c_cc[VMIN] = 0;              // Non-blocking read
+        newt.c_cc[VTIME] = 0;             // No timeout delay
+        tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    } else {
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    }
+}
+
+// Helper function to handle serial packet building and sending
+void send_velocity_command(int fd, float left_vel, float right_vel) {
+    VelocityTarget msg;
+    msg.left_rad_sec = left_vel;
+    msg.right_rad_sec = right_vel;
+    msg.crc16 = calculate_crc16(reinterpret_cast<const uint8_t*>(&msg), sizeof(float) * 2);
+
+    uint8_t struct_buffer[sizeof(VelocityTarget)];
+    uint8_t encoded_buffer[sizeof(VelocityTarget) + 2];
+
+    std::memcpy(struct_buffer, &msg, sizeof(VelocityTarget));
+    size_t encoded_len = cobs_encode(struct_buffer, sizeof(VelocityTarget), encoded_buffer);
+
+    write(fd, encoded_buffer, encoded_len);
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 3 || argc > 4) {
-        print_usage(argv[0]);
-        return 1;
-    }
-
-    // Parse velocities
-    float left_vel = 0.0f;
-    float right_vel = 0.0f;
-    try {
-        left_vel = std::stof(argv[1]);
-        right_vel = std::stof(argv[2]);
-    } catch (const std::exception& e) {
-        std::cerr << "Error parsing velocities: " << e.what() << "\n";
-        print_usage(argv[0]);
-        return 1;
-    }
-
-    // Parse port
     std::string port_name = "/dev/ttyACM0";
-    if (argc == 4) {
-        port_name = argv[3];
+    if (argc == 2) {
+        port_name = argv[1];
+    } else if (argc > 2) {
+        std::clog << "Usage: " << argv[0] << " [port_name]\n";
+        return 1;
     }
 
     std::clog << "Opening serial port " << port_name << "...\n";
@@ -42,36 +59,83 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    // Build the VelocityTarget message
-    VelocityTarget msg;
-    msg.left_rad_sec = left_vel;
-    msg.right_rad_sec = right_vel;
-    msg.crc16 = calculate_crc16(reinterpret_cast<const uint8_t*>(&msg), sizeof(float) * 2);
+    // Put terminal into raw, non-blocking mode
+    set_terminal_raw_mode(true);
 
-    // Buffers for encoding
-    uint8_t struct_buffer[sizeof(VelocityTarget)];
-    uint8_t encoded_buffer[sizeof(VelocityTarget) + 2]; // COBS overhead + delimiter
+    std::clog << "\n====================================================\n";
+    std::clog << " Control Mode Active! Use WASD to drive, Q to quit.\n";
+    std::clog << "====================================================\n\n";
 
-    std::memcpy(struct_buffer, &msg, sizeof(VelocityTarget));
-    size_t encoded_len = cobs_encode(struct_buffer, sizeof(VelocityTarget), encoded_buffer);
+    char ch;
+    bool running = true;
 
-    std::clog << std::fixed << std::setprecision(2);
-    std::clog << "Sending command:\n";
-    std::clog << "  - Left Target  : " << left_vel << " rad/sec\n";
-    std::clog << "  - Right Target : " << right_vel << " rad/sec\n";
-    std::clog << "  - Packet CRC16 : 0x" << std::hex << std::setw(4) << std::setfill('0') << msg.crc16 << std::dec << "\n";
+    // Track active key states manually to handle overlapping inputs
+    bool w_pressed = false;
+    bool s_pressed = false;
+    bool a_pressed = false;
+    bool d_pressed = false;
 
-    // Write to port
-    ssize_t bytes_written = write(fd, encoded_buffer, encoded_len);
-    if (bytes_written == static_cast<ssize_t>(encoded_len)) {
-        std::clog << "Successfully sent command (" << bytes_written << " bytes written).\n";
-    } else {
-        std::cerr << "Error: Only wrote " << bytes_written << " of " << encoded_len << " bytes.\n";
+    while (running) {
+        // Read character stream to update current key states
+        while (read(STDIN_FILENO, &ch, 1) > 0) {
+            if (ch == 'q' || ch == 'Q') {
+                running = false;
+            }
+            
+            // Map character strokes to active vector triggers
+            if (ch == 'w' || ch == 'W') { w_pressed = true; s_pressed = false; }
+            if (ch == 's' || ch == 'S') { s_pressed = true; w_pressed = false; }
+            if (ch == 'a' || ch == 'A') { a_pressed = true; d_pressed = false; }
+            if (ch == 'd' || ch == 'D') { d_pressed = true; a_pressed = false; }
+            if (ch == ' ') { // Spacebar emergency brake
+                w_pressed = s_pressed = a_pressed = d_pressed = false;
+            }
+        }
+
+        // Initialize frame velocities
+        float left_target = 0.0f;
+        float right_target = 0.0f;
+    
+        // 1. Handle Linear Movement
+        if (w_pressed) {
+            left_target = LINEAR_SPEED;
+            right_target = LINEAR_SPEED;
+        } else if (s_pressed) {
+            left_target = -LINEAR_SPEED;
+            right_target = -LINEAR_SPEED;
+        }
+
+        // 2. Handle Angular Turns & Pure Rotation
+        if (d_pressed) {
+            // If driving forward, create a sweeping turn. If stationary, perform a zero-radius spin.
+            left_target  += TURN_SPEED;
+            right_target -= TURN_SPEED;
+        } else if (a_pressed) {
+            left_target  -= TURN_SPEED;
+            right_target += TURN_SPEED;
+        }
+    
+        // Incorporate motor rotating direction
+        left_target *= -1.0f;
+
+        // Send the mixed command down the serial pipeline
+        send_velocity_command(fd, left_target, right_target);
+
+        // Reset tracking variables for next iteration cycle
+        // If the key is held down, the next cycle loop will re-trigger them true
+        w_pressed = s_pressed = a_pressed = d_pressed = false;
+
+        // Control frequency: loop updates roughly every 20ms (50Hz)
+        usleep(20000); 
     }
 
-    // Sleep briefly to ensure transmission completes before closing the port descriptor
-    usleep(50000); // 50ms
-    close(fd);
+    // Clean up: stop the robot, restore terminal settings, close port descriptor
+    std::clog << "\nShutting down interface. Stopping robot...\n";
+    send_velocity_command(fd, 0.0f, 0.0f);
+    usleep(50000);
 
+    set_terminal_raw_mode(false);
+    close(fd);
     return 0;
 }
+

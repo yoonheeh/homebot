@@ -1,6 +1,6 @@
-"""Bazel rule to build a binary and run it on a remote board via ssh/scp."""
+"""Bazel rule to build a binary and deploy it on a remote board via ssh/scp."""
 
-def _remote_run_impl(ctx):
+def _deploy_impl(ctx):
     binary = ctx.attr.binary
     binary_default = binary[DefaultInfo]
     binary_executable = binary_default.files_to_run.executable
@@ -69,10 +69,10 @@ echo "== If needed, remove existing binary =="
 ssh "${{BOARD_USER}}@${{BOARD_HOST}}" -- "cd ${{REMOTE_DIR}} && rm -rf ${{BINARY_NAME}}"
 
 echo "== Deploying ${{BINARY_PACKAGE}}/${{BINARY_NAME}} to ${{BOARD_USER}}@${{BOARD_HOST}}:${{REMOTE_BIN}} =="
-scp "$BINARY" "${{BOARD_USER}}@${{BOARD_HOST}}:${{REMOTE_BIN}}"
+scp "$BINARY" "${{BOARD_USER}}@${{BOARD_HOST}}:${{REMOTE_BIN}} && chmod +x ${{REMOTE_BIN}}"
 
-echo "== Running on board =="
-ssh "${{BOARD_USER}}@${{BOARD_HOST}}" -- "chmod +x ${{REMOTE_BIN}} && ${{REMOTE_BIN}} \"$@\""
+#echo "== Running on board =="
+#ssh "${{BOARD_USER}}@${{BOARD_HOST}}" -- "chmod +x ${{REMOTE_BIN}} && ${{REMOTE_BIN}} \"$@\""
 """.format(
         remote_dir = ctx.attr.remote_dir,
         binary_package = binary_package,
@@ -93,14 +93,14 @@ ssh "${{BOARD_USER}}@${{BOARD_HOST}}" -- "chmod +x ${{REMOTE_BIN}} && ${{REMOTE_
         runfiles = runfiles,
     )]
 
-remote_run = rule(
-    implementation = _remote_run_impl,
+deploy = rule(
+    implementation = _deploy_impl,
     attrs = {
         "binary": attr.label(
             mandatory = True,
             executable = True,
             cfg = "target",
-            doc = "Executable target to deploy and run on the remote board.",
+            doc = "Executable target to deploy on the remote board.",
         ),
         "remote_dir": attr.string(
             default = "~/homebot/bin",
@@ -108,5 +108,5 @@ remote_run = rule(
         ),
     },
     executable = True,
-    doc = "Builds a binary and runs it on a remote board via scp/ssh.",
+    doc = "Builds a binary and deploys it on a remote board via scp/ssh.",
 )
