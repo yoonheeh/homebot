@@ -34,6 +34,7 @@ struct RobotPose {
     double x = 0.0;
     double y = 0.0;
     double theta = 0.0;
+    uint64_t estimated_at_us = 0; // Host steady_clock timestamp in microseconds
 };
 
 // Standard CRC16-CCITT helper

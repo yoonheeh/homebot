@@ -3,8 +3,12 @@
 #include <atomic>
 #include <mutex>
 #include <cmath>
+#include <chrono>
 #include "TelemetryDefs.hpp"
 #include "TelemetryQueue.hpp"
+#include "opentelemetry/trace/provider.h"
+#include "opentelemetry/trace/span.h"
+#include "opentelemetry/trace/tracer.h"
 
 // Define PI locally for C++17 compatibility
 constexpr double PI = 3.14159265358979323846;
@@ -67,9 +71,15 @@ private:
         }
     }
 
+    // Cached tracer instance for high-frequency zero-overhead tracing
+    opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> tracer_;
+
 public:
     explicit StateEstimator(TelemetryQueue<EncoderIMUTelemetry>& rx_queue, RobotConfig config = RobotConfig{})
-        : rx_queue_(rx_queue), config_(config) {}
+        : rx_queue_(rx_queue), config_(config) {
+        auto provider = opentelemetry::trace::Provider::GetTracerProvider();
+        tracer_ = provider->GetTracer("state_estimator");
+    }
 
     ~StateEstimator() {
         stop();
@@ -91,6 +101,21 @@ public:
 
     // Process a single telemetry packet and update EKF
     void process_telemetry(const EncoderIMUTelemetry& tel) {
+        auto span = tracer_->StartSpan("process_telemetry");
+
+        // Set rich input telemetry attributes on the span
+        span->SetAttribute("telemetry.timestamp_us", tel.timestamp_us);
+        span->SetAttribute("telemetry.count_fl", tel.count_fl);
+        span->SetAttribute("telemetry.count_rl", tel.count_rl);
+        span->SetAttribute("telemetry.count_fr", tel.count_fr);
+        span->SetAttribute("telemetry.count_rr", tel.count_rr);
+        span->SetAttribute("telemetry.accel_x", tel.accel_x);
+        span->SetAttribute("telemetry.accel_y", tel.accel_y);
+        span->SetAttribute("telemetry.accel_z", tel.accel_z);
+        span->SetAttribute("telemetry.gyro_x", tel.gyro_x);
+        span->SetAttribute("telemetry.gyro_y", tel.gyro_y);
+        span->SetAttribute("telemetry.gyro_z", tel.gyro_z);
+
         if (!initialized_) {
             last_timestamp_us_ = tel.timestamp_us;
             last_left_ticks_ = (tel.count_fl + tel.count_rl) / 2.0;
@@ -99,7 +124,15 @@ public:
             
             std::lock_guard<std::mutex> lock(pose_mutex_);
             pose_ = {0.0, 0.0, 0.0};
+            pose_.estimated_at_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
             initialized_ = true;
+
+            span->SetAttribute("pose.initialization", true);
+            span->SetAttribute("pose.x", 0.0);
+            span->SetAttribute("pose.y", 0.0);
+            span->SetAttribute("pose.theta", 0.0);
+            span->End();
             return;
         }
 
@@ -117,6 +150,9 @@ public:
             last_timestamp_us_ = tel.timestamp_us;
             last_left_ticks_ = (tel.count_fl + tel.count_rl) / 2.0;
             last_right_ticks_ = (tel.count_fr + tel.count_rr) / 2.0;
+
+            span->SetAttribute("pose.error", "invalid_dt");
+            span->End();
             return;
         }
 
@@ -127,6 +163,9 @@ public:
             last_timestamp_us_ = tel.timestamp_us;
             last_left_ticks_ = (tel.count_fl + tel.count_rl) / 2.0;
             last_right_ticks_ = (tel.count_fr + tel.count_rr) / 2.0;
+
+            span->SetAttribute("pose.error", "invalid_geometry_or_floats");
+            span->End();
             return;
         }
 
@@ -238,7 +277,16 @@ public:
             pose_.x = est_x;
             pose_.y = est_y;
             pose_.theta = est_theta;
+            pose_.estimated_at_us = std::chrono::duration_cast<std::chrono::microseconds>(
+                std::chrono::steady_clock::now().time_since_epoch()).count();
         }
+
+        // Set output pose attributes on the span and end it
+        span->SetAttribute("pose.initialization", false);
+        span->SetAttribute("pose.x", est_x);
+        span->SetAttribute("pose.y", est_y);
+        span->SetAttribute("pose.theta", est_theta);
+        span->End();
     }
 
     RobotPose get_pose() {
