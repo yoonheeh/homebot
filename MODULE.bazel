@@ -1,4 +1,7 @@
-module(name = "homebot", version = "0.1.0")
+module(
+    name = "homebot",
+    version = "0.1.0",
+)
 
 # C++ build dependencies only.
 # Python is managed by uv (pyproject.toml + uv.lock), NOT Bazel — see ADR-001 in NOTES.md.
@@ -11,7 +14,7 @@ bazel_dep(name = "rules_shell", version = "0.6.1")
 bazel_dep(name = "toolchains_llvm", version = "1.8.0")
 
 # Pinned aarch64 Linux sysroot (target headers + libc/libstdc++) for cross-compilation.
-# Debian Stretch (glibc 2.24) — older than the board's Ubuntu 22.04 (glibc 2.35),
+# Debian Bullseye (glibc 2.31) — older than the board's Ubuntu 22.04 (glibc 2.35),
 # so binaries built against it run on the board. See ADR-001.
 http_archive = use_repo_rule("@bazel_tools//tools/build_defs/repo:http.bzl", "http_archive")
 
@@ -24,8 +27,8 @@ filegroup(
     visibility = ["//visibility:public"],
 )
 """,
-    sha256 = "e39b700d8858d18868544c8c84922f6adfa8419f3f42471b92024ba38eff7aca",
-    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/2202c161310ffde63729f29d27fe7bb24a0bc540/debian_stretch_arm64_sysroot.tar.xz"],
+    sha256 = "d303cf3faf7804c9dd24c9b6b167d0345d41d7fe4bfb7d34add3ab342f6a236c",
+    urls = ["https://commondatastorage.googleapis.com/chrome-linux-sysroot/toolchain/906cc7c6bf47d4bd969a3221fc0602c6b3153caa/debian_bullseye_arm64_sysroot.tar.xz"],
 )
 
 llvm = use_extension("@toolchains_llvm//toolchain/extensions:llvm.bzl", "llvm")
@@ -47,3 +50,9 @@ use_repo(llvm, "llvm_toolchain")
 
 # Register the toolchains so Bazel can resolve them (incl. the aarch64 cross target).
 register_toolchains("@llvm_toolchain//:all")
+
+# OpenTelemetry SDK
+bazel_dep(name = "opentelemetry-cpp", version = "1.27.0")
+
+# Google Tests
+bazel_dep(name = "googletest", version = "1.17.0.bcr.2")

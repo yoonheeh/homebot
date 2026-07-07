@@ -1,4 +1,4 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
 load("//scripts:deploy.bzl", "deploy")
 
 cc_library(
@@ -9,13 +9,31 @@ cc_library(
 )
 
 cc_binary(
-    name = "pico_interface",
+    name = "state_estimator",
     srcs = ["main.cpp"],
     copts = ["-std=c++20"],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
     deps = [
         ":pico_interface_lib",
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_test(
+    name = "fake_test",
+    srcs = ["tests/fake_test.cpp"],
+    copts = ["-std=c++20"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":pico_interface_lib",
+        "@googletest//:gtest_main",
+        "@opentelemetry-cpp//api",
+        "@opentelemetry-cpp//exporters/memory:in_memory_span_exporter",
+        "@opentelemetry-cpp//exporters/ostream:ostream_span_exporter",
+        "@opentelemetry-cpp//exporters/otlp:otlp_http_exporter",
+        "@opentelemetry-cpp//sdk:headers",
+        "@opentelemetry-cpp//sdk/src/metrics:metrics",
     ],
 )
 
@@ -44,17 +62,17 @@ cc_binary(
     name = "calibrate_encoders",
     srcs = ["calibrate_encoders.cpp"],
     copts = ["-std=c++20"],
+    data = [":control"],
     linkopts = ["-pthread"],
     visibility = ["//visibility:public"],
     deps = [
         ":pico_interface_lib",
     ],
-    data = [":control"],
 )
 
 deploy(
     name = "deploy_state_estimator",
-    binary = ":pico_interface",
+    binary = ":state_estimator",
 )
 
 deploy(

@@ -30,12 +30,19 @@ void pose_printer_thread_func(StateEstimator& estimator, std::atomic<bool>& run_
     while (run_printer) {
         sleep(1); // 1Hz output
         RobotPose pose = estimator.get_pose();
+        uint64_t now_us = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        double latency_ms = 0.0;
+        if (pose.estimated_at_us > 0) {
+            latency_ms = (now_us - pose.estimated_at_us) / 1000.0;
+        }
         std::clog << "\n================ ESTIMATED ROBOT POSE (1Hz) ================\n";
         std::clog << std::fixed << std::setprecision(4);
         std::clog << "Pose X     -> " << std::setw(8) << pose.x << " m\n";
         std::clog << "Pose Y     -> " << std::setw(8) << pose.y << " m\n";
         std::clog << "Pose Theta -> " << std::setw(8) << pose.theta << " rad (" 
                   << std::setw(6) << std::setprecision(2) << (pose.theta * 180.0 / PI) << " deg)\n";
+        std::clog << "Latency    -> " << std::setw(8) << std::setprecision(2) << latency_ms << " ms\n";
         std::clog << "============================================================\n\n";
     }
 }
@@ -46,7 +53,13 @@ void pose_publisher_thread_func(StateEstimator& estimator, std::atomic<bool>& ru
         // 20Hz output
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
         RobotPose pose = estimator.get_pose();
-        std::cout << pose.x << "," << pose.y << "," << pose.theta << std::endl;
+        uint64_t now_us = std::chrono::duration_cast<std::chrono::microseconds>(
+            std::chrono::steady_clock::now().time_since_epoch()).count();
+        double latency_ms = 0.0;
+        if (pose.estimated_at_us > 0) {
+            latency_ms = (now_us - pose.estimated_at_us) / 1000.0;
+        }
+        std::cout << pose.x << "," << pose.y << "," << pose.theta << "," << latency_ms << std::endl;
     }
 }
 
