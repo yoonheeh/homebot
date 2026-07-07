@@ -11,7 +11,7 @@ Host-side C++ software that talks to the Raspberry Pi Pico over USB serial, fuse
   - Loads `data/robot_calibration.txt` (or uses defaults).
   - Starts the `PicoInterface` reader and `StateEstimator` EKF consumer.
   - Streams `x,y,theta` poses on stdout at 20Hz and writes human-readable logs to `logs/estimator.log`.
-- `control.cpp` — sends a single `VelocityTarget` command (left/right rad/s) to the Pico over USB serial.
+- `main.cpp` — sends a single `VelocityTarget` command (left/right rad/s) to the Pico over USB serial.
 - `calibrate_encoders.cpp` — interactive straight-line calibration tool that computes an odometry scale factor.
 - `test_suite.cpp` — unit tests covering telemetry queue stress, serialization, and EKF math.
 
