@@ -8,6 +8,13 @@ cc_library(
     visibility = ["//visibility:public"],
 )
 
+cc_library(
+    name = "control_lib",
+    hdrs = glob(["include/pico_interface/**/*.hpp"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
 cc_binary(
     name = "state_estimator",
     srcs = ["main.cpp"],
@@ -49,12 +56,28 @@ cc_binary(
 )
 
 cc_binary(
-    name = "control",
-    srcs = ["control.cpp"],
+    name = "control",  #TODO: rename?
+    srcs = ["main.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":control_lib",
+        ":pico_interface_lib",
+        "@cppzmq",
+        "@libzmq",
+    ],
+)
+
+cc_test(
+    name = "test_controller",
+    srcs = ["tests/test_controller.cpp"],
     copts = ["-std=c++20"],
     visibility = ["//visibility:public"],
     deps = [
+        ":control_lib",
         ":pico_interface_lib",
+        "@googletest//:gtest_main",
     ],
 )
 
@@ -68,6 +91,23 @@ cc_binary(
     deps = [
         ":pico_interface_lib",
     ],
+)
+
+cc_binary(
+    name = "test_client",
+    srcs = ["tests/test_client.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@cppzmq",
+        "@libzmq",
+    ],
+)
+
+deploy(
+    name = "deploy_test_client",
+    binary = ":test_client",
 )
 
 deploy(

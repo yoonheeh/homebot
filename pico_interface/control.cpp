@@ -6,6 +6,7 @@
 #include <cstring>
 #include <termios.h>
 #include <fcntl.h>
+#include <zmq.hpp>
 #include "pico_interface/TelemetryDefs.hpp"
 
 // Base speed variables (adjust these to fit your robot's physical capabilities)
@@ -58,6 +59,10 @@ int main(int argc, char* argv[]) {
         std::cerr << "Failed to open serial port. Exiting.\n";
         return 1;
     }
+    
+    // ZMQ setup
+    zmq::context_t context(1); 
+    zmq::socket_t publisher(context, zmq::socket_type::pub);
 
     // Put terminal into raw, non-blocking mode
     set_terminal_raw_mode(true);
