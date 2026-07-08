@@ -1,0 +1,45 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library", "cc_test")
+load("//scripts:deploy.bzl", "deploy")
+
+cc_library(
+    name = "collector_lib",
+    hdrs = glob(["include/data_collector/**/*.hpp"]),
+    includes = ["include"],
+    visibility = ["//visibility:public"],
+)
+
+cc_binary(
+    name = "data_collector",
+    srcs = [
+        "main.cpp",
+    ],
+    copts = [
+        "-std=c++17",
+        "-O3",
+    ],
+    linkstatic = True,
+    deps = [
+        ":collector_lib",
+        "//third_party/depthai:depthai-core",
+        "@cppzmq",
+        "@libzmq",
+        "@opencv",
+    ],
+)
+
+cc_test(
+    name = "test_collector",
+    srcs = [
+        "tests/test_collector.cpp",
+    ],
+    deps = [
+        ":collector_lib",
+        "@opencv",
+        "@googletest//:gtest_main",
+    ],
+)
+
+deploy(
+    name = "deploy_data_collector",
+    binary = ":data_collector",
+)

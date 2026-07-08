@@ -9,7 +9,7 @@ int main(int argc, char *argv[]) {
   int fd = configure_serial("/dev/ttyACM0");  // Handle errors appropriately
   zmq::context_t context(1);
   zmq::socket_t zmq_pub(context, zmq::socket_type::pub);
-  zmq_pub.bind("tcp://*:5556");
+  zmq_pub.bind("ipc:///tmp/control_command.ipc");
 
   RawTerminalGuard
       terminal_guard;  // Automatically sets raw mode, cleans up on exit
