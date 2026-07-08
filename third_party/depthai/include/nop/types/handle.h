@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_HANDLE_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_HANDLE_H_
 
+#include <nop/base/utility.h>
+
 #include <functional>
 #include <type_traits>
-
-#include <nop/base/utility.h>
 
 namespace nop {
 
@@ -34,7 +34,8 @@ namespace nop {
 //   2. Sharing of resource objects between processes, when supported.
 //
 
-// Reference type used by the Reader/Writer to reference handles in serialized form.
+// Reference type used by the Reader/Writer to reference handles in serialized
+// form.
 using HandleReference = std::int64_t;
 enum : HandleReference { kEmptyHandleReference = -1 };
 
@@ -50,14 +51,14 @@ struct DefaultHandlePolicy {
   static constexpr T Default() { return Empty; }
 
   // Returns true if the handle is not empty.
-  static bool IsValid(const T& value) { return value != Empty; }
+  static bool IsValid(const T &value) { return value != Empty; }
 
   // Closes the handle and assigns the empty value.
-  static void Close(T* value) { *value = Empty; }
+  static void Close(T *value) { *value = Empty; }
 
   // Releases the value from the handle and assigns the empty value in its
   // place. The returned value is no longer managed by the handle.
-  static T Release(T* value) {
+  static T Release(T *value) {
     T temp{Empty};
     std::swap(*value, temp);
     return temp;
@@ -78,14 +79,14 @@ class Handle {
   using Type = typename Policy::Type;
 
   template <typename T, typename Enabled = EnableIfConvertible<T, Type>>
-  explicit Handle(T&& value) : value_{std::forward<T>(value)} {}
+  explicit Handle(T &&value) : value_{std::forward<T>(value)} {}
 
   Handle() : value_{Policy::Default()} {}
-  Handle(const Handle&) = default;
-  Handle& operator=(const Handle&) = default;
+  Handle(const Handle &) = default;
+  Handle &operator=(const Handle &) = default;
 
   explicit operator bool() const { return Policy::IsValid(value_); }
-  const Type& get() const { return value_; }
+  const Type &get() const { return value_; }
 
  protected:
   Type value_;
@@ -100,13 +101,13 @@ class UniqueHandle : public Handle<Policy> {
   using Base = Handle<Policy>;
 
   template <typename T, typename Enabled = EnableIfConvertible<T, Type>>
-  explicit UniqueHandle(T&& value) : Base{std::forward<T>(value)} {}
+  explicit UniqueHandle(T &&value) : Base{std::forward<T>(value)} {}
 
   UniqueHandle() = default;
-  UniqueHandle(UniqueHandle&& other) : UniqueHandle() {
+  UniqueHandle(UniqueHandle &&other) : UniqueHandle() {
     *this = std::move(other);
   }
-  UniqueHandle& operator=(UniqueHandle&& other) {
+  UniqueHandle &operator=(UniqueHandle &&other) {
     if (this != &other) {
       close();
       std::swap(this->value_, other.value_);
@@ -120,8 +121,8 @@ class UniqueHandle : public Handle<Policy> {
   Type release() { return Policy::Release(&this->value_); }
 
  private:
-  UniqueHandle(const UniqueHandle&) = delete;
-  UniqueHandle& operator=(const UniqueHandle&) = delete;
+  UniqueHandle(const UniqueHandle &) = delete;
+  UniqueHandle &operator=(const UniqueHandle &) = delete;
 };
 
 }  // namespace nop

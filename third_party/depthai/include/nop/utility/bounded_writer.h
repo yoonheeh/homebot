@@ -17,13 +17,13 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_BOUNDED_WRITER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_BOUNDED_WRITER_H_
 
-#include <cstddef>
-#include <cstdint>
-#include <iterator>
-
 #include <nop/base/encoding.h>
 #include <nop/base/handle.h>
 #include <nop/base/utility.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <iterator>
 
 namespace nop {
 
@@ -36,11 +36,11 @@ template <typename Writer>
 class BoundedWriter {
  public:
   constexpr BoundedWriter() = default;
-  constexpr BoundedWriter(const BoundedWriter&) = default;
-  constexpr BoundedWriter(Writer* writer, std::size_t size)
+  constexpr BoundedWriter(const BoundedWriter &) = default;
+  constexpr BoundedWriter(Writer *writer, std::size_t size)
       : writer_{writer}, size_{size} {}
 
-  constexpr BoundedWriter& operator=(const BoundedWriter&) = default;
+  constexpr BoundedWriter &operator=(const BoundedWriter &) = default;
 
   constexpr Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
@@ -52,8 +52,7 @@ class BoundedWriter {
   constexpr Status<void> Write(std::uint8_t byte) {
     if (index_ < size_) {
       auto status = writer_->Write(byte);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       index_ += 1;
       return {};
@@ -63,17 +62,15 @@ class BoundedWriter {
   }
 
   template <typename T, typename Enabel = EnableIfArithmetic<T>>
-  constexpr Status<void> Write(const T* begin, const T* end) {
+  constexpr Status<void> Write(const T *begin, const T *end) {
     const std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
 
-    if (length_bytes > (size_ - index_))
-      return ErrorStatus::WriteLimitReached;
+    if (length_bytes > (size_ - index_)) return ErrorStatus::WriteLimitReached;
 
     auto status = writer_->Write(begin, end);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     index_ += length_bytes;
     return {};
@@ -81,12 +78,10 @@ class BoundedWriter {
 
   constexpr Status<void> Skip(std::size_t padding_bytes,
                               std::uint8_t padding_value = 0x00) {
-    if (padding_bytes > (size_ - index_))
-      return ErrorStatus::WriteLimitReached;
+    if (padding_bytes > (size_ - index_)) return ErrorStatus::WriteLimitReached;
 
     auto status = writer_->Skip(padding_bytes, padding_value);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     index_ += padding_bytes;
     return {};
@@ -96,15 +91,14 @@ class BoundedWriter {
   constexpr Status<void> WritePadding(std::uint8_t padding_value = 0x00) {
     const std::size_t padding_bytes = size_ - index_;
     auto status = writer_->Skip(padding_bytes, padding_value);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     index_ += padding_bytes;
     return {};
   }
 
   template <typename HandleType>
-  constexpr Status<HandleType> PushHandle(const HandleType& handle) {
+  constexpr Status<HandleType> PushHandle(const HandleType &handle) {
     return writer_->PushHandle(handle);
   }
 
@@ -112,7 +106,7 @@ class BoundedWriter {
   constexpr std::size_t capacity() const { return size_; }
 
  private:
-  Writer* writer_{nullptr};
+  Writer *writer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

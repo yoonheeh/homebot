@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_READER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_READER_H_
 
+#include <nop/base/encoding.h>
+#include <nop/base/utility.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-
-#include <nop/base/encoding.h>
-#include <nop/base/utility.h>
 
 namespace nop {
 
@@ -35,16 +35,16 @@ namespace nop {
 class BufferReader {
  public:
   BufferReader() = default;
-  BufferReader(const BufferReader&) = default;
+  BufferReader(const BufferReader &) = default;
   template <std::size_t Size>
   BufferReader(const std::uint8_t (&buffer)[Size])
       : buffer_{buffer}, size_{Size} {}
-  BufferReader(const std::uint8_t* buffer, std::size_t size)
+  BufferReader(const std::uint8_t *buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
-  BufferReader(const void* buffer, std::size_t size)
-      : buffer_{static_cast<const std::uint8_t*>(buffer)}, size_{size} {}
+  BufferReader(const void *buffer, std::size_t size)
+      : buffer_{static_cast<const std::uint8_t *>(buffer)}, size_{size} {}
 
-  BufferReader& operator=(const BufferReader&) = default;
+  BufferReader &operator=(const BufferReader &) = default;
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
@@ -53,10 +53,10 @@ class BufferReader {
       return {};
   }
 
-  Status<void> Read(std::uint8_t* byte) { return Read(byte, byte + 1); }
+  Status<void> Read(std::uint8_t *byte) { return Read(byte, byte + 1); }
 
   template <typename T, typename Enable = EnableIfArithmetic<T>>
-  Status<void> Read(T* begin, T* end) {
+  Status<void> Read(T *begin, T *end) {
     constexpr std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
@@ -77,7 +77,7 @@ class BufferReader {
   std::size_t capacity() const { return size_; }
 
  private:
-  const std::uint8_t* buffer_{nullptr};
+  const std::uint8_t *buffer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

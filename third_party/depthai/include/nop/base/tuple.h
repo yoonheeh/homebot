@@ -17,11 +17,11 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_TUPLE_H_
 #define LIBNOP_INCLUDE_NOP_BASE_TUPLE_H_
 
-#include <tuple>
-#include <type_traits>
-
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
+
+#include <tuple>
+#include <type_traits>
 
 namespace nop {
 
@@ -38,11 +38,11 @@ template <typename... Types>
 struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   using Type = std::tuple<Types...>;
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Array;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<SizeType>::Size(sizeof...(Types)) +
            Size(value, Index<sizeof...(Types)>{});
@@ -53,8 +53,9 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Writer>
-  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
+                                             const Type &value,
+                                             Writer *writer) {
     auto status = Encoding<SizeType>::Write(sizeof...(Types), writer);
     if (!status)
       return status;
@@ -63,8 +64,8 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
+                                            Type *value, Reader *reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
@@ -81,47 +82,46 @@ struct Encoding<std::tuple<Types...>> : EncodingIO<std::tuple<Types...>> {
       std::remove_reference_t<std::tuple_element_t<Index, Type>>>;
 
   // Terminates template recursion.
-  static constexpr std::size_t Size(const Type& /*value*/, Index<0>) {
+  static constexpr std::size_t Size(const Type & /*value*/, Index<0>) {
     return 0;
   }
 
   // Recursively determines the size of all tuple elements.
   template <std::size_t index>
-  static constexpr std::size_t Size(const Type& value, Index<index>) {
+  static constexpr std::size_t Size(const Type &value, Index<index>) {
     return Size(value, Index<index - 1>{}) +
            Encoding<ElementType<index - 1>>::Size(std::get<index - 1>(value));
   }
 
   // Terminates template recursion.
   template <typename Writer>
-  static constexpr Status<void> WriteElements(const Type& /*value*/, Writer* /*writer*/,
-                                    Index<0>) {
+  static constexpr Status<void> WriteElements(const Type & /*value*/,
+                                              Writer * /*writer*/, Index<0>) {
     return {};
   }
 
   // Recursively writes tuple elements to the writer.
   template <std::size_t index, typename Writer>
-  static constexpr Status<void> WriteElements(const Type& value, Writer* writer,
-                                    Index<index>) {
+  static constexpr Status<void> WriteElements(const Type &value, Writer *writer,
+                                              Index<index>) {
     auto status = WriteElements(value, writer, Index<index - 1>{});
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return Encoding<ElementType<index - 1>>::Write(std::get<index - 1>(value),
                                                    writer);
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadElements(Type* /*value*/, Reader* /*reader*/,
-                                   Index<0>) {
+  static constexpr Status<void> ReadElements(Type * /*value*/,
+                                             Reader * /*reader*/, Index<0>) {
     return {};
   }
 
   template <std::size_t index, typename Reader>
-  static constexpr Status<void> ReadElements(Type* value, Reader* reader, Index<index>) {
+  static constexpr Status<void> ReadElements(Type *value, Reader *reader,
+                                             Index<index>) {
     auto status = ReadElements(value, reader, Index<index - 1>{});
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return Encoding<ElementType<index - 1>>::Read(&std::get<index - 1>(*value),
                                                   reader);

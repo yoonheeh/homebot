@@ -6,13 +6,13 @@
 namespace dai {
 namespace node {
 class Display : public dai::NodeCRTP<ThreadedHostNode, Display> {
-   private:
-    std::string name;
+ private:
+  std::string name;
 
-   public:
-    explicit Display(std::string name = "Display");
-    Input input{*this, {}};
-    void run() override;
+ public:
+  explicit Display(std::string name = "Display");
+  Input input{*this, {}};
+  void run() override;
 };
 }  // namespace node
 }  // namespace dai

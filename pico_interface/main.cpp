@@ -1,30 +1,32 @@
 // main.cpp
-#include "pico_interface/TelemetryDefs.hpp"
-#include "pico_interface/TeleopController.hpp"
-#include "pico_interface/HardwareImpl.hpp"
 #include <iostream>
 
-int main(int argc, char* argv[]) {
-    int fd = configure_serial("/dev/ttyACM0"); // Handle errors appropriately
-    zmq::context_t context(1); 
-    zmq::socket_t zmq_pub(context, zmq::socket_type::pub);
-    zmq_pub.bind("tcp://*:5556");
+#include "pico_interface/HardwareImpl.hpp"
+#include "pico_interface/TelemetryDefs.hpp"
+#include "pico_interface/TeleopController.hpp"
 
-    RawTerminalGuard terminal_guard; // Automatically sets raw mode, cleans up on exit
-    KeyboardInput keyboard;
-    SerialMotorDriver motors(fd);
-    ZmqTelemetryPublisher telemetry(zmq_pub);
+int main(int argc, char *argv[]) {
+  int fd = configure_serial("/dev/ttyACM0");  // Handle errors appropriately
+  zmq::context_t context(1);
+  zmq::socket_t zmq_pub(context, zmq::socket_type::pub);
+  zmq_pub.bind("tcp://*:5556");
 
-    TeleopController robot(keyboard, motors, telemetry);
+  RawTerminalGuard
+      terminal_guard;  // Automatically sets raw mode, cleans up on exit
+  KeyboardInput keyboard;
+  SerialMotorDriver motors(fd);
+  ZmqTelemetryPublisher telemetry(zmq_pub);
 
-    std::clog << "Control Mode Active! Use WASD to drive, Q to quit.\n";
+  TeleopController robot(keyboard, motors, telemetry);
 
-    while (robot.isRunning()) {
-        robot.step();
-        usleep(20000); // 50Hz
-    }
+  std::clog << "Control Mode Active! Use WASD to drive, Q to quit.\n";
 
-    robot.stopRobot();
-    close(fd);
-    return 0;
+  while (robot.isRunning()) {
+    robot.step();
+    usleep(20000);  // 50Hz
+  }
+
+  robot.stopRobot();
+  close(fd);
+  return 0;
 }

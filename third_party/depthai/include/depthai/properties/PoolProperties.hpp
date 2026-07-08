@@ -11,29 +11,30 @@ namespace dai {
  * Specify PoolProperties options such as pool uri, pool name, ...
  */
 struct PoolProperties : PropertiesSerializable<Properties, PoolProperties> {
-    /**
-     * Number of messages in pool
-     */
-    std::optional<int> numMessages = std::nullopt;
+  /**
+   * Number of messages in pool
+   */
+  std::optional<int> numMessages = std::nullopt;
 
-    /**
-     * Size of data allocated for each message
-     */
-    std::optional<std::int64_t> maxMessageSize = std::nullopt;
+  /**
+   * Size of data allocated for each message
+   */
+  std::optional<std::int64_t> maxMessageSize = std::nullopt;
 
-    /**
-     * Optional datatype of messages in the pool
-     */
-    std::optional<DatatypeEnum> datatype = std::nullopt;
+  /**
+   * Optional datatype of messages in the pool
+   */
+  std::optional<DatatypeEnum> datatype = std::nullopt;
 
-    /**
-     * Which processor should hold the pool
-     */
-    std::optional<ProcessorType> processor = std::nullopt;
+  /**
+   * Which processor should hold the pool
+   */
+  std::optional<ProcessorType> processor = std::nullopt;
 
-    ~PoolProperties() override;
+  ~PoolProperties() override;
 };
 
-DEPTHAI_SERIALIZE_EXT(PoolProperties, numMessages, maxMessageSize, datatype, processor);
+DEPTHAI_SERIALIZE_EXT(PoolProperties, numMessages, maxMessageSize, datatype,
+                      processor);
 
 }  // namespace dai

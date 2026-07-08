@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_THREAD_LOCAL_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_THREAD_LOCAL_H_
 
+#include <nop/types/optional.h>
+
 #include <cstdint>
 #include <memory>
-
-#include <nop/types/optional.h>
 
 namespace nop {
 
@@ -51,35 +51,35 @@ class ThreadLocal {
   using ValueType = T;
 
   template <typename... Args>
-  ThreadLocal(Args&&... args) : value_{Setup(std::forward<Args>(args)...)} {}
+  ThreadLocal(Args &&...args) : value_{Setup(std::forward<Args>(args)...)} {}
 
   template <typename... Args>
-  void Initialize(Args&&... args) {
+  void Initialize(Args &&...args) {
     Setup(std::forward<Args>(args)...);
   }
 
-  ValueType& Get() { return value_->get(); }
+  ValueType &Get() { return value_->get(); }
 
   void Clear() { value_->clear(); }
 
  private:
-  Optional<ValueType>* value_;
+  Optional<ValueType> *value_;
 
   template <typename... Args>
-  static Optional<ValueType>* Setup(Args&&... args) {
-    Optional<ValueType>* value = GetValue();
+  static Optional<ValueType> *Setup(Args &&...args) {
+    Optional<ValueType> *value = GetValue();
     if (value->empty())
       *value = Optional<ValueType>(std::forward<Args>(args)...);
     return value;
   }
 
-  static Optional<ValueType>* GetValue() {
+  static Optional<ValueType> *GetValue() {
     static thread_local Optional<ValueType> value;
     return &value;
   }
 
-  ThreadLocal(const ThreadLocal&) = delete;
-  void operator=(const ThreadLocal&) = delete;
+  ThreadLocal(const ThreadLocal &) = delete;
+  void operator=(const ThreadLocal &) = delete;
 };
 
 }  // namespace nop

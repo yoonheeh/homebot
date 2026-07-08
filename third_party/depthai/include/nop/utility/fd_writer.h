@@ -18,12 +18,11 @@
 #define LIBNOP_INCLUDE_NOP_UTILITY_FD_WRITER_H_
 
 #include <errno.h>
+#include <nop/status.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <utility>
-
-#include <nop/status.h>
 
 namespace nop {
 
@@ -31,13 +30,13 @@ class FdWriter {
  public:
   FdWriter() = default;
   FdWriter(int fd) : fd_{fd} {}
-  FdWriter(const FdWriter&) = delete;
-  FdWriter(FdWriter&& other) { *this = std::move(other); }
+  FdWriter(const FdWriter &) = delete;
+  FdWriter(FdWriter &&other) { *this = std::move(other); }
 
   ~FdWriter() { Clear(); }
 
-  FdWriter& operator=(const FdWriter&) = delete;
-  FdWriter& operator=(FdWriter&& other) {
+  FdWriter &operator=(const FdWriter &) = delete;
+  FdWriter &operator=(FdWriter &&other) {
     if (this != &other) {
       Clear();
       std::swap(fd_, other.fd_);
@@ -72,14 +71,13 @@ class FdWriter {
     }
   }
 
-  Status<void> Write(const void* begin, const void* end) {
-    const std::uint8_t* begin_byte = static_cast<const std::uint8_t*>(begin);
-    const std::uint8_t* end_byte = static_cast<const std::uint8_t*>(end);
+  Status<void> Write(const void *begin, const void *end) {
+    const std::uint8_t *begin_byte = static_cast<const std::uint8_t *>(begin);
+    const std::uint8_t *end_byte = static_cast<const std::uint8_t *>(end);
 
-    for (const std::uint8_t* byte = begin_byte; byte < end_byte; byte++) {
+    for (const std::uint8_t *byte = begin_byte; byte < end_byte; byte++) {
       auto status = Write(*byte);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};

@@ -3,8 +3,8 @@
 namespace dai {
 
 struct ProfilingData {
-    long long numBytesWritten;
-    long long numBytesRead;
+  long long numBytesWritten;
+  long long numBytesRead;
 };
 
 }  // namespace dai

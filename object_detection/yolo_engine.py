@@ -2,33 +2,108 @@ import cv2
 import numpy as np
 from rknnlite.api import RKNNLite
 
+
 class YoloEngine:
     # COCO class names
-    CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-               'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-               'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-               'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-               'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-               'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-               'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-               'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-               'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-               'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+    CLASSES = [
+        "person",
+        "bicycle",
+        "car",
+        "motorcycle",
+        "airplane",
+        "bus",
+        "train",
+        "truck",
+        "boat",
+        "traffic light",
+        "fire hydrant",
+        "stop sign",
+        "parking meter",
+        "bench",
+        "bird",
+        "cat",
+        "dog",
+        "horse",
+        "sheep",
+        "cow",
+        "elephant",
+        "bear",
+        "zebra",
+        "giraffe",
+        "backpack",
+        "umbrella",
+        "handbag",
+        "tie",
+        "suitcase",
+        "frisbee",
+        "skis",
+        "snowboard",
+        "sports ball",
+        "kite",
+        "baseball bat",
+        "baseball glove",
+        "skateboard",
+        "surfboard",
+        "tennis racket",
+        "bottle",
+        "wine glass",
+        "cup",
+        "fork",
+        "knife",
+        "spoon",
+        "bowl",
+        "banana",
+        "apple",
+        "sandwich",
+        "orange",
+        "broccoli",
+        "carrot",
+        "hot dog",
+        "pizza",
+        "donut",
+        "cake",
+        "chair",
+        "couch",
+        "potted plant",
+        "bed",
+        "dining table",
+        "toilet",
+        "tv",
+        "laptop",
+        "mouse",
+        "remote",
+        "keyboard",
+        "cell phone",
+        "microwave",
+        "oven",
+        "toaster",
+        "sink",
+        "refrigerator",
+        "book",
+        "clock",
+        "vase",
+        "scissors",
+        "teddy bear",
+        "hair drier",
+        "toothbrush",
+    ]
 
-    def __init__(self, model_path, input_size=(640, 640), conf_thresh=0.001, nms_thresh=0.45):
+    def __init__(
+        self, model_path, input_size=(640, 640), conf_thresh=0.001, nms_thresh=0.45
+    ):
         self.model_path = model_path
         self.input_size = input_size
         self.conf_thresh = conf_thresh
         self.nms_thresh = nms_thresh
         self.rknn = RKNNLite()
-        
+
         self._load_model()
 
     def _load_model(self):
         ret = self.rknn.load_rknn(self.model_path)
         if ret != 0:
             raise RuntimeError(f"Failed to load RKNN model (ret={ret})")
-        
+
         ret = self.rknn.init_runtime(core_mask=RKNNLite.NPU_CORE_AUTO)
         if ret != 0:
             raise RuntimeError(f"Failed to init RKNN runtime (ret={ret})")
@@ -51,10 +126,12 @@ class YoloEngine:
 
         if shape[::-1] != new_unpad:  # resize
             img = cv2.resize(img, new_unpad, interpolation=cv2.INTER_LINEAR)
-        
+
         top, bottom = int(round(dh - 0.1)), int(round(dh + 0.1))
         left, right = int(round(dw - 0.1)), int(round(dw + 0.1))
-        img = cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color)  # add border
+        img = cv2.copyMakeBorder(
+            img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=color
+        )  # add border
         return img, r, (dw, dh)
 
     def preprocess(self, img):
@@ -82,7 +159,7 @@ class YoloEngine:
 
         box_class_probs = input_data[..., 5:]
 
-        box_xy = input_data[..., :2]*2 - 0.5
+        box_xy = input_data[..., :2] * 2 - 0.5
 
         col = np.tile(np.arange(0, grid_w), grid_w).reshape(-1, grid_w)
         row = np.tile(np.arange(0, grid_h).reshape(-1, 1), grid_h)
@@ -90,9 +167,9 @@ class YoloEngine:
         row = row.reshape(grid_h, grid_w, 1, 1).repeat(3, axis=-2)
         grid = np.concatenate((col, row), axis=-1)
         box_xy += grid
-        box_xy *= int(self.input_size[0]/grid_h)
+        box_xy *= int(self.input_size[0] / grid_h)
 
-        box_wh = pow(input_data[..., 2:4]*2, 2)
+        box_wh = pow(input_data[..., 2:4] * 2, 2)
         box_wh = box_wh * anchors
 
         box = np.concatenate((box_xy, box_wh), axis=-1)
@@ -145,13 +222,22 @@ class YoloEngine:
             ovr = inter / (areas[i] + areas[order[1:]] - inter)
             inds = np.where(ovr <= self.nms_thresh)[0]
             order = order[inds + 1]
-        
+
         return np.array(keep)
 
     def post_process(self, outputs):
         masks = [[0, 1, 2], [3, 4, 5], [6, 7, 8]]
-        anchors = [[10, 13], [16, 30], [33, 23], [30, 61], [62, 45],
-                   [59, 119], [116, 90], [156, 198], [373, 326]]
+        anchors = [
+            [10, 13],
+            [16, 30],
+            [33, 23],
+            [30, 61],
+            [62, 45],
+            [59, 119],
+            [116, 90],
+            [156, 198],
+            [373, 326],
+        ]
 
         # Reshape like Rockchip does
         input_data = []
@@ -198,7 +284,7 @@ class YoloEngine:
         input_img, ratio, (dw, dh) = self.preprocess(img)
         outputs = self.rknn.inference(inputs=[input_img])
         boxes, classes, scores = self.post_process(outputs)
-        
+
         if boxes is not None:
             # Map boxes back to original image space
             # 1. Remove padding
@@ -206,7 +292,7 @@ class YoloEngine:
             boxes[:, [1, 3]] -= dh
             # 2. Rescale
             boxes /= ratio
-            
+
         return boxes, classes, scores
 
     def release(self):

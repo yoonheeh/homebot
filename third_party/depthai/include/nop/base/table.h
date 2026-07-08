@@ -61,11 +61,11 @@ namespace nop {
 
 template <typename Table>
 struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
-  static constexpr EncodingByte Prefix(const Table& /*value*/) {
+  static constexpr EncodingByte Prefix(const Table & /*value*/) {
     return EncodingByte::Table;
   }
 
-  static constexpr std::size_t Size(const Table& value) {
+  static constexpr std::size_t Size(const Table &value) {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<std::uint64_t>::Size(
                EntryListTraits<Table>::EntryList::Hash) +
@@ -79,24 +79,22 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Table& value,
-                                             Writer* writer) {
+                                             const Table &value,
+                                             Writer *writer) {
     auto status = Encoding<std::uint64_t>::Write(
         EntryListTraits<Table>::EntryList::Hash, writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     status = Encoding<SizeType>::Write(ActiveEntryCount(value, Index<Count>{}),
                                        writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return WriteEntries(value, writer, Index<Count>{});
   }
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Table* value, Reader* reader) {
+                                            Table *value, Reader *reader) {
     // Clear entries so that we can detect whether there are duplicate entries
     // for the same id during deserialization.
     ClearEntries(value, Index<Count>{});
@@ -110,8 +108,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
     SizeType count = 0;
     status = Encoding<SizeType>::Read(&count, reader);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return ReadEntries(value, count, reader);
   }
@@ -123,13 +120,13 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   using PointerAt =
       typename EntryListTraits<Table>::EntryList::template At<Index>;
 
-  static constexpr std::size_t ActiveEntryCount(const Table& /*value*/,
+  static constexpr std::size_t ActiveEntryCount(const Table & /*value*/,
                                                 Index<0>) {
     return 0;
   }
 
   template <std::size_t index>
-  static constexpr std::size_t ActiveEntryCount(const Table& value,
+  static constexpr std::size_t ActiveEntryCount(const Table &value,
                                                 Index<index>) {
     using Pointer = PointerAt<index - 1>;
     const std::size_t count = Pointer::Resolve(value) ? 1 : 0;
@@ -137,7 +134,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   }
 
   template <typename T, std::uint64_t Id>
-  static constexpr std::size_t Size(const Entry<T, Id, ActiveEntry>& entry) {
+  static constexpr std::size_t Size(const Entry<T, Id, ActiveEntry> &entry) {
     if (entry) {
       const std::size_t size = Encoding<T>::Size(entry.get());
       return Encoding<std::uint64_t>::Size(Id) +
@@ -149,40 +146,38 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
   template <typename T, std::uint64_t Id>
   static constexpr std::size_t Size(
-      const Entry<T, Id, DeletedEntry>& /*entry*/) {
+      const Entry<T, Id, DeletedEntry> & /*entry*/) {
     return 0;
   }
 
-  static constexpr std::size_t Size(const Table& /*value*/, Index<0>) {
+  static constexpr std::size_t Size(const Table & /*value*/, Index<0>) {
     return 0;
   }
 
   template <std::size_t index>
-  static constexpr std::size_t Size(const Table& value, Index<index>) {
+  static constexpr std::size_t Size(const Table &value, Index<index>) {
     using Pointer = PointerAt<index - 1>;
     return Size(value, Index<index - 1>{}) + Size(Pointer::Resolve(value));
   }
 
-  static void ClearEntries(Table* /*value*/, Index<0>) {}
+  static void ClearEntries(Table * /*value*/, Index<0>) {}
 
   template <std::size_t index>
-  static void ClearEntries(Table* value, Index<index>) {
+  static void ClearEntries(Table *value, Index<index>) {
     ClearEntries(value, Index<index - 1>{});
     PointerAt<index - 1>::Resolve(value)->clear();
   }
 
   template <typename T, std::uint64_t Id, typename Writer>
   static constexpr Status<void> WriteEntry(
-      const Entry<T, Id, ActiveEntry>& entry, Writer* writer) {
+      const Entry<T, Id, ActiveEntry> &entry, Writer *writer) {
     if (entry) {
       auto status = Encoding<std::uint64_t>::Write(Id, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       const SizeType size = Encoding<T>::Size(entry.get());
       status = Encoding<SizeType>::Write(size, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       // Use a BoundedWriter to track the number of bytes written. Since a few
       // encodings overestimate their size, the remaining bytes must be padded
@@ -195,8 +190,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       // buffer.
       BoundedWriter<Writer> bounded_writer{writer, size};
       status = Encoding<T>::Write(entry.get(), &bounded_writer);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       return bounded_writer.WritePadding();
     } else {
@@ -206,38 +200,36 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
   template <typename T, std::uint64_t Id, typename Writer>
   static constexpr Status<void> WriteEntry(
-      const Entry<T, Id, DeletedEntry>& /*entry*/, Writer* /*writer*/) {
+      const Entry<T, Id, DeletedEntry> & /*entry*/, Writer * /*writer*/) {
     return {};
   }
 
   template <typename Writer>
-  static constexpr Status<void> WriteEntries(const Table& /*value*/,
-                                             Writer* /*writer*/, Index<0>) {
+  static constexpr Status<void> WriteEntries(const Table & /*value*/,
+                                             Writer * /*writer*/, Index<0>) {
     return {};
   }
 
   template <std::size_t index, typename Writer>
-  static constexpr Status<void> WriteEntries(const Table& value, Writer* writer,
+  static constexpr Status<void> WriteEntries(const Table &value, Writer *writer,
                                              Index<index>) {
     auto status = WriteEntries(value, writer, Index<index - 1>{});
-    if (!status)
-      return status;
+    if (!status) return status;
 
     using Pointer = PointerAt<index - 1>;
     return WriteEntry(Pointer::Resolve(value), writer);
   }
 
   template <typename T, std::uint64_t Id, typename Reader>
-  static constexpr Status<void> ReadEntry(Entry<T, Id, ActiveEntry>* entry,
-                                          Reader* reader) {
+  static constexpr Status<void> ReadEntry(Entry<T, Id, ActiveEntry> *entry,
+                                          Reader *reader) {
     // At the beginning of reading the table the destination entries are
     // cleared. If an entry is not cleared here then more than one entry for
     // the same id was written in violation of the table protocol.
     if (entry->empty()) {
       SizeType size = 0;
       auto status = Encoding<SizeType>::Read(&size, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       // Default construct the entry;
       *entry = T{};
@@ -247,8 +239,7 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
       // container.
       BoundedReader<Reader> bounded_reader{reader, size};
       status = Encoding<T>::Read(&entry->get(), &bounded_reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       return bounded_reader.ReadPadding();
     } else {
@@ -258,31 +249,30 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
 
   // Skips over the binary container for an entry.
   template <typename Reader>
-  static constexpr Status<void> SkipEntry(Reader* reader) {
+  static constexpr Status<void> SkipEntry(Reader *reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return reader->Skip(size);
   }
 
   template <typename T, std::uint64_t Id, typename Reader>
-  static constexpr Status<void> ReadEntry(Entry<T, Id, DeletedEntry>* /*entry*/,
-                                          Reader* reader) {
+  static constexpr Status<void> ReadEntry(
+      Entry<T, Id, DeletedEntry> * /*entry*/, Reader *reader) {
     return SkipEntry(reader);
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadEntryForId(Table* /*value*/,
+  static constexpr Status<void> ReadEntryForId(Table * /*value*/,
                                                std::uint64_t /*id*/,
-                                               Reader* reader, Index<0>) {
+                                               Reader *reader, Index<0>) {
     return SkipEntry(reader);
   }
 
   template <typename Reader, std::size_t index>
-  static constexpr Status<void> ReadEntryForId(Table* value, std::uint64_t id,
-                                               Reader* reader, Index<index>) {
+  static constexpr Status<void> ReadEntryForId(Table *value, std::uint64_t id,
+                                               Reader *reader, Index<index>) {
     using Pointer = PointerAt<index - 1>;
     using Type = typename Pointer::Type;
     if (Type::Id == id)
@@ -292,17 +282,15 @@ struct Encoding<Table, EnableIfHasEntryList<Table>> : EncodingIO<Table> {
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadEntries(Table* value, SizeType count,
-                                            Reader* reader) {
+  static constexpr Status<void> ReadEntries(Table *value, SizeType count,
+                                            Reader *reader) {
     for (SizeType i = 0; i < count; i++) {
       std::uint64_t id = 0;
       auto status = Encoding<std::uint64_t>::Read(&id, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       status = ReadEntryForId(value, id, reader, Index<Count>{});
-      if (!status)
-        return status;
+      if (!status) return status;
     }
     return {};
   }

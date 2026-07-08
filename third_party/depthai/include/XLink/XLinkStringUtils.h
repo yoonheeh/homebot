@@ -10,7 +10,7 @@
 /*
  * Maximum sring length, 4KB.
  */
-#define RSIZE_MAX_STR ( 4UL << 10 )
+#define RSIZE_MAX_STR (4UL << 10)
 
 /**
  * @brief If the string utils functions have worked without errors, EOK will be
@@ -18,12 +18,12 @@
  *    be returned.
  */
 typedef enum {
-    EOK     = 0,  // Successful operation.
-    ESNULLP = 1,  // NULL pointer.
-    ESZEROL = 2,  // Zero length.
-    ESLEMAX = 3,  // Length exceeds max limit.
-    ESOVRLP = 4,  // Strings overlap.
-    ESNOSPC = 5   // Not enough space to copy src
+  EOK = 0,      // Successful operation.
+  ESNULLP = 1,  // NULL pointer.
+  ESZEROL = 2,  // Zero length.
+  ESLEMAX = 3,  // Length exceeds max limit.
+  ESOVRLP = 4,  // Strings overlap.
+  ESNOSPC = 5   // Not enough space to copy src
 } mvStringUtilsError;
 
 /**
@@ -38,7 +38,7 @@ typedef enum {
  *    pointer to the string that will be copied to dest
  * @return zero on success and non-zero value on error.
  */
- int mv_strcpy(char *dest, size_t destsz, const char *src);
+int mv_strcpy(char *dest, size_t destsz, const char *src);
 
 /**
  * @brief The mv_strncpy function copies at most count characters from the

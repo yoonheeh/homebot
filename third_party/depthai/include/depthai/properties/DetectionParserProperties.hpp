@@ -11,19 +11,21 @@ namespace dai {
 /**
  * Specify properties for DetectionParser
  */
-struct DetectionParserProperties : PropertiesSerializable<Properties, DetectionParserProperties> {
-    /// Num frames in output pool
-    int numFramesPool = 8;
+struct DetectionParserProperties
+    : PropertiesSerializable<Properties, DetectionParserProperties> {
+  /// Num frames in output pool
+  int numFramesPool = 8;
 
-    /// Network inputs
-    std::unordered_map<std::string, TensorInfo> networkInputs;
+  /// Network inputs
+  std::unordered_map<std::string, TensorInfo> networkInputs;
 
-    /// Options for parser
-    DetectionParserOptions parser;
+  /// Options for parser
+  DetectionParserOptions parser;
 
-    ~DetectionParserProperties() override;
+  ~DetectionParserProperties() override;
 };
 
-DEPTHAI_SERIALIZE_EXT(DetectionParserProperties, numFramesPool, networkInputs, parser);
+DEPTHAI_SERIALIZE_EXT(DetectionParserProperties, numFramesPool, networkInputs,
+                      parser);
 
 }  // namespace dai

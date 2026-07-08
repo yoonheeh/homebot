@@ -16,85 +16,110 @@ namespace dai {
 namespace node {
 
 /**
- * @brief RTABMap Visual Inertial Odometry node. Performs VIO on rectified frame, depth frame and IMU data.
+ * @brief RTABMap Visual Inertial Odometry node. Performs VIO on rectified
+ * frame, depth frame and IMU data.
  */
 class RTABMapVIO : public NodeCRTP<ThreadedHostNode, RTABMapVIO> {
-   public:
-    constexpr static const char* NAME = "RTABMapVIO";
-    RTABMapVIO();
-    ~RTABMapVIO() override;
+ public:
+  constexpr static const char *NAME = "RTABMapVIO";
+  RTABMapVIO();
+  ~RTABMapVIO() override;
 
-    std::string rectInputName = "rect";
-    std::string depthInputName = "depth";
-    std::string featuresInputName = "features";
+  std::string rectInputName = "rect";
+  std::string depthInputName = "depth";
+  std::string featuresInputName = "features";
 
-    Subnode<node::Sync> sync{*this, "sync"};
-    InputMap& inputs = sync->inputs;
+  Subnode<node::Sync> sync{*this, "sync"};
+  InputMap &inputs = sync->inputs;
 
-    /**
-     * Input rectified image on which VIO is performed.
-     */
-    Input& rect = inputs[rectInputName];
-    /**
-     * Input depth image on which VIO is performed.
-     */
-    Input& depth = inputs[depthInputName];
-    /**
-     * Input tracked features on which VIO is performed (optional).
-     */
-    Input features{*this, {featuresInputName, DEFAULT_GROUP, DEFAULT_BLOCKING, 15, {{{DatatypeEnum::TrackedFeatures, true}}}}};
-    /**
-     * Input IMU data.
-     */
-    Input imu{*this, {"imu", DEFAULT_GROUP, DEFAULT_BLOCKING, 15, {{{DatatypeEnum::IMUData, true}}}}};
-    /**
-     * Output transform.
-     */
-    Output transform{*this, {"transform", DEFAULT_GROUP, {{{DatatypeEnum::TransformData, true}}}}};
-    /**
-     * Passthrough rectified frame.
-     */
-    Output passthroughRect{*this, {"passthroughRect", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
-    /**
-     * Passthrough depth frame.
-     */
-    Output passthroughDepth{*this, {"passthroughDepth", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
-    /**
-     * Passthrough features.
-     */
-    Output passthroughFeatures{*this, {"passthroughFeatures", DEFAULT_GROUP, {{{DatatypeEnum::TrackedFeatures, true}}}}};
+  /**
+   * Input rectified image on which VIO is performed.
+   */
+  Input &rect = inputs[rectInputName];
+  /**
+   * Input depth image on which VIO is performed.
+   */
+  Input &depth = inputs[depthInputName];
+  /**
+   * Input tracked features on which VIO is performed (optional).
+   */
+  Input features{*this,
+                 {featuresInputName,
+                  DEFAULT_GROUP,
+                  DEFAULT_BLOCKING,
+                  15,
+                  {{{DatatypeEnum::TrackedFeatures, true}}}}};
+  /**
+   * Input IMU data.
+   */
+  Input imu{*this,
+            {"imu",
+             DEFAULT_GROUP,
+             DEFAULT_BLOCKING,
+             15,
+             {{{DatatypeEnum::IMUData, true}}}}};
+  /**
+   * Output transform.
+   */
+  Output transform{
+      *this,
+      {"transform", DEFAULT_GROUP, {{{DatatypeEnum::TransformData, true}}}}};
+  /**
+   * Passthrough rectified frame.
+   */
+  Output passthroughRect{
+      *this,
+      {"passthroughRect", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
+  /**
+   * Passthrough depth frame.
+   */
+  Output passthroughDepth{
+      *this,
+      {"passthroughDepth", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
+  /**
+   * Passthrough features.
+   */
+  Output passthroughFeatures{*this,
+                             {"passthroughFeatures",
+                              DEFAULT_GROUP,
+                              {{{DatatypeEnum::TrackedFeatures, true}}}}};
 
-    /**
-     * Set RTABMap parameters.
-     */
-    void setParams(const std::map<std::string, std::string>& params);
-    /**
-     * Whether to use input features or calculate them internally.
-     */
-    void setUseFeatures(bool use);
+  /**
+   * Set RTABMap parameters.
+   */
+  void setParams(const std::map<std::string, std::string> &params);
+  /**
+   * Whether to use input features or calculate them internally.
+   */
+  void setUseFeatures(bool use);
 
-    void setLocalTransform(std::shared_ptr<TransformData> transform);
+  void setLocalTransform(std::shared_ptr<TransformData> transform);
 
-    /**
-     * Reset Odometry.
-     */
-    void reset(std::shared_ptr<TransformData> transform = nullptr);
+  /**
+   * Reset Odometry.
+   */
+  void reset(std::shared_ptr<TransformData> transform = nullptr);
 
-    void buildInternal() override;
+  void buildInternal() override;
 
-   private:
-    // pimpl
-    class Impl;
-    Pimpl<Impl> pimplRtabmap;
-    void run() override;
-    void syncCB(std::shared_ptr<dai::ADatatype> data);
-    Input inSync{*this, {"inSync", DEFAULT_GROUP, DEFAULT_BLOCKING, 15, {{{DatatypeEnum::MessageGroup, true}}}}};
-    void imuCB(std::shared_ptr<ADatatype> msg);
-    void initialize(Pipeline& pipeline, int instanceNum, int width, int height);
-    std::mutex imuMtx;
-    float alphaScaling = -1.0;
-    bool initialized = false;
-    bool useFeatures = true;
+ private:
+  // pimpl
+  class Impl;
+  Pimpl<Impl> pimplRtabmap;
+  void run() override;
+  void syncCB(std::shared_ptr<dai::ADatatype> data);
+  Input inSync{*this,
+               {"inSync",
+                DEFAULT_GROUP,
+                DEFAULT_BLOCKING,
+                15,
+                {{{DatatypeEnum::MessageGroup, true}}}}};
+  void imuCB(std::shared_ptr<ADatatype> msg);
+  void initialize(Pipeline &pipeline, int instanceNum, int width, int height);
+  std::mutex imuMtx;
+  float alphaScaling = -1.0;
+  bool initialized = false;
+  bool useFeatures = true;
 };
 }  // namespace node
 }  // namespace dai

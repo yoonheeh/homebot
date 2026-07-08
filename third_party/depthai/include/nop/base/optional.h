@@ -44,11 +44,11 @@ template <typename T>
 struct Encoding<Optional<T>> : EncodingIO<Optional<T>> {
   using Type = Optional<T>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type &value) {
     return value ? Encoding<T>::Prefix(value.get()) : EncodingByte::Empty;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return value ? Encoding<T>::Size(value.get())
                  : BaseEncodingSize(EncodingByte::Empty);
   }
@@ -58,8 +58,9 @@ struct Encoding<Optional<T>> : EncodingIO<Optional<T>> {
   }
 
   template <typename Writer>
-  static constexpr Status<void> WritePayload(EncodingByte prefix, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const Type &value,
+                                             Writer *writer) {
     if (value)
       return Encoding<T>::WritePayload(prefix, value.get(), writer);
     else
@@ -67,15 +68,14 @@ struct Encoding<Optional<T>> : EncodingIO<Optional<T>> {
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type *value,
+                                            Reader *reader) {
     if (prefix == EncodingByte::Empty) {
       value->clear();
     } else {
       T temp;
       auto status = Encoding<T>::ReadPayload(prefix, &temp, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       *value = std::move(temp);
     }

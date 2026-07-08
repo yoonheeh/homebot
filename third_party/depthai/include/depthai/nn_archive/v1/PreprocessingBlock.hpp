@@ -49,28 +49,29 @@ namespace v1 {
  * automatically setup the pipeline.
  */
 struct PreprocessingBlock {
-    /**
-     * DepthAI input type which is read by DepthAI to automatically setup the pipeline.
-     */
-    std::optional<std::string> daiType;
-    /**
-     * If True input to the model is interleaved (NHWC) else planar (NCHW).
-     */
-    std::optional<bool> interleavedToPlanar;
-    /**
-     * Mean values in channel order. Order depends on the order in which the model was trained
-     * on.
-     */
-    std::optional<std::vector<double>> mean;
-    /**
-     * If True input to the model is RGB else BGR.
-     */
-    std::optional<bool> reverseChannels;
-    /**
-     * Standardization values in channel order. Order depends on the order in which the model
-     * was trained on.
-     */
-    std::optional<std::vector<double>> scale;
+  /**
+   * DepthAI input type which is read by DepthAI to automatically setup the
+   * pipeline.
+   */
+  std::optional<std::string> daiType;
+  /**
+   * If True input to the model is interleaved (NHWC) else planar (NCHW).
+   */
+  std::optional<bool> interleavedToPlanar;
+  /**
+   * Mean values in channel order. Order depends on the order in which the model
+   * was trained on.
+   */
+  std::optional<std::vector<double>> mean;
+  /**
+   * If True input to the model is RGB else BGR.
+   */
+  std::optional<bool> reverseChannels;
+  /**
+   * Standardization values in channel order. Order depends on the order in
+   * which the model was trained on.
+   */
+  std::optional<std::vector<double>> scale;
 };
 }  // namespace v1
 }  // namespace nn_archive

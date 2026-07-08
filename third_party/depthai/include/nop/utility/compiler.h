@@ -25,7 +25,6 @@
 #define __has_cpp_attribute(x) 0
 #endif
 
-
 #ifdef _MSC_VER
 
 // MSVC case

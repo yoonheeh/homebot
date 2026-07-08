@@ -40,7 +40,7 @@
 #include "datatype/TransformData.hpp"
 #include "datatype/Transformable.hpp"
 #ifdef DEPTHAI_HAVE_DYNAMIC_CALIBRATION_SUPPORT
-    #include "datatype/DynamicCalibrationControl.hpp"
-    #include "datatype/DynamicCalibrationResults.hpp"
+#include "datatype/DynamicCalibrationControl.hpp"
+#include "datatype/DynamicCalibrationResults.hpp"
 #endif
 #include "datatype/VppConfig.hpp"

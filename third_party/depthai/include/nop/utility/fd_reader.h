@@ -18,12 +18,11 @@
 #define LIBNOP_INCLUDE_NOP_UTILITY_FD_READER_H_
 
 #include <errno.h>
+#include <nop/status.h>
 #include <sys/types.h>
 #include <unistd.h>
 
 #include <utility>
-
-#include <nop/status.h>
 
 namespace nop {
 
@@ -34,13 +33,13 @@ class FdReader {
  public:
   FdReader() = default;
   FdReader(int fd) : fd_{fd} {}
-  FdReader(const FdReader&) = delete;
-  FdReader(FdReader&& other) { *this = std::move(other); }
+  FdReader(const FdReader &) = delete;
+  FdReader(FdReader &&other) { *this = std::move(other); }
 
   ~FdReader() { Clear(); }
 
-  FdReader& operator=(const FdReader&) = delete;
-  FdReader& operator=(FdReader&& other) {
+  FdReader &operator=(const FdReader &) = delete;
+  FdReader &operator=(FdReader &&other) {
     if (this != &other) {
       Clear();
       std::swap(fd_, other.fd_);
@@ -61,7 +60,7 @@ class FdReader {
 
   Status<void> Ensure(std::size_t) { return {}; }
 
-  Status<void> Read(std::uint8_t* byte) {
+  Status<void> Read(std::uint8_t *byte) {
     while (true) {
       const int ret = ::read(fd_, byte, sizeof(*byte));
       if (ret == 1)
@@ -75,14 +74,13 @@ class FdReader {
     }
   }
 
-  Status<void> Read(void* begin, void* end) {
-    std::uint8_t* begin_byte = static_cast<std::uint8_t*>(begin);
-    std::uint8_t* end_byte = static_cast<std::uint8_t*>(end);
+  Status<void> Read(void *begin, void *end) {
+    std::uint8_t *begin_byte = static_cast<std::uint8_t *>(begin);
+    std::uint8_t *end_byte = static_cast<std::uint8_t *>(end);
 
-    for (std::uint8_t* byte = begin_byte; byte < end_byte; byte++) {
+    for (std::uint8_t *byte = begin_byte; byte < end_byte; byte++) {
       auto status = Read(byte);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};

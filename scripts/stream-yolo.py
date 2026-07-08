@@ -20,10 +20,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from object_detection.yolo_engine import YoloEngine
 
 # Configuration
-STREAM_URL = 'http://192.168.4.1:81/stream'
-MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
+STREAM_URL = "http://192.168.4.1:81/stream"
+MODEL_PATH = "object_detection/model/yolo/yolov5s-640-640.rknn"
 CONF_THRESH = 0.25
 NMS_THRESH = 0.45
+
 
 def draw_detections(frame, detections, class_names):
     """Draw bounding boxes and labels on frame"""
@@ -43,10 +44,16 @@ def draw_detections(frame, detections, class_names):
         label_size, _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 2)
         label_y = max(y1, label_size[1] + 10)
 
-        cv2.rectangle(frame, (x1, label_y - label_size[1] - 10),
-                     (x1 + label_size[0], label_y), color, -1)
-        cv2.putText(frame, label, (x1, label_y - 5),
-                   cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2)
+        cv2.rectangle(
+            frame,
+            (x1, label_y - label_size[1] - 10),
+            (x1 + label_size[0], label_y),
+            color,
+            -1,
+        )
+        cv2.putText(
+            frame, label, (x1, label_y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 2
+        )
 
     return frame
 
@@ -72,7 +79,7 @@ class YOLOStreamer:
         self.result_queue = queue.Queue(maxsize=1)
         self.running = False
         self.fps = 0
-        self.draw_bounding_box = True # Default to True for streaming
+        self.draw_bounding_box = True  # Default to True for streaming
 
     def init_camera(self):
         """Initialize video capture from ESP32-CAM"""
@@ -88,9 +95,7 @@ class YOLOStreamer:
         """Initialize YoloEngine"""
         print(f"Initializing YoloEngine with model: {self.model_path}")
         self.engine = YoloEngine(
-            self.model_path, 
-            conf_thresh=self.conf_thresh, 
-            nms_thresh=self.nms_thresh
+            self.model_path, conf_thresh=self.conf_thresh, nms_thresh=self.nms_thresh
         )
 
     def capture_thread(self):
@@ -173,17 +178,24 @@ class YOLOStreamer:
                     display = draw_detections(frame, detections, self.engine.CLASSES)
 
                     # Draw FPS
-                    cv2.putText(display, f"FPS: {self.fps:.1f}", (10, 30),
-                               cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.putText(
+                        display,
+                        f"FPS: {self.fps:.1f}",
+                        (10, 30),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        1,
+                        (0, 255, 0),
+                        2,
+                    )
 
                     # Show frame
-                    cv2.imshow('YOLO + ESP32-CAM', display)
+                    cv2.imshow("YOLO + ESP32-CAM", display)
 
                     key = cv2.waitKey(1) & 0xFF
-                    if key == ord('q'):
+                    if key == ord("q"):
                         print("Quitting...")
                         break
-                    elif key == ord('s'):
+                    elif key == ord("s"):
                         timestamp = time.strftime("%Y%m%d_%H%M%S")
                         filename = f"snapshot_{timestamp}.jpg"
                         cv2.imwrite(filename, display)
@@ -209,12 +221,14 @@ class YOLOStreamer:
             print("Cleanup complete")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Verify model path exists
     if not os.path.exists(MODEL_PATH):
         print(f"Model not found: {MODEL_PATH}")
         print("Please update MODEL_PATH to point to your .rknn model")
         exit(1)
 
-    streamer = YOLOStreamer(STREAM_URL, MODEL_PATH, conf_thresh=CONF_THRESH, nms_thresh=NMS_THRESH)
+    streamer = YOLOStreamer(
+        STREAM_URL, MODEL_PATH, conf_thresh=CONF_THRESH, nms_thresh=NMS_THRESH
+    )
     streamer.run()

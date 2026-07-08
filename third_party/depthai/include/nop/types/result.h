@@ -70,14 +70,14 @@ class Result {
 
  public:
   constexpr Result() : error_{ErrorEnum::None}, state_{State::Empty} {}
-  constexpr Result(const T& value) : value_{value}, state_{State::Value} {}
-  constexpr Result(T&& value)
+  constexpr Result(const T &value) : value_{value}, state_{State::Value} {}
+  constexpr Result(T &&value)
       : value_{std::move(value)}, state_{State::Value} {}
-  constexpr Result(const Result& other)
+  constexpr Result(const Result &other)
       : error_{ErrorEnum::None}, state_{State::Empty} {
     *this = other;
   }
-  constexpr Result(Result&& other) noexcept
+  constexpr Result(Result &&other) noexcept
       : error_{ErrorEnum::None}, state_{State::Empty} {
     *this = std::move(other);
   }
@@ -87,7 +87,7 @@ class Result {
 
   ~Result() { Destruct(); }
 
-  constexpr Result& operator=(const Result& other) {
+  constexpr Result &operator=(const Result &other) {
     if (this != &other) {
       if (other.has_value())
         Assign(other.value_);
@@ -96,7 +96,7 @@ class Result {
     }
     return *this;
   }
-  constexpr Result& operator=(Result&& other) noexcept {
+  constexpr Result &operator=(Result &&other) noexcept {
     if (this != &other) {
       if (other.has_value())
         Assign(std::move(other.value_));
@@ -108,15 +108,15 @@ class Result {
     return *this;
   }
 
-  constexpr Result& operator=(const T& value) {
+  constexpr Result &operator=(const T &value) {
     Assign(value);
     return *this;
   }
-  constexpr Result& operator=(T&& value) {
+  constexpr Result &operator=(T &&value) {
     Assign(std::move(value));
     return *this;
   }
-  constexpr Result& operator=(ErrorEnum error) {
+  constexpr Result &operator=(ErrorEnum error) {
     Assign(error);
     return *this;
   }
@@ -133,14 +133,14 @@ class Result {
       return ErrorEnum::None;
   }
 
-  constexpr const T& get() const { return *value(); }
-  constexpr T& get() { return *value(); }
-  constexpr T&& take() { return std::move(*value()); }
+  constexpr const T &get() const { return *value(); }
+  constexpr T &get() { return *value(); }
+  constexpr T &&take() { return std::move(*value()); }
 
   constexpr void clear() { Destruct(); }
 
  private:
-  constexpr void Assign(const T& value) {
+  constexpr void Assign(const T &value) {
     if (has_value()) {
       value_ = value;
     } else {
@@ -149,7 +149,7 @@ class Result {
     }
   }
 
-  constexpr void Assign(T&& value) {
+  constexpr void Assign(T &&value) {
     if (has_value()) {
       value_ = std::move(value);
     } else {
@@ -167,14 +167,13 @@ class Result {
   }
 
   constexpr void Destruct() {
-    if (has_value())
-      value_.~T();
+    if (has_value()) value_.~T();
     error_ = ErrorEnum::None;
     state_ = State::Empty;
   }
 
-  constexpr const T* value() const { return has_value() ? &value_ : nullptr; }
-  constexpr T* value() { return has_value() ? &value_ : nullptr; }
+  constexpr const T *value() const { return has_value() ? &value_ : nullptr; }
+  constexpr T *value() { return has_value() ? &value_ : nullptr; }
 
   enum class State {
     Empty,
@@ -198,20 +197,20 @@ class Result<ErrorEnum, void> {
  public:
   constexpr Result() : error_{ErrorEnum::None} {}
   constexpr Result(ErrorEnum error) : error_{error} {}
-  constexpr Result(const Result& other) : error_{other.error_} {}
-  constexpr Result(Result&& other) noexcept : error_{other.error_} {
+  constexpr Result(const Result &other) : error_{other.error_} {}
+  constexpr Result(Result &&other) noexcept : error_{other.error_} {
     other.clear();
   }
 
   ~Result() = default;
 
-  constexpr Result& operator=(const Result& other) {
+  constexpr Result &operator=(const Result &other) {
     if (this != &other) {
       error_ = other.error_;
     }
     return *this;
   }
-  constexpr Result& operator=(Result&& other) noexcept {
+  constexpr Result &operator=(Result &&other) noexcept {
     if (this != &other) {
       error_ = other.error_;
       other.clear();

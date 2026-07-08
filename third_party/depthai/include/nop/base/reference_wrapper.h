@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_REFERENCE_WRAPPER_H_
 #define LIBNOP_INCLUDE_NOP_BASE_REFERENCE_WRAPPER_H_
 
-#include <functional>
-
 #include <nop/base/encoding.h>
+
+#include <functional>
 
 namespace nop {
 
@@ -30,11 +30,11 @@ struct Encoding<std::reference_wrapper<T>>
     : EncodingIO<std::reference_wrapper<T>> {
   using Type = std::reference_wrapper<T>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type &value) {
     return Encoding<T>::Prefix(value);
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return Encoding<T>::Size(value);
   }
 
@@ -44,14 +44,14 @@ struct Encoding<std::reference_wrapper<T>>
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte prefix,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     return Encoding<T>::WritePayload(prefix, value, writer);
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
-                                            Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type *value,
+                                            Reader *reader) {
     return Encoding<T>::ReadPayload(prefix, &value->get(), reader);
   }
 };

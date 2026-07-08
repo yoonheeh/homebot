@@ -8,13 +8,14 @@ namespace dai {
 /**
  * Specify properties for MessageDemux.
  */
-struct MessageDemuxProperties : PropertiesSerializable<Properties, MessageDemuxProperties> {
-    /**
-     * Which processor should execute the node.
-     */
-    ProcessorType processor = ProcessorType::LEON_CSS;
+struct MessageDemuxProperties
+    : PropertiesSerializable<Properties, MessageDemuxProperties> {
+  /**
+   * Which processor should execute the node.
+   */
+  ProcessorType processor = ProcessorType::LEON_CSS;
 
-    ~MessageDemuxProperties() override;
+  ~MessageDemuxProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(MessageDemuxProperties, processor);

@@ -10,9 +10,9 @@ namespace dai {
  * Free, remaining and total memory stats
  */
 struct MemoryInfo {
-    int64_t remaining;
-    int64_t used;
-    int64_t total;
+  int64_t remaining;
+  int64_t used;
+  int64_t total;
 };
 
 DEPTHAI_SERIALIZE_EXT(MemoryInfo, remaining, used, total);

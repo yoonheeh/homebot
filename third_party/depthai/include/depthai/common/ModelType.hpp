@@ -16,7 +16,7 @@ enum class ModelType { BLOB, SUPERBLOB, DLC, NNARCHIVE, OTHER };
  * @param modelPath Path to model
  * @return ModelType
  */
-ModelType readModelType(const std::filesystem::path& modelPath);
+ModelType readModelType(const std::filesystem::path &modelPath);
 
 }  // namespace model
 }  // namespace dai

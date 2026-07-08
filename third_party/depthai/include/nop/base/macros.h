@@ -21,10 +21,10 @@
 
 #define NOP_DEFERRED_EXPAND(x) x
 #if defined(_MSC_VER) && (!defined(_MSVC_TRADITIONAL) || _MSVC_TRADITIONAL)
-  // Logic using the traditional preprocessor
-  // This is for suppressing false positive warnings when compiling
-  // without /Zc:preprocessor
-  #pragma warning(disable : 4003)
+// Logic using the traditional preprocessor
+// This is for suppressing false positive warnings when compiling
+// without /Zc:preprocessor
+#pragma warning(disable : 4003)
 #endif
 
 // Recursive expansion macros.
@@ -34,7 +34,7 @@
 #define _NOP_EXPAND3(...) _NOP_EXPAND2(_NOP_EXPAND2(_NOP_EXPAND2(__VA_ARGS__)))
 #define _NOP_EXPAND4(...) _NOP_EXPAND3(_NOP_EXPAND3(_NOP_EXPAND3(__VA_ARGS__)))
 #define _NOP_EXPAND5(...) _NOP_EXPAND4(_NOP_EXPAND4(_NOP_EXPAND4(__VA_ARGS__)))
-#define _NOP_EXPAND(...)  _NOP_EXPAND5(_NOP_EXPAND5(_NOP_EXPAND5(__VA_ARGS__)))
+#define _NOP_EXPAND(...) _NOP_EXPAND5(_NOP_EXPAND5(_NOP_EXPAND5(__VA_ARGS__)))
 
 // Required to workaround a bug in the VC++ preprocessor.
 #define _NOP_INDIRECT_EXPAND(macro, args) macro args
@@ -92,43 +92,40 @@
 
 #define _NOP_REMOVE_PARENS(...)            \
   _NOP_IF_ELSE(_NOP_IS_PAREN(__VA_ARGS__)) \
-    (_NOP_STRIP_PARENS __VA_ARGS__)        \
-    (__VA_ARGS__)
+  (_NOP_STRIP_PARENS __VA_ARGS__)(__VA_ARGS__)
 
 #define _NOP_STRIP_PARENS(...) __VA_ARGS__
 
 #define NOP_MAP(...) _NOP_EXPAND(_NOP_MAP_FIRST(__VA_ARGS__))
 
-#define _NOP_MAP_FIRST(m, ...)                         \
-  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__)) (           \
-    m(_NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
-    _NOP_MAP_NEXT(m, _NOP_REST_ARG(__VA_ARGS__))       \
-  )(/* done */)
+#define _NOP_MAP_FIRST(m, ...)                        \
+  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))            \
+  (m(_NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
+       _NOP_MAP_NEXT(m, _NOP_REST_ARG(__VA_ARGS__)))(/* done */)
 
-#define _NOP_MAP_NEXT(m, ...)                                    \
-  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__)) (                     \
-    , m(_NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__)))         \
-    _NOP_DEFER3(__NOP_MAP_NEXT)()(m, _NOP_REST_ARG(__VA_ARGS__)) \
-  )(/* done */)
+#define _NOP_MAP_NEXT(m, ...)                                        \
+  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))                           \
+  (, m(_NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) _NOP_DEFER3( \
+         __NOP_MAP_NEXT)()(m, _NOP_REST_ARG(__VA_ARGS__)))(/* done */)
 
 #define __NOP_MAP_NEXT() _NOP_MAP_NEXT
 
 #define NOP_MAP_ARGS(...) _NOP_EXPAND(_NOP_MAP_FIRST_ARGS(__VA_ARGS__))
 #define _NOP_MAP_ARGS() NOP_MAP_ARGS
 
-#define _NOP_MAP_FIRST_ARGS(m, args, ...)                                        \
-  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__)) (                                     \
-    m(_NOP_REMOVE_PARENS(args), _NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
-    _NOP_MAP_NEXT_ARGS(m, args, _NOP_REST_ARG(__VA_ARGS__))                      \
-  )(/* done */)
+#define _NOP_MAP_FIRST_ARGS(m, args, ...)             \
+  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))            \
+  (m(_NOP_REMOVE_PARENS(args),                        \
+     _NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
+       _NOP_MAP_NEXT_ARGS(m, args, _NOP_REST_ARG(__VA_ARGS__)))(/* done */)
 
-#define _NOP_MAP_NEXT_ARGS(m, args, ...)                                           \
-  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__)) (                                       \
-    , m(_NOP_REMOVE_PARENS(args), _NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
-    _NOP_DEFER3(__NOP_MAP_NEXT_ARGS)()(m, args, _NOP_REST_ARG(__VA_ARGS__))        \
-  )(/* done */)
+#define _NOP_MAP_NEXT_ARGS(m, args, ...)                \
+  _NOP_IF_ELSE(_NOP_HAS_ARGS(__VA_ARGS__))              \
+  (, m(_NOP_REMOVE_PARENS(args),                        \
+       _NOP_REMOVE_PARENS(_NOP_FIRST_ARG(__VA_ARGS__))) \
+         _NOP_DEFER3(__NOP_MAP_NEXT_ARGS)()(            \
+             m, args, _NOP_REST_ARG(__VA_ARGS__)))(/* done */)
 
 #define __NOP_MAP_NEXT_ARGS() _NOP_MAP_NEXT_ARGS
-
 
 #endif  // LIBNOP_INCLUDE_NOP_BASE_MACROS_H_

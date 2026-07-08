@@ -8,16 +8,16 @@ namespace dai {
 
 template <typename T>
 class Pimpl {
-   private:
-    std::unique_ptr<T> m;
+ private:
+  std::unique_ptr<T> m;
 
-   public:
-    Pimpl();
-    template <typename... Args>
-    Pimpl(Args&&...);
-    ~Pimpl();
-    T* operator->();
-    T& operator*();
+ public:
+  Pimpl();
+  template <typename... Args>
+  Pimpl(Args &&...);
+  ~Pimpl();
+  T *operator->();
+  T &operator*();
 };
 
 }  // namespace dai

@@ -8,21 +8,93 @@ import cv2
 import numpy as np
 from rknnlite.api import RKNNLite
 
-MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
+MODEL_PATH = "object_detection/model/yolo/yolov5s-640-640.rknn"
 INPUT_SIZE = (640, 640)
 CONF_THRESH = 0.25
 
 # COCO class names
-CLASSES = ['person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-           'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-           'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-           'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-           'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-           'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-           'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-           'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-           'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-           'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush']
+CLASSES = [
+    "person",
+    "bicycle",
+    "car",
+    "motorcycle",
+    "airplane",
+    "bus",
+    "train",
+    "truck",
+    "boat",
+    "traffic light",
+    "fire hydrant",
+    "stop sign",
+    "parking meter",
+    "bench",
+    "bird",
+    "cat",
+    "dog",
+    "horse",
+    "sheep",
+    "cow",
+    "elephant",
+    "bear",
+    "zebra",
+    "giraffe",
+    "backpack",
+    "umbrella",
+    "handbag",
+    "tie",
+    "suitcase",
+    "frisbee",
+    "skis",
+    "snowboard",
+    "sports ball",
+    "kite",
+    "baseball bat",
+    "baseball glove",
+    "skateboard",
+    "surfboard",
+    "tennis racket",
+    "bottle",
+    "wine glass",
+    "cup",
+    "fork",
+    "knife",
+    "spoon",
+    "bowl",
+    "banana",
+    "apple",
+    "sandwich",
+    "orange",
+    "broccoli",
+    "carrot",
+    "hot dog",
+    "pizza",
+    "donut",
+    "cake",
+    "chair",
+    "couch",
+    "potted plant",
+    "bed",
+    "dining table",
+    "toilet",
+    "tv",
+    "laptop",
+    "mouse",
+    "remote",
+    "keyboard",
+    "cell phone",
+    "microwave",
+    "oven",
+    "toaster",
+    "sink",
+    "refrigerator",
+    "book",
+    "clock",
+    "vase",
+    "scissors",
+    "teddy bear",
+    "hair drier",
+    "toothbrush",
+]
 
 
 def preprocess(img, input_size):
@@ -49,7 +121,7 @@ def process_rockchip(input, mask, anchors):
 
     box_class_probs = input[..., 5:]
 
-    box_xy = input[..., :2]*2 - 0.5
+    box_xy = input[..., :2] * 2 - 0.5
 
     col = np.tile(np.arange(0, grid_w), grid_w).reshape(-1, grid_w)
     row = np.tile(np.arange(0, grid_h).reshape(-1, 1), grid_h)
@@ -57,9 +129,9 @@ def process_rockchip(input, mask, anchors):
     row = row.reshape(grid_h, grid_w, 1, 1).repeat(3, axis=-2)
     grid = np.concatenate((col, row), axis=-1)
     box_xy += grid
-    box_xy *= int(640/grid_h)
+    box_xy *= int(640 / grid_h)
 
-    box_wh = pow(input[..., 2:4]*2, 2)
+    box_wh = pow(input[..., 2:4] * 2, 2)
     box_wh = box_wh * anchors
 
     box = np.concatenate((box_xy, box_wh), axis=-1)
@@ -83,13 +155,13 @@ def debug_output(output, name):
 
     # Sample values - handle different dimensions
     if len(output.shape) == 3:
-        print(f"  Sample [0,:5,:5]: {output[0,:5,:5]}")
+        print(f"  Sample [0,:5,:5]: {output[0, :5, :5]}")
     elif len(output.shape) == 4:
-        print(f"  Sample [0,0,0,:]: {output[0,0,0,:]}")
+        print(f"  Sample [0,0,0,:]: {output[0, 0, 0, :]}")
 
 
 def main():
-    image_path = sys.argv[1] if len(sys.argv) > 1 else 'data/snapshot.jpg'
+    image_path = sys.argv[1] if len(sys.argv) > 1 else "data/snapshot.jpg"
 
     if not os.path.exists(image_path):
         print(f"ERROR: Image not found: {image_path}")
@@ -112,7 +184,7 @@ def main():
 
     for i, out in enumerate(outputs):
         debug_output(out[0], f"Output[{i}]")  # Remove batch dim
-        
+
         # Check max confidence
         # Reshape to [3, 85, H, W]
         h, w = out.shape[-2:]
@@ -121,9 +193,9 @@ def main():
         print(f"  Max confidence in Output[{i}]: {conf_channel.max():.4f}")
 
     # Now let's try reshaping like Rockchip does
-    print("\n" + "="*50)
+    print("\n" + "=" * 50)
     print("Rockchip reshape/transpose test:")
-    print("="*50)
+    print("=" * 50)
 
     for i, out in enumerate(outputs):
         print(f"\nOutput[{i}]:")
@@ -142,5 +214,5 @@ def main():
     rknn.release()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

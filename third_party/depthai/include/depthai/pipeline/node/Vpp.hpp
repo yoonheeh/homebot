@@ -13,77 +13,95 @@ namespace dai {
 namespace node {
 
 /**
- * @brief Vpp node. Apply Virtual Projection Pattern algorithm to stereo images based on disparity.
+ * @brief Vpp node. Apply Virtual Projection Pattern algorithm to stereo images
+ * based on disparity.
  */
 class Vpp : public DeviceNodeCRTP<DeviceNode, Vpp, VppProperties> {
-   protected:
-    Properties& getProperties() override;
+ protected:
+  Properties &getProperties() override;
 
-   public:
-    constexpr static const char* NAME = "Vpp";
+ public:
+  constexpr static const char *NAME = "Vpp";
 
-    using DeviceNodeCRTP::DeviceNodeCRTP;
+  using DeviceNodeCRTP::DeviceNodeCRTP;
 
-    Vpp() = default;
+  Vpp() = default;
 
-    Vpp(std::unique_ptr<Properties> props);
+  Vpp(std::unique_ptr<Properties> props);
 
-    virtual ~Vpp();
+  virtual ~Vpp();
 
-    std::shared_ptr<Vpp> build(Output& leftInput, Output& rightInput, Output& disparityInput, Output& confidenceInput);
+  std::shared_ptr<Vpp> build(Output &leftInput, Output &rightInput,
+                             Output &disparityInput, Output &confidenceInput);
 
-    void buildInternal() override;
+  void buildInternal() override;
 
-    /**
-     * Initial config to use for VPP.
-     */
-    std::shared_ptr<VppConfig> initialConfig = std::make_shared<VppConfig>();
+  /**
+   * Initial config to use for VPP.
+   */
+  std::shared_ptr<VppConfig> initialConfig = std::make_shared<VppConfig>();
 
-    Subnode<node::Sync> sync{*this, "sync"};
+  Subnode<node::Sync> sync{*this, "sync"};
 
-    /**
-     *"Synchronised Left Img, Right Img, Dispatiy and confidence input."
-     */
-    Input syncedInputs{*this, {"syncedInputs", DEFAULT_GROUP, false, 4, {{{DatatypeEnum::MessageGroup, false}}}, DEFAULT_WAIT_FOR_MESSAGE}};
+  /**
+   *"Synchronised Left Img, Right Img, Dispatiy and confidence input."
+   */
+  Input syncedInputs{*this,
+                     {"syncedInputs",
+                      DEFAULT_GROUP,
+                      false,
+                      4,
+                      {{{DatatypeEnum::MessageGroup, false}}},
+                      DEFAULT_WAIT_FOR_MESSAGE}};
 
-    const std::string leftInputName = "left";
-    const std::string rightInputName = "right";
-    const std::string disparityName = "disparity";
-    const std::string confidenceName = "confidence";
+  const std::string leftInputName = "left";
+  const std::string rightInputName = "right";
+  const std::string disparityName = "disparity";
+  const std::string confidenceName = "confidence";
 
 #ifndef DEPTHAI_INTERNAL_DEVICE_BUILD_RVC4
 
-    /**
-     * Input for left rectified ImgFrame
-     */
-    Input& left{sync->inputs["left"]};
-    /**
-     * Input for right rectified ImgFrame
-     */
-    Input& right{sync->inputs["right"]};
+  /**
+   * Input for left rectified ImgFrame
+   */
+  Input &left{sync->inputs["left"]};
+  /**
+   * Input for right rectified ImgFrame
+   */
+  Input &right{sync->inputs["right"]};
 
-    /**
-     * Low resolution disparity in pixels (in integers - 16 times bigger)
-     */
-    Input& disparity{sync->inputs["disparity"]};
+  /**
+   * Low resolution disparity in pixels (in integers - 16 times bigger)
+   */
+  Input &disparity{sync->inputs["disparity"]};
 
-    /**
-     * Confidence of the dispatiry (in integers - 16 times bigger).
-     */
-    Input& confidence{sync->inputs["confidence"]};
+  /**
+   * Confidence of the dispatiry (in integers - 16 times bigger).
+   */
+  Input &confidence{sync->inputs["confidence"]};
 #endif
 
-    Input inputConfig{*this, {"inputConfig", DEFAULT_GROUP, false, 4, {{{DatatypeEnum::VppConfig, false}}}, DEFAULT_WAIT_FOR_MESSAGE}};
+  Input inputConfig{*this,
+                    {"inputConfig",
+                     DEFAULT_GROUP,
+                     false,
+                     4,
+                     {{{DatatypeEnum::VppConfig, false}}},
+                     DEFAULT_WAIT_FOR_MESSAGE}};
 
-    /**
-     * Output ImgFrame message that carries the processed left image with virtual projection pattern applied.
-     */
-    Output leftOut{*this, {"leftOut", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
+  /**
+   * Output ImgFrame message that carries the processed left image with virtual
+   * projection pattern applied.
+   */
+  Output leftOut{
+      *this, {"leftOut", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
 
-    /**
-     * Output ImgFrame message that carries the processed right image with virtual projection pattern applied.
-     */
-    Output rightOut{*this, {"rightOut", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
+  /**
+   * Output ImgFrame message that carries the processed right image with virtual
+   * projection pattern applied.
+   */
+  Output rightOut{
+      *this, {"rightOut", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
 };
 
 }  // namespace node

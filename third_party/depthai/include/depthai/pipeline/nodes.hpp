@@ -11,8 +11,8 @@
 #include "node/Rectification.hpp"
 #include "node/SegmentationParser.hpp"
 #ifdef DEPTHAI_HAVE_DYNAMIC_CALIBRATION_SUPPORT
-    #include "node/AutoCalibration.hpp"
-    #include "node/DynamicCalibrationNode.hpp"
+#include "node/AutoCalibration.hpp"
+#include "node/DynamicCalibrationNode.hpp"
 #endif
 #include "node/EdgeDetector.hpp"
 #include "node/FeatureTracker.hpp"
@@ -40,23 +40,23 @@
 #include "node/Warp.hpp"
 #include "node/host/RGBD.hpp"
 #ifdef DEPTHAI_HAVE_OPENCV_SUPPORT
-    #include "node/NeuralAssistedStereo.hpp"
-    #include "node/Vpp.hpp"
-    #include "node/host/Display.hpp"
-    #include "node/host/HostCamera.hpp"
-    #include "node/host/HostNode.hpp"
-    #include "node/host/Record.hpp"
-    #include "node/host/Replay.hpp"
+#include "node/NeuralAssistedStereo.hpp"
+#include "node/Vpp.hpp"
+#include "node/host/Display.hpp"
+#include "node/host/HostCamera.hpp"
+#include "node/host/HostNode.hpp"
+#include "node/host/Record.hpp"
+#include "node/host/Replay.hpp"
 #endif
 #include "ThreadedHostNode.hpp"
 #include "node/ImageAlign.hpp"
 #include "node/host/HostNode.hpp"
 #ifdef DEPTHAI_HAVE_RTABMAP_SUPPORT
-    #include "depthai/rtabmap/RTABMapSLAM.hpp"
-    #include "depthai/rtabmap/RTABMapVIO.hpp"
+#include "depthai/rtabmap/RTABMapSLAM.hpp"
+#include "depthai/rtabmap/RTABMapVIO.hpp"
 #endif
 #ifdef DEPTHAI_HAVE_BASALT_SUPPORT
-    #include "depthai/basalt/BasaltVIO.hpp"
+#include "depthai/basalt/BasaltVIO.hpp"
 #endif
 
 // Internal nodes

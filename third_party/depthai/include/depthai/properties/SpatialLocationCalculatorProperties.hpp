@@ -11,10 +11,11 @@ namespace dai {
 /**
  * Specify properties for SpatialLocationCalculator
  */
-struct SpatialLocationCalculatorProperties : PropertiesSerializable<Properties, SpatialLocationCalculatorProperties> {
-    SpatialLocationCalculatorConfig roiConfig;
+struct SpatialLocationCalculatorProperties
+    : PropertiesSerializable<Properties, SpatialLocationCalculatorProperties> {
+  SpatialLocationCalculatorConfig roiConfig;
 
-    ~SpatialLocationCalculatorProperties() override;
+  ~SpatialLocationCalculatorProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(SpatialLocationCalculatorProperties, roiConfig);

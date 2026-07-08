@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_DIE_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_DIE_H_
 
+#include <nop/base/utility.h>
+#include <nop/status.h>
+
 #include <cstdlib>
 #include <functional>
 #include <type_traits>
-
-#include <nop/base/utility.h>
-#include <nop/status.h>
 
 //
 // The Status<T> || Die(...) idiom provides a simple way to handle errors when
@@ -50,7 +50,7 @@ struct IsStreamable : std::false_type {};
 template <typename Stream, typename Value>
 struct IsStreamable<
     Stream, Value,
-    Void<decltype(std::declval<Stream&&>() << std::declval<Value>())>>
+    Void<decltype(std::declval<Stream &&>() << std::declval<Value>())>>
     : std::true_type {};
 
 // Utility wrapper type that accepts a reference to a stream-like object to use
@@ -67,14 +67,14 @@ class StreamWrapper {
   using StreamType = std::remove_reference_t<Stream>;
 
  public:
-  StreamWrapper(StreamWrapper&&) = default;
-  explicit StreamWrapper(StreamType& stream) : stream_{stream} {}
-  StreamWrapper(StreamType& stream, const char* error_message)
+  StreamWrapper(StreamWrapper &&) = default;
+  explicit StreamWrapper(StreamType &stream) : stream_{stream} {}
+  StreamWrapper(StreamType &stream, const char *error_message)
       : stream_{stream}, error_message_{error_message} {}
 
-  StreamWrapper(const StreamWrapper&) = delete;
-  void operator=(const StreamWrapper&) = delete;
-  void operator=(StreamWrapper&&) = delete;
+  StreamWrapper(const StreamWrapper &) = delete;
+  void operator=(const StreamWrapper &) = delete;
+  void operator=(StreamWrapper &&) = delete;
 
   // Operator overload that handles Status<T> || Die(...) expressions. If the
   // Status<T> argument contains an error the StreamWrapper is used to report an
@@ -82,8 +82,8 @@ class StreamWrapper {
   // returned.
   template <typename T, typename Enabled = std::enable_if_t<
                             IsStreamable<Stream, std::string>::value>>
-  friend Status<T> operator||(Status<T>&& status,
-                                const StreamWrapper<Stream>& wrapper) {
+  friend Status<T> operator||(Status<T> &&status,
+                              const StreamWrapper<Stream> &wrapper) {
     if (!status) {
       wrapper.PrintError(status.GetErrorMessage());
       std::exit(-1);
@@ -93,12 +93,12 @@ class StreamWrapper {
   }
 
  private:
-  void PrintError(const std::string& error_message) const {
+  void PrintError(const std::string &error_message) const {
     stream_.get() << error_message_ << ": " << error_message << std::endl;
   }
 
   std::reference_wrapper<StreamType> stream_;
-  const char* error_message_{"Error"};
+  const char *error_message_{"Error"};
 };
 
 }  // namespace detail
@@ -106,7 +106,7 @@ class StreamWrapper {
 // Wraps the given stream-like object in a StreamWrapper and returns it for use
 // in a Status<T> || Die(...) expression.
 template <typename Stream, typename... Args>
-detail::StreamWrapper<Stream> Die(Stream&& stream, Args&&... args) {
+detail::StreamWrapper<Stream> Die(Stream &&stream, Args &&...args) {
   return detail::StreamWrapper<Stream>{std::forward<Stream>(stream),
                                        std::forward<Args>(args)...};
 }

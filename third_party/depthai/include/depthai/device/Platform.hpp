@@ -24,6 +24,6 @@ std::string platform2string(Platform platform);
  * @param platform String representation of Platform
  * @return Platform Platform enum
  */
-Platform string2platform(const std::string& platform);
+Platform string2platform(const std::string &platform);
 
 }  // namespace dai

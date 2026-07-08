@@ -11,14 +11,15 @@
 namespace dai {
 
 struct LogMessage {
-    std::string nodeIdName;
-    LogLevel level{LogLevel::TRACE};
-    Timestamp time;
-    size_t colorRangeStart{0};
-    size_t colorRangeEnd{0};
-    std::string payload;
+  std::string nodeIdName;
+  LogLevel level{LogLevel::TRACE};
+  Timestamp time;
+  size_t colorRangeStart{0};
+  size_t colorRangeEnd{0};
+  std::string payload;
 };
 
-DEPTHAI_SERIALIZE_EXT(LogMessage, nodeIdName, level, time, colorRangeStart, colorRangeEnd, payload);
+DEPTHAI_SERIALIZE_EXT(LogMessage, nodeIdName, level, time, colorRangeStart,
+                      colorRangeEnd, payload);
 
 }  // namespace dai

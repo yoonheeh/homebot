@@ -10,9 +10,9 @@ namespace dai {
  */
 
 struct GateProperties : PropertiesSerializable<Properties, GateProperties> {
-    GateControl initialConfig;
+  GateControl initialConfig;
 
-    ~GateProperties() override;
+  ~GateProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(GateProperties, initialConfig);

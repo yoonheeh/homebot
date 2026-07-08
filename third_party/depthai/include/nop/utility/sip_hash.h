@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_SIP_HASH_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_SIP_HASH_H_
 
+#include <nop/utility/compiler.h>
+
 #include <array>
 #include <cstdint>
-
-#include <nop/utility/compiler.h>
 
 // A direct port of the SipHash C reference implementation.
 //
@@ -42,11 +42,11 @@ class BlockReader {
   template <std::size_t Size>
   constexpr BlockReader(const ValueType (&value)[Size])
       : data_{value}, size_{Size} {}
-  constexpr BlockReader(const ValueType* data, std::size_t size)
+  constexpr BlockReader(const ValueType *data, std::size_t size)
       : data_{data}, size_{size} {}
 
-  BlockReader(const BlockReader&) = default;
-  BlockReader& operator=(const BlockReader&) = default;
+  BlockReader(const BlockReader &) = default;
+  BlockReader &operator=(const BlockReader &) = default;
 
   constexpr std::size_t size() const { return size_; }
   constexpr ValueType operator[](const std::size_t index) const {
@@ -54,7 +54,7 @@ class BlockReader {
   }
 
  private:
-  const ValueType* data_;
+  const ValueType *data_;
   std::size_t size_;
 };
 

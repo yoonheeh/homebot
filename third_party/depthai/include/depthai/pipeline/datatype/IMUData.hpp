@@ -10,49 +10,51 @@
 namespace dai {
 
 struct IMUReport {
-    enum class Accuracy : std::uint8_t {
-        UNRELIABLE = 0,
-        LOW = 1,
-        MEDIUM = 2,
-        HIGH = 3,
-    };
-    /**
-     * The sequence number increments once for each report sent.  Gaps
-     * in the sequence numbers indicate missing or dropped reports.
-     * Max value 2^32 after which resets to 0.
-     */
-    int32_t sequence = 0;
+  enum class Accuracy : std::uint8_t {
+    UNRELIABLE = 0,
+    LOW = 1,
+    MEDIUM = 2,
+    HIGH = 3,
+  };
+  /**
+   * The sequence number increments once for each report sent.  Gaps
+   * in the sequence numbers indicate missing or dropped reports.
+   * Max value 2^32 after which resets to 0.
+   */
+  int32_t sequence = 0;
 
-    /** Accuracy of sensor */
-    Accuracy accuracy = Accuracy::UNRELIABLE;
+  /** Accuracy of sensor */
+  Accuracy accuracy = Accuracy::UNRELIABLE;
 
-    /** Generation timestamp, synced to host time */
-    Timestamp timestamp = {};
+  /** Generation timestamp, synced to host time */
+  Timestamp timestamp = {};
 
-    /** Generation timestamp, direct device monotonic clock */
-    Timestamp tsDevice = {};
+  /** Generation timestamp, direct device monotonic clock */
+  Timestamp tsDevice = {};
 
-    /**
-     * Retrieves timestamp related to dai::Clock::now()
-     */
-    std::chrono::time_point<std::chrono::steady_clock, std::chrono::steady_clock::duration> getTimestamp() const {
-        return timestamp.get();
-    }
+  /**
+   * Retrieves timestamp related to dai::Clock::now()
+   */
+  std::chrono::time_point<std::chrono::steady_clock,
+                          std::chrono::steady_clock::duration>
+  getTimestamp() const {
+    return timestamp.get();
+  }
 
-    /**
-     * Retrieves timestamp directly captured from device's monotonic clock,
-     * not synchronized to host time. Used mostly for debugging
-     */
-    std::chrono::time_point<std::chrono::steady_clock, std::chrono::steady_clock::duration> getTimestampDevice() const {
-        return tsDevice.get();
-    }
+  /**
+   * Retrieves timestamp directly captured from device's monotonic clock,
+   * not synchronized to host time. Used mostly for debugging
+   */
+  std::chrono::time_point<std::chrono::steady_clock,
+                          std::chrono::steady_clock::duration>
+  getTimestampDevice() const {
+    return tsDevice.get();
+  }
 
-    /**
-     * Retrieves IMU report sequence number
-     */
-    int32_t getSequenceNum() const {
-        return sequence;
-    }
+  /**
+   * Retrieves IMU report sequence number
+   */
+  int32_t getSequenceNum() const { return sequence; }
 };
 DEPTHAI_SERIALIZE_EXT(IMUReport, sequence, accuracy, timestamp, tsDevice);
 
@@ -62,11 +64,12 @@ DEPTHAI_SERIALIZE_EXT(IMUReport, sequence, accuracy, timestamp, tsDevice);
  * Units are [m/s^2]
  */
 struct IMUReportAccelerometer : public IMUReport {
-    float x = 0;
-    float y = 0;
-    float z = 0;
+  float x = 0;
+  float y = 0;
+  float z = 0;
 };
-DEPTHAI_SERIALIZE_EXT(IMUReportAccelerometer, x, y, z, sequence, accuracy, timestamp, tsDevice);
+DEPTHAI_SERIALIZE_EXT(IMUReportAccelerometer, x, y, z, sequence, accuracy,
+                      timestamp, tsDevice);
 
 /**
  * @brief Gyroscope
@@ -74,11 +77,12 @@ DEPTHAI_SERIALIZE_EXT(IMUReportAccelerometer, x, y, z, sequence, accuracy, times
  * Units are [rad/s]
  */
 struct IMUReportGyroscope : public IMUReport {
-    float x = 0;
-    float y = 0;
-    float z = 0;
+  float x = 0;
+  float y = 0;
+  float z = 0;
 };
-DEPTHAI_SERIALIZE_EXT(IMUReportGyroscope, x, y, z, sequence, accuracy, timestamp, tsDevice);
+DEPTHAI_SERIALIZE_EXT(IMUReportGyroscope, x, y, z, sequence, accuracy,
+                      timestamp, tsDevice);
 
 /**
  * @brief Magnetic field
@@ -86,11 +90,12 @@ DEPTHAI_SERIALIZE_EXT(IMUReportGyroscope, x, y, z, sequence, accuracy, timestamp
  * Units are [uTesla]
  */
 struct IMUReportMagneticField : public IMUReport {
-    float x = 0;
-    float y = 0;
-    float z = 0;
+  float x = 0;
+  float y = 0;
+  float z = 0;
 };
-DEPTHAI_SERIALIZE_EXT(IMUReportMagneticField, x, y, z, sequence, accuracy, timestamp, tsDevice);
+DEPTHAI_SERIALIZE_EXT(IMUReportMagneticField, x, y, z, sequence, accuracy,
+                      timestamp, tsDevice);
 
 /**
  * @brief Rotation Vector with Accuracy
@@ -98,13 +103,16 @@ DEPTHAI_SERIALIZE_EXT(IMUReportMagneticField, x, y, z, sequence, accuracy, times
  * Contains quaternion components: i,j,k,real
  */
 struct IMUReportRotationVectorWAcc : public IMUReport {
-    float i = 0;                      /**< @brief Quaternion component i */
-    float j = 0;                      /**< @brief Quaternion component j */
-    float k = 0;                      /**< @brief Quaternion component k */
-    float real = 0;                   /**< @brief Quaternion component, real */
-    float rotationVectorAccuracy = 0; /**< @brief Accuracy estimate [radians], 0 means no estimate */
+  float i = 0;    /**< @brief Quaternion component i */
+  float j = 0;    /**< @brief Quaternion component j */
+  float k = 0;    /**< @brief Quaternion component k */
+  float real = 0; /**< @brief Quaternion component, real */
+  float rotationVectorAccuracy =
+      0; /**< @brief Accuracy estimate [radians], 0 means no estimate */
 };
-DEPTHAI_SERIALIZE_EXT(IMUReportRotationVectorWAcc, i, j, k, real, rotationVectorAccuracy, sequence, accuracy, timestamp, tsDevice);
+DEPTHAI_SERIALIZE_EXT(IMUReportRotationVectorWAcc, i, j, k, real,
+                      rotationVectorAccuracy, sequence, accuracy, timestamp,
+                      tsDevice);
 
 #if 0
 
@@ -179,13 +187,14 @@ DEPTHAI_SERIALIZE_EXT(IMUReportGyroIntegratedRV, i, j, k, real, angVelX, angVelY
 /**
  * IMU output
  *
- * Contains combined output for all possible modes. Only the enabled outputs are populated.
+ * Contains combined output for all possible modes. Only the enabled outputs are
+ * populated.
  */
 struct IMUPacket {
-    IMUReportAccelerometer acceleroMeter;
-    IMUReportGyroscope gyroscope;
-    IMUReportMagneticField magneticField;
-    IMUReportRotationVectorWAcc rotationVector;
+  IMUReportAccelerometer acceleroMeter;
+  IMUReportGyroscope gyroscope;
+  IMUReportMagneticField magneticField;
+  IMUReportRotationVectorWAcc rotationVector;
 
 #if 0
     IMUReportAccelerometer rawAcceleroMeter;
@@ -208,42 +217,43 @@ struct IMUPacket {
 #endif
 };
 
-DEPTHAI_SERIALIZE_EXT(IMUPacket, acceleroMeter, gyroscope, magneticField, rotationVector);
+DEPTHAI_SERIALIZE_EXT(IMUPacket, acceleroMeter, gyroscope, magneticField,
+                      rotationVector);
 
 /**
  * IMUData message. Carries normalized detection results
  */
 class IMUData : public Buffer, public ProtoSerializable {
-   public:
-    // Construct IMUData message
-    IMUData() = default;
-    virtual ~IMUData();
+ public:
+  // Construct IMUData message
+  IMUData() = default;
+  virtual ~IMUData();
 
-    /// Detections
-    std::vector<IMUPacket> packets;
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
+  /// Detections
+  std::vector<IMUPacket> packets;
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
 
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::IMUData;
-    }
+  DatatypeEnum getDatatype() const override { return DatatypeEnum::IMUData; }
 
 #ifdef DEPTHAI_ENABLE_PROTOBUF
-    /**
-     * Serialize message to proto buffer
-     *
-     * @returns serialized message
-     */
-    std::vector<std::uint8_t> serializeProto(bool = false) const override;
+  /**
+   * Serialize message to proto buffer
+   *
+   * @returns serialized message
+   */
+  std::vector<std::uint8_t> serializeProto(bool = false) const override;
 
-    /**
-     * Serialize schema to proto buffer
-     *
-     * @returns serialized schema
-     */
-    ProtoSerializable::SchemaPair serializeSchema() const override;
+  /**
+   * Serialize schema to proto buffer
+   *
+   * @returns serialized schema
+   */
+  ProtoSerializable::SchemaPair serializeSchema() const override;
 #endif
 
-    DEPTHAI_SERIALIZE(IMUData, Buffer::ts, Buffer::tsDevice, Buffer::sequenceNum, packets);
+  DEPTHAI_SERIALIZE(IMUData, Buffer::ts, Buffer::tsDevice, Buffer::sequenceNum,
+                    packets);
 };
 
 }  // namespace dai
