@@ -17,14 +17,14 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_LOGICAL_BUFFER_H_
 #define LIBNOP_INCLUDE_NOP_BASE_LOGICAL_BUFFER_H_
 
+#include <nop/base/encoding.h>
+#include <nop/base/utility.h>
+#include <nop/types/detail/logical_buffer.h>
+
 #include <array>
 #include <cstddef>
 #include <limits>
 #include <type_traits>
-
-#include <nop/base/encoding.h>
-#include <nop/base/utility.h>
-#include <nop/types/detail/logical_buffer.h>
 
 //
 // Logical buffers support the serialization of structures that contain a pair
@@ -91,16 +91,15 @@ struct Encoding<
   using ValueType = std::remove_const_t<typename Type::ValueType>;
   enum : std::size_t { Length = Type::Length };
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Array;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     std::size_t element_size_sum = 0;
 
     SizeType size = static_cast<SizeType>(value.size());
-    if (!IsUnbounded && size > Length)
-      size = Length;
+    if (!IsUnbounded && size > Length) size = Length;
 
     for (SizeType i = 0; i < size; i++)
       element_size_sum += Encoding<ValueType>::Size(value[i]);
@@ -115,20 +114,18 @@ struct Encoding<
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     const SizeType size = static_cast<SizeType>(value.size());
     if (!IsUnbounded && size > Length)
       return ErrorStatus::InvalidContainerLength;
 
     auto status = Encoding<SizeType>::Write(size, writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     for (SizeType i = 0; i < size; i++) {
       status = Encoding<ValueType>::Write(value[i], writer);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};
@@ -136,7 +133,7 @@ struct Encoding<
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
     if (!status)
@@ -146,8 +143,7 @@ struct Encoding<
 
     for (SizeType i = 0; i < size; i++) {
       status = Encoding<ValueType>::Read(&(*value)[i], reader);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     value->size() = size;
@@ -166,11 +162,11 @@ struct Encoding<LogicalBuffer<BufferType, SizeType, IsUnbounded>,
   using ValueType = std::remove_const_t<typename Type::ValueType>;
   enum : std::size_t { Length = Type::Length };
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Binary;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     const std::size_t size = value.size() * sizeof(ValueType);
     return BaseEncodingSize(Prefix(value)) + Encoding<SizeType>::Size(size) +
            size;
@@ -182,22 +178,21 @@ struct Encoding<LogicalBuffer<BufferType, SizeType, IsUnbounded>,
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     const SizeType size = value.size();
     if (!IsUnbounded && size > Length)
       return ErrorStatus::InvalidContainerLength;
 
     auto status = Encoding<SizeType>::Write(size * sizeof(ValueType), writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return writer->Write(value.begin(), value.end());
   }
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     SizeType size_bytes = 0;
     auto status = Encoding<SizeType>::Read(&size_bytes, reader);
     if (!status) {

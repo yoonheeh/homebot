@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_TRAITS_FUNCTION_TRAITS_H_
 #define LIBNOP_INCLUDE_NOP_TRAITS_FUNCTION_TRAITS_H_
 
+#include <nop/base/utility.h>
+#include <nop/traits/is_fungible.h>
+
 #include <functional>
 #include <tuple>
 #include <type_traits>
-
-#include <nop/base/utility.h>
-#include <nop/traits/is_fungible.h>
 
 namespace nop {
 

@@ -36,592 +36,597 @@ namespace dai {
 namespace fs = std::filesystem;
 
 enum class PipelineAutoCalibrationMode : int {
-    OFF = 0,
-    ON_START = 1,
-    CONTINUOUS = 2,
+  OFF = 0,
+  ON_START = 1,
+  CONTINUOUS = 2,
 };
 
 class PipelineImpl : public std::enable_shared_from_this<PipelineImpl> {
-    friend class Pipeline;
-    friend class Node;
-    friend class DeviceBase;
-    friend class utility::PipelineImplHelper;
+  friend class Pipeline;
+  friend class Node;
+  friend class DeviceBase;
+  friend class utility::PipelineImplHelper;
 
-   public:
-    PipelineImpl(bool createImplicitDevice = true) : assetManager("/pipeline/") {
-        if(createImplicitDevice) {
-            defaultDevice = std::make_shared<Device>();
-        } else {
-            hostProperties = DeviceProperties();
-            defaultDeviceProperties = &hostProperties.value();
-        }
+ public:
+  PipelineImpl(bool createImplicitDevice = true) : assetManager("/pipeline/") {
+    if (createImplicitDevice) {
+      defaultDevice = std::make_shared<Device>();
+    } else {
+      hostProperties = DeviceProperties();
+      defaultDeviceProperties = &hostProperties.value();
     }
-    PipelineImpl(std::shared_ptr<Device> device) : assetManager("/pipeline/"), defaultDevice{std::move(device)} {}
-    PipelineImpl(const PipelineImpl&) = delete;
-    PipelineImpl& operator=(const PipelineImpl&) = delete;
-    PipelineImpl(PipelineImpl&&) = delete;
-    PipelineImpl& operator=(PipelineImpl&&) = delete;
-    ~PipelineImpl();
+  }
+  PipelineImpl(std::shared_ptr<Device> device)
+      : assetManager("/pipeline/"), defaultDevice{std::move(device)} {}
+  PipelineImpl(const PipelineImpl &) = delete;
+  PipelineImpl &operator=(const PipelineImpl &) = delete;
+  PipelineImpl(PipelineImpl &&) = delete;
+  PipelineImpl &operator=(PipelineImpl &&) = delete;
+  ~PipelineImpl();
 
-   protected:
-    // Record and Replay
-    RecordConfig recordConfig;
-    bool enableHolisticRecordReplay = false;
-    std::unordered_map<std::string, std::filesystem::path> recordReplayFilenames;
-    bool removeRecordReplayFiles = true;
-    std::string defaultDeviceId;
-    // Is the pipeline building on host? Some steps should be skipped when building on device
-    bool buildingOnHost = true;
+ protected:
+  // Record and Replay
+  RecordConfig recordConfig;
+  bool enableHolisticRecordReplay = false;
+  std::unordered_map<std::string, std::filesystem::path> recordReplayFilenames;
+  bool removeRecordReplayFiles = true;
+  std::string defaultDeviceId;
+  // Is the pipeline building on host? Some steps should be skipped when
+  // building on device
+  bool buildingOnHost = true;
 
-    // Pipeline events
-    bool enablePipelineDebugging = false;
-    std::shared_ptr<MessageQueue> pipelineStateOut;
-    std::shared_ptr<InputQueue> pipelineStateRequest;
-    std::shared_ptr<MessageQueue> pipelineStateTraceOut;
-    std::shared_ptr<InputQueue> pipelineStateTraceRequest;
+  // Pipeline events
+  bool enablePipelineDebugging = false;
+  std::shared_ptr<MessageQueue> pipelineStateOut;
+  std::shared_ptr<InputQueue> pipelineStateRequest;
+  std::shared_ptr<MessageQueue> pipelineStateTraceOut;
+  std::shared_ptr<InputQueue> pipelineStateTraceRequest;
 
-    // Access to nodes
-    std::vector<std::shared_ptr<Node>> getAllNodes() const;
-    std::shared_ptr<Node> getNode(Node::Id id) const;
-    std::vector<std::shared_ptr<Node>> getSourceNodes();
+  // Access to nodes
+  std::vector<std::shared_ptr<Node>> getAllNodes() const;
+  std::shared_ptr<Node> getNode(Node::Id id) const;
+  std::vector<std::shared_ptr<Node>> getSourceNodes();
 
-   private:
-    static std::string createTelemetryPipelineId();
+ private:
+  static std::string createTelemetryPipelineId();
 
-    // static functions
-    static bool isSamePipeline(const Node::Output& out, const Node::Input& in);
-    static bool canConnect(const Node::Output& out, const Node::Input& in);
+  // static functions
+  static bool isSamePipeline(const Node::Output &out, const Node::Input &in);
+  static bool canConnect(const Node::Output &out, const Node::Input &in);
 
-    // Functions
-    Node::Id getNextUniqueId();
-    PipelineSchema getPipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE, bool includePipelineDebugging = true) const;
-    PipelineSchema getDevicePipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE, bool includePipelineDebugging = true) const;
-    Device::Config getDeviceConfig() const;
-    void setCameraTuningBlobPath(const fs::path& path);
-    void setCameraTuningBlobPath(CameraBoardSocket socket, const fs::path& path);
-    void setXLinkChunkSize(int sizeBytes);
-    GlobalProperties getGlobalProperties() const;
-    void setGlobalProperties(GlobalProperties globalProperties);
-    void setDefaultDeviceProperties(const DeviceProperties& deviceProperties);
-    void setDefaultDevicePropertiesRef(DeviceProperties* deviceProperties);
-    std::optional<DeviceProperties> getDefaultDeviceProperties() const;
-    void setSippBufferSize(int sizeBytes);
-    void setSippDmaBufferSize(int sizeBytes);
-    void setBoardConfig(BoardConfig board);
-    void setAutoCalibrationMode(PipelineAutoCalibrationMode mode);
-    std::pair<std::shared_ptr<dai::node::Camera>, std::shared_ptr<dai::node::Camera>> getStereoPair() const;
-    bool hasDynamicCalibration() const;
-    PipelineAutoCalibrationMode getAutoCalibrationMode() const;
+  // Functions
+  Node::Id getNextUniqueId();
+  PipelineSchema getPipelineSchema(
+      SerializationType type = DEFAULT_SERIALIZATION_TYPE,
+      bool includePipelineDebugging = true) const;
+  PipelineSchema getDevicePipelineSchema(
+      SerializationType type = DEFAULT_SERIALIZATION_TYPE,
+      bool includePipelineDebugging = true) const;
+  Device::Config getDeviceConfig() const;
+  void setCameraTuningBlobPath(const fs::path &path);
+  void setCameraTuningBlobPath(CameraBoardSocket socket, const fs::path &path);
+  void setXLinkChunkSize(int sizeBytes);
+  GlobalProperties getGlobalProperties() const;
+  void setGlobalProperties(GlobalProperties globalProperties);
+  void setDefaultDeviceProperties(const DeviceProperties &deviceProperties);
+  void setDefaultDevicePropertiesRef(DeviceProperties *deviceProperties);
+  std::optional<DeviceProperties> getDefaultDeviceProperties() const;
+  void setSippBufferSize(int sizeBytes);
+  void setSippDmaBufferSize(int sizeBytes);
+  void setBoardConfig(BoardConfig board);
+  void setAutoCalibrationMode(PipelineAutoCalibrationMode mode);
+  std::pair<std::shared_ptr<dai::node::Camera>,
+            std::shared_ptr<dai::node::Camera>>
+  getStereoPair() const;
+  bool hasDynamicCalibration() const;
+  PipelineAutoCalibrationMode getAutoCalibrationMode() const;
 
-    BoardConfig getBoardConfig() const;
+  BoardConfig getBoardConfig() const;
 
-    void serialize(PipelineSchema& schema, Assets& assets, std::vector<std::uint8_t>& assetStorage, SerializationType type = DEFAULT_SERIALIZATION_TYPE) const;
-    nlohmann::json serializeToJson(bool includeAssets) const;
-    void remove(std::shared_ptr<Node> node);
+  void serialize(PipelineSchema &schema, Assets &assets,
+                 std::vector<std::uint8_t> &assetStorage,
+                 SerializationType type = DEFAULT_SERIALIZATION_TYPE) const;
+  nlohmann::json serializeToJson(bool includeAssets) const;
+  void remove(std::shared_ptr<Node> node);
 
-    std::vector<Node::Connection> getConnections() const;
-    std::vector<Node::ConnectionInternal> getConnectionsInternal() const;
-    void link(const Node::Output& out, const Node::Input& in);
-    void unlink(const Node::Output& out, const Node::Input& in);
-    void setCalibrationData(CalibrationHandler calibrationDataHandler);
-    bool isCalibrationDataAvailable() const;
-    CalibrationHandler getCalibrationData() const;
-    void setEepromData(std::optional<EepromData> eepromData);
-    std::optional<EepromData> getEepromData() const;
-    uint32_t getEepromId() const;
-    bool isHostOnly() const;
-    bool isDeviceOnly() const;
+  std::vector<Node::Connection> getConnections() const;
+  std::vector<Node::ConnectionInternal> getConnectionsInternal() const;
+  void link(const Node::Output &out, const Node::Input &in);
+  void unlink(const Node::Output &out, const Node::Input &in);
+  void setCalibrationData(CalibrationHandler calibrationDataHandler);
+  bool isCalibrationDataAvailable() const;
+  CalibrationHandler getCalibrationData() const;
+  void setEepromData(std::optional<EepromData> eepromData);
+  std::optional<EepromData> getEepromData() const;
+  uint32_t getEepromId() const;
+  bool isHostOnly() const;
+  bool isDeviceOnly() const;
 
-    // Pipeline state getters
-    PipelineStateApi getPipelineState();
+  // Pipeline state getters
+  PipelineStateApi getPipelineState();
 
-    // Must be incremented and unique for each node
-    Node::Id latestId = 0;
-    // Pipeline asset manager
-    AssetManager assetManager;
-    // Optionally forced version
-    std::optional<OpenVINO::Version> forceRequiredOpenVINOVersion;
-    // Global pipeline properties
-    GlobalProperties globalProperties;
-    // // Optimized for adding, searching and removing connections
-    // using NodeMap = std::unordered_map<Node::Id, std::shared_ptr<Node>>;
-    // NodeMap nodeMap;
-    std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<std::pair<int64_t, int64_t>> xlinkBridges;
+  // Must be incremented and unique for each node
+  Node::Id latestId = 0;
+  // Pipeline asset manager
+  AssetManager assetManager;
+  // Optionally forced version
+  std::optional<OpenVINO::Version> forceRequiredOpenVINOVersion;
+  // Global pipeline properties
+  GlobalProperties globalProperties;
+  // // Optimized for adding, searching and removing connections
+  // using NodeMap = std::unordered_map<Node::Id, std::shared_ptr<Node>>;
+  // NodeMap nodeMap;
+  std::vector<std::shared_ptr<Node>> nodes;
+  std::vector<std::pair<int64_t, int64_t>> xlinkBridges;
 
-    // TODO(themarpe) - refactor, connections are now carried by nodes instead
-    using NodeConnectionMap = std::unordered_map<Node::Id, std::unordered_set<Node::ConnectionInternal, Node::ConnectionInternal::Hash>>;
-    // // Connection map, NodeId represents id of node connected TO (input)
-    // NodeConnectionMap nodeConnectionMap;
-    /// Get a reference to internal connection representation
-    NodeConnectionMap getConnectionMap() const;
+  // TODO(themarpe) - refactor, connections are now carried by nodes instead
+  using NodeConnectionMap =
+      std::unordered_map<Node::Id,
+                         std::unordered_set<Node::ConnectionInternal,
+                                            Node::ConnectionInternal::Hash>>;
+  // // Connection map, NodeId represents id of node connected TO (input)
+  // NodeConnectionMap nodeConnectionMap;
+  /// Get a reference to internal connection representation
+  NodeConnectionMap getConnectionMap() const;
 
-    // Board configuration
-    BoardConfig board;
+  // Board configuration
+  BoardConfig board;
 
-    // Build-time automatic calibration policy for implicit AutoCalibration node creation.
-    PipelineAutoCalibrationMode autoCalibrationMode = PipelineAutoCalibrationMode::ON_START;
-    bool autoCalibrationModeSetByApi = false;
+  // Build-time automatic calibration policy for implicit AutoCalibration node
+  // creation.
+  PipelineAutoCalibrationMode autoCalibrationMode =
+      PipelineAutoCalibrationMode::ON_START;
+  bool autoCalibrationModeSetByApi = false;
 
-    // Output queues
-    std::vector<std::shared_ptr<MessageQueue>> outputQueues;
+  // Output queues
+  std::vector<std::shared_ptr<MessageQueue>> outputQueues;
 
-    // is pipeline running
-    AtomicBool running{false};
-    std::string telemetryPipelineId{createTelemetryPipelineId()};
-    std::optional<std::chrono::steady_clock::time_point> telemetryPipelineStartedAt;
+  // is pipeline running
+  AtomicBool running{false};
+  std::string telemetryPipelineId{createTelemetryPipelineId()};
+  std::optional<std::chrono::steady_clock::time_point>
+      telemetryPipelineStartedAt;
 
-    // was pipeline built
-    AtomicBool isBuild{false};
+  // was pipeline built
+  AtomicBool isBuild{false};
 
-    // Add a mutex for any state change
-    std::mutex stateMtx;
+  // Add a mutex for any state change
+  std::mutex stateMtx;
 
-    // Calibration mutex
-    mutable std::mutex calibMtx;
+  // Calibration mutex
+  mutable std::mutex calibMtx;
 
-    // DeviceBase for hybrid pipelines
-    std::shared_ptr<Device> defaultDevice;
-    std::optional<DeviceProperties> hostProperties;
-    DeviceProperties* defaultDeviceProperties = nullptr;
+  // DeviceBase for hybrid pipelines
+  std::shared_ptr<Device> defaultDevice;
+  std::optional<DeviceProperties> hostProperties;
+  DeviceProperties *defaultDeviceProperties = nullptr;
 
-    // Queue for tasks
-    LockingQueue<std::function<void()>> tasks;
+  // Queue for tasks
+  LockingQueue<std::function<void()>> tasks;
 
-    void addTask(std::function<void()> task) {
-        tasks.push(std::move(task));
+  void addTask(std::function<void()> task) { tasks.push(std::move(task)); }
+
+  void processTasks(bool waitForTasks = false, double timeoutSeconds = -1.0) {
+    bool timeoutSet = timeoutSeconds >= 0.0;
+    if (waitForTasks) {
+      std::function<void()> task;
+      bool success;
+      if (timeoutSet) {
+        success = tasks.tryWaitAndPop(
+            task, std::chrono::duration<double>(timeoutSeconds));
+      } else {
+        success = tasks.waitAndPop(task);
+      }
+      if (!success) {
+        return;
+      }
+      task();
     }
-
-    void processTasks(bool waitForTasks = false, double timeoutSeconds = -1.0) {
-        bool timeoutSet = timeoutSeconds >= 0.0;
-        if(waitForTasks) {
-            std::function<void()> task;
-            bool success;
-            if(timeoutSet) {
-                success = tasks.tryWaitAndPop(task, std::chrono::duration<double>(timeoutSeconds));
-            } else {
-                success = tasks.waitAndPop(task);
-            }
-            if(!success) {
-                return;
-            }
-            task();
-        }
-        // Regardless if we should wait or not, run all remaining tasks
-        while(!tasks.empty()) {
-            std::function<void()> task;
-            bool success = false;
-            success = tasks.tryPop(task);
-            if(!success) {
-                // No more tasks
-                break;
-            }
-            task();
-        }
+    // Regardless if we should wait or not, run all remaining tasks
+    while (!tasks.empty()) {
+      std::function<void()> task;
+      bool success = false;
+      success = tasks.tryPop(task);
+      if (!success) {
+        // No more tasks
+        break;
+      }
+      task();
     }
+  }
 
-    template <typename N, typename... Args>
-    std::enable_if_t<std::is_base_of<DeviceNode, N>::value && !std::is_base_of<HostRunnable, N>::value, std::shared_ptr<N>> createNode(Args&&... args) {
-        // N is a subclass of DeviceNode
-        // return N::create();  // Specific create call for DeviceNode subclasses
-        if(defaultDevice == nullptr) {
-            throw std::runtime_error("Pipeline is host only, cannot create device node");
-        }
-        return N::create(defaultDevice, std::forward<Args>(args)...);  // Specific create call for DeviceNode subclasses
+  template <typename N, typename... Args>
+  std::enable_if_t<std::is_base_of<DeviceNode, N>::value &&
+                       !std::is_base_of<HostRunnable, N>::value,
+                   std::shared_ptr<N>>
+  createNode(Args &&...args) {
+    // N is a subclass of DeviceNode
+    // return N::create();  // Specific create call for DeviceNode subclasses
+    if (defaultDevice == nullptr) {
+      throw std::runtime_error(
+          "Pipeline is host only, cannot create device node");
     }
+    return N::create(
+        defaultDevice,
+        std::forward<Args>(
+            args)...);  // Specific create call for DeviceNode subclasses
+  }
 
-    template <typename N, typename... Args>
-    std::enable_if_t<std::is_base_of<DeviceNode, N>::value && std::is_base_of<HostRunnable, N>::value, std::shared_ptr<N>> createNode(Args&&... args) {
-        // N is a subclass of DeviceNode
-        // return N::create();  // Specific create call for DeviceNode subclasses
-        if(defaultDevice == nullptr) {
-            return N::create(std::forward<Args>(args)...);  // Generic create call
-        } else {
-            return N::create(defaultDevice, std::forward<Args>(args)...);  // Specific create call for DeviceNode subclasses
-        }
+  template <typename N, typename... Args>
+  std::enable_if_t<std::is_base_of<DeviceNode, N>::value &&
+                       std::is_base_of<HostRunnable, N>::value,
+                   std::shared_ptr<N>>
+  createNode(Args &&...args) {
+    // N is a subclass of DeviceNode
+    // return N::create();  // Specific create call for DeviceNode subclasses
+    if (defaultDevice == nullptr) {
+      return N::create(std::forward<Args>(args)...);  // Generic create call
+    } else {
+      return N::create(
+          defaultDevice,
+          std::forward<Args>(
+              args)...);  // Specific create call for DeviceNode subclasses
     }
+  }
 
-    template <typename N, typename... Args>
-    std::enable_if_t<!std::is_base_of<DeviceNode, N>::value, std::shared_ptr<N>> createNode(Args&&... args) {
-        // N is not a subclass of DeviceNode
-        return N::create(std::forward<Args>(args)...);  // Generic create call
-    }
+  template <typename N, typename... Args>
+  std::enable_if_t<!std::is_base_of<DeviceNode, N>::value, std::shared_ptr<N>>
+  createNode(Args &&...args) {
+    // N is not a subclass of DeviceNode
+    return N::create(std::forward<Args>(args)...);  // Generic create call
+  }
 
-    // Template create function
-    template <class N, typename... Args>
-    std::shared_ptr<N> create(const std::shared_ptr<PipelineImpl>& itself, Args&&... args) {
-        (void)itself;
-        // Check that passed type 'N' is subclass of Node
-        static_assert(std::is_base_of<Node, N>::value, "Specified class is not a subclass of Node");
-        // Create and store the node in the map
-        auto node = createNode<N>(std::forward<Args>(args)...);
-        // std::shared_ptr<N> node = nullptr;
-        add(node);
-        // Return shared pointer to this node
-        return node;
-    }
+  // Template create function
+  template <class N, typename... Args>
+  std::shared_ptr<N> create(const std::shared_ptr<PipelineImpl> &itself,
+                            Args &&...args) {
+    (void)itself;
+    // Check that passed type 'N' is subclass of Node
+    static_assert(std::is_base_of<Node, N>::value,
+                  "Specified class is not a subclass of Node");
+    // Create and store the node in the map
+    auto node = createNode<N>(std::forward<Args>(args)...);
+    // std::shared_ptr<N> node = nullptr;
+    add(node);
+    // Return shared pointer to this node
+    return node;
+  }
 
-    // Add a node to nodeMap
-    void add(std::shared_ptr<Node> node);
+  // Add a node to nodeMap
+  void add(std::shared_ptr<Node> node);
 
-    // Run only host side, if any device nodes are present, error out
-    bool isRunning() const;
-    bool isBuilt() const;
-    void build();
-    void start();
-    void wait();
-    void stop();
-    void run();
+  // Run only host side, if any device nodes are present, error out
+  bool isRunning() const;
+  bool isBuilt() const;
+  void build();
+  void start();
+  void wait();
+  void stop();
+  void run();
 
-    // Reset connections
-    void resetConnections();
-    void disconnectXLinkHosts();
+  // Reset connections
+  void resetConnections();
+  void disconnectXLinkHosts();
 
-   private:
-    // Resource
-    std::vector<uint8_t> loadResource(fs::path uri);
-    std::vector<uint8_t> loadResourceCwd(fs::path uri, fs::path cwd, bool moveAsset = false);
+ private:
+  // Resource
+  std::vector<uint8_t> loadResource(fs::path uri);
+  std::vector<uint8_t> loadResourceCwd(fs::path uri, fs::path cwd,
+                                       bool moveAsset = false);
 };
 
 /**
  * @brief Represents the pipeline, set of nodes and connections between them
  */
 class Pipeline {
-    friend class PipelineImpl;
-    friend class Device;
+  friend class PipelineImpl;
+  friend class Device;
 
-    std::shared_ptr<PipelineImpl> pimpl;
+  std::shared_ptr<PipelineImpl> pimpl;
 
-   public:
-    using AutoCalibrationMode = PipelineAutoCalibrationMode;
+ public:
+  using AutoCalibrationMode = PipelineAutoCalibrationMode;
 
-    PipelineImpl* impl() {
-        return pimpl.get();
-    }
-    const PipelineImpl* impl() const {
-        return pimpl.get();
-    }
+  PipelineImpl *impl() { return pimpl.get(); }
+  const PipelineImpl *impl() const { return pimpl.get(); }
 
-    std::vector<std::shared_ptr<Node>> getSourceNodes() {
-        return impl()->getSourceNodes();
-    }
+  std::vector<std::shared_ptr<Node>> getSourceNodes() {
+    return impl()->getSourceNodes();
+  }
 
-    /**
-     * Creates a pipeline
-     * @param createImplicitDevice If true, creates a default device (default = true)
-     */
-    explicit Pipeline(bool createImplicitDevice = true);
+  /**
+   * Creates a pipeline
+   * @param createImplicitDevice If true, creates a default device (default =
+   * true)
+   */
+  explicit Pipeline(bool createImplicitDevice = true);
 
-    /**
-     * Creates a pipeline with specified device
-     */
-    explicit Pipeline(std::shared_ptr<Device> device);
+  /**
+   * Creates a pipeline with specified device
+   */
+  explicit Pipeline(std::shared_ptr<Device> device);
 
-    /**
-     * Creates a pipeline with specified device
-     */
-    explicit Pipeline(std::shared_ptr<PipelineImpl> pimpl);
+  /**
+   * Creates a pipeline with specified device
+   */
+  explicit Pipeline(std::shared_ptr<PipelineImpl> pimpl);
 
-    /**
-     * @returns Global properties of current pipeline
-     */
-    GlobalProperties getGlobalProperties() const {
-        return impl()->getGlobalProperties();
-    }
+  /**
+   * @returns Global properties of current pipeline
+   */
+  GlobalProperties getGlobalProperties() const {
+    return impl()->getGlobalProperties();
+  }
 
-    /**
-     * Sets global properties of pipeline
-     */
-    void setGlobalProperties(GlobalProperties globalProperties) {
-        impl()->setGlobalProperties(globalProperties);
-    }
+  /**
+   * Sets global properties of pipeline
+   */
+  void setGlobalProperties(GlobalProperties globalProperties) {
+    impl()->setGlobalProperties(globalProperties);
+  }
 
-    /**
-     * Sets default device properties
-     */
-    void setDefaultDeviceProperties(DeviceProperties deviceProperties) {
-        impl()->setDefaultDeviceProperties(deviceProperties);
-    }
+  /**
+   * Sets default device properties
+   */
+  void setDefaultDeviceProperties(DeviceProperties deviceProperties) {
+    impl()->setDefaultDeviceProperties(deviceProperties);
+  }
 
-    /**
-     * Sets default device properties reference. The properties should live at least as long as the pipeline.
-     */
-    void setDefaultDevicePropertiesRef(DeviceProperties* deviceProperties) {
-        impl()->setDefaultDevicePropertiesRef(deviceProperties);
-    }
+  /**
+   * Sets default device properties reference. The properties should live at
+   * least as long as the pipeline.
+   */
+  void setDefaultDevicePropertiesRef(DeviceProperties *deviceProperties) {
+    impl()->setDefaultDevicePropertiesRef(deviceProperties);
+  }
 
-    /**
-     * Gets a copy of default device properties. If pipeline is in host only mode, returns host properties, otherwise returns device properties
-     */
-    std::optional<DeviceProperties> getDefaultDeviceProperties() const {
-        return impl()->getDefaultDeviceProperties();
-    }
+  /**
+   * Gets a copy of default device properties. If pipeline is in host only mode,
+   * returns host properties, otherwise returns device properties
+   */
+  std::optional<DeviceProperties> getDefaultDeviceProperties() const {
+    return impl()->getDefaultDeviceProperties();
+  }
 
-    /**
-     * @returns Pipeline schema
-     */
-    PipelineSchema getPipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE, bool includePipelineDebugging = true) const;
+  /**
+   * @returns Pipeline schema
+   */
+  PipelineSchema getPipelineSchema(
+      SerializationType type = DEFAULT_SERIALIZATION_TYPE,
+      bool includePipelineDebugging = true) const;
 
-    /**
-     * @returns Device pipeline schema (without host only nodes and connections)
-     */
-    PipelineSchema getDevicePipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE, bool includePipelineDebugging = true) const;
+  /**
+   * @returns Device pipeline schema (without host only nodes and connections)
+   */
+  PipelineSchema getDevicePipelineSchema(
+      SerializationType type = DEFAULT_SERIALIZATION_TYPE,
+      bool includePipelineDebugging = true) const;
 
-    // void loadAssets(AssetManager& assetManager);
-    void serialize(PipelineSchema& schema, Assets& assets, std::vector<std::uint8_t>& assetStorage) const {
-        impl()->serialize(schema, assets, assetStorage);
-    }
+  // void loadAssets(AssetManager& assetManager);
+  void serialize(PipelineSchema &schema, Assets &assets,
+                 std::vector<std::uint8_t> &assetStorage) const {
+    impl()->serialize(schema, assets, assetStorage);
+  }
 
-    /// Returns whole pipeline represented as JSON
-    nlohmann::json serializeToJson(bool includeAssests = true) const {
-        return impl()->serializeToJson(includeAssests);
-    }
+  /// Returns whole pipeline represented as JSON
+  nlohmann::json serializeToJson(bool includeAssests = true) const {
+    return impl()->serializeToJson(includeAssests);
+  }
 
-    /**
-     * Creates and adds a node to the pipeline.
-     *
-     * Node is specified by template argument N
-     */
-    template <class N, typename... Args>
-    std::shared_ptr<N> create(Args&&... args) {
-        return impl()->create<N>(pimpl, std::forward<Args>(args)...);
-    }
+  /**
+   * Creates and adds a node to the pipeline.
+   *
+   * Node is specified by template argument N
+   */
+  template <class N, typename... Args>
+  std::shared_ptr<N> create(Args &&...args) {
+    return impl()->create<N>(pimpl, std::forward<Args>(args)...);
+  }
 
-    /**
-     * Adds an existing node to the pipeline
-     */
-    void add(std::shared_ptr<Node> node) {
-        impl()->add(node);
-    }
+  /**
+   * Adds an existing node to the pipeline
+   */
+  void add(std::shared_ptr<Node> node) { impl()->add(node); }
 
-    /// Removes a node from pipeline
-    void remove(std::shared_ptr<Node> node) {
-        impl()->remove(node);
-    }
+  /// Removes a node from pipeline
+  void remove(std::shared_ptr<Node> node) { impl()->remove(node); }
 
-    /// Get a vector of all nodes
-    std::vector<std::shared_ptr<Node>> getAllNodes() const {
-        return impl()->getAllNodes();
-    }
+  /// Get a vector of all nodes
+  std::vector<std::shared_ptr<Node>> getAllNodes() const {
+    return impl()->getAllNodes();
+  }
 
-    /// Get node with id if it exists, nullptr otherwise
-    std::shared_ptr<const Node> getNode(Node::Id id) const {
-        return impl()->getNode(id);
-    }
-    /// Get node with id if it exists, nullptr otherwise
-    std::shared_ptr<Node> getNode(Node::Id id) {
-        return impl()->getNode(id);
-    }
+  /// Get node with id if it exists, nullptr otherwise
+  std::shared_ptr<const Node> getNode(Node::Id id) const {
+    return impl()->getNode(id);
+  }
+  /// Get node with id if it exists, nullptr otherwise
+  std::shared_ptr<Node> getNode(Node::Id id) { return impl()->getNode(id); }
 
-    /// Get all connections
-    std::vector<Node::Connection> getConnections() const {
-        return impl()->getConnections();
-    }
+  /// Get all connections
+  std::vector<Node::Connection> getConnections() const {
+    return impl()->getConnections();
+  }
 
-    using NodeConnectionMap = PipelineImpl::NodeConnectionMap;
-    NodeConnectionMap getConnectionMap() const {
-        return impl()->getConnectionMap();
-    }
+  using NodeConnectionMap = PipelineImpl::NodeConnectionMap;
+  NodeConnectionMap getConnectionMap() const {
+    return impl()->getConnectionMap();
+  }
 
-    /// Get pipelines AssetManager as reference
-    const AssetManager& getAssetManager() const {
-        return impl()->assetManager;
-    }
+  /// Get pipelines AssetManager as reference
+  const AssetManager &getAssetManager() const { return impl()->assetManager; }
 
-    /// Get pipelines AssetManager as reference
-    AssetManager& getAssetManager() {
-        return impl()->assetManager;
-    }
+  /// Get pipelines AssetManager as reference
+  AssetManager &getAssetManager() { return impl()->assetManager; }
 
-    /// Set a specific OpenVINO version to use with this pipeline
-    void setOpenVINOVersion(OpenVINO::Version version) {
-        impl()->forceRequiredOpenVINOVersion = version;
-    }
+  /// Set a specific OpenVINO version to use with this pipeline
+  void setOpenVINOVersion(OpenVINO::Version version) {
+    impl()->forceRequiredOpenVINOVersion = version;
+  }
 
-    /**
-     * Sets the calibration in pipeline which overrides the calibration data in eeprom
-     *
-     * @param calibrationDataHandler CalibrationHandler object which is loaded with calibration information.
-     */
-    void setCalibrationData(CalibrationHandler calibrationDataHandler) {
-        impl()->setCalibrationData(calibrationDataHandler);
-    }
+  /**
+   * Sets the calibration in pipeline which overrides the calibration data in
+   * eeprom
+   *
+   * @param calibrationDataHandler CalibrationHandler object which is loaded
+   * with calibration information.
+   */
+  void setCalibrationData(CalibrationHandler calibrationDataHandler) {
+    impl()->setCalibrationData(calibrationDataHandler);
+  }
 
-    /**
-     * gets the calibration data which is set through pipeline
-     *
-     * @return the calibrationHandler with calib data in the pipeline
-     */
-    CalibrationHandler getCalibrationData() const {
-        return impl()->getCalibrationData();
-    }
+  /**
+   * gets the calibration data which is set through pipeline
+   *
+   * @return the calibrationHandler with calib data in the pipeline
+   */
+  CalibrationHandler getCalibrationData() const {
+    return impl()->getCalibrationData();
+  }
 
-    /**
-     * check if calib data is available on the device
-     * @return true - calib data is available
-     * @return false - calib data is not available
-     */
-    bool isCalibrationDataAvailable() const {
-        return impl()->isCalibrationDataAvailable();
-    }
+  /**
+   * check if calib data is available on the device
+   * @return true - calib data is available
+   * @return false - calib data is not available
+   */
+  bool isCalibrationDataAvailable() const {
+    return impl()->isCalibrationDataAvailable();
+  }
 
-    /**
-     * gets the eeprom data from the pipeline
-     *
-     * @return eepromData from the the pipeline
-     */
-    std::optional<EepromData> getEepromData() const {
-        return impl()->getEepromData();
-    }
+  /**
+   * gets the eeprom data from the pipeline
+   *
+   * @return eepromData from the the pipeline
+   */
+  std::optional<EepromData> getEepromData() const {
+    return impl()->getEepromData();
+  }
 
-    /**
-     * Sets the eeprom data in pipeline
-     *
-     * @param eepromData EepromData object that is loaded in the pipeline.
-     */
-    void setEepromData(std::optional<EepromData> eepromData) {
-        impl()->setEepromData(eepromData);
-    }
+  /**
+   * Sets the eeprom data in pipeline
+   *
+   * @param eepromData EepromData object that is loaded in the pipeline.
+   */
+  void setEepromData(std::optional<EepromData> eepromData) {
+    impl()->setEepromData(eepromData);
+  }
 
-    /**
-     * Gets the eeprom id from the pipeline
-     *
-     * @return eeprom id from the pipeline
-     */
-    uint32_t getEepromId() const {
-        return impl()->getEepromId();
-    }
+  /**
+   * Gets the eeprom id from the pipeline
+   *
+   * @return eeprom id from the pipeline
+   */
+  uint32_t getEepromId() const { return impl()->getEepromId(); }
 
-    /// Set a camera IQ (Image Quality) tuning blob, used for all cameras
-    void setCameraTuningBlobPath(const fs::path& path) {
-        impl()->setCameraTuningBlobPath(path);
-    }
+  /// Set a camera IQ (Image Quality) tuning blob, used for all cameras
+  void setCameraTuningBlobPath(const fs::path &path) {
+    impl()->setCameraTuningBlobPath(path);
+  }
 
-    /// Set a camera IQ (Image Quality) tuning blob, used for specific board socket
-    void setCameraTuningBlobPath(CameraBoardSocket socket, const fs::path& path) {
-        impl()->setCameraTuningBlobPath(socket, path);
-    }
+  /// Set a camera IQ (Image Quality) tuning blob, used for specific board
+  /// socket
+  void setCameraTuningBlobPath(CameraBoardSocket socket, const fs::path &path) {
+    impl()->setCameraTuningBlobPath(socket, path);
+  }
 
-    /**
-     * Set chunk size for splitting device-sent XLink packets, in bytes. A larger value could
-     * increase performance, with 0 disabling chunking. A negative value won't modify the
-     * device defaults - configured per protocol, currently 64*1024 for both USB and Ethernet.
-     */
-    void setXLinkChunkSize(int sizeBytes) {
-        impl()->setXLinkChunkSize(sizeBytes);
-    }
+  /**
+   * Set chunk size for splitting device-sent XLink packets, in bytes. A larger
+   * value could increase performance, with 0 disabling chunking. A negative
+   * value won't modify the device defaults - configured per protocol, currently
+   * 64*1024 for both USB and Ethernet.
+   */
+  void setXLinkChunkSize(int sizeBytes) {
+    impl()->setXLinkChunkSize(sizeBytes);
+  }
 
-    /**
-     * SIPP (Signal Image Processing Pipeline) internal memory pool.
-     * SIPP is a framework used to schedule HW filters, e.g. ISP, Warp, Median filter etc.
-     * Changing the size of this pool is meant for advanced use cases, pushing the limits of the HW.
-     * By default memory is allocated in high speed CMX memory. Setting to 0 will allocate in DDR 256 kilobytes.
-     * Units are bytes.
-     */
-    void setSippBufferSize(int sizeBytes) {
-        impl()->setSippBufferSize(sizeBytes);
-    }
+  /**
+   * SIPP (Signal Image Processing Pipeline) internal memory pool.
+   * SIPP is a framework used to schedule HW filters, e.g. ISP, Warp, Median
+   * filter etc. Changing the size of this pool is meant for advanced use cases,
+   * pushing the limits of the HW. By default memory is allocated in high speed
+   * CMX memory. Setting to 0 will allocate in DDR 256 kilobytes. Units are
+   * bytes.
+   */
+  void setSippBufferSize(int sizeBytes) {
+    impl()->setSippBufferSize(sizeBytes);
+  }
 
-    /**
-     * SIPP (Signal Image Processing Pipeline) internal DMA memory pool.
-     * SIPP is a framework used to schedule HW filters, e.g. ISP, Warp, Median filter etc.
-     * Changing the size of this pool is meant for advanced use cases, pushing the limits of the HW.
-     * Memory is allocated in high speed CMX memory
-     * Units are bytes.
-     */
-    void setSippDmaBufferSize(int sizeBytes) {
-        impl()->setSippDmaBufferSize(sizeBytes);
-    }
+  /**
+   * SIPP (Signal Image Processing Pipeline) internal DMA memory pool.
+   * SIPP is a framework used to schedule HW filters, e.g. ISP, Warp, Median
+   * filter etc. Changing the size of this pool is meant for advanced use cases,
+   * pushing the limits of the HW. Memory is allocated in high speed CMX memory
+   * Units are bytes.
+   */
+  void setSippDmaBufferSize(int sizeBytes) {
+    impl()->setSippDmaBufferSize(sizeBytes);
+  }
 
-    /// Sets board configuration
-    void setBoardConfig(BoardConfig board) {
-        impl()->setBoardConfig(board);
-    }
+  /// Sets board configuration
+  void setBoardConfig(BoardConfig board) { impl()->setBoardConfig(board); }
 
-    /// Sets implicit automatic calibration policy for this pipeline.
-    void setAutoCalibrationMode(AutoCalibrationMode mode) {
-        impl()->setAutoCalibrationMode(mode);
-    }
+  /// Sets implicit automatic calibration policy for this pipeline.
+  void setAutoCalibrationMode(AutoCalibrationMode mode) {
+    impl()->setAutoCalibrationMode(mode);
+  }
 
-    /// Gets implicit automatic calibration policy for this pipeline.
-    AutoCalibrationMode getAutoCalibrationMode() const {
-        return impl()->getAutoCalibrationMode();
-    }
+  /// Gets implicit automatic calibration policy for this pipeline.
+  AutoCalibrationMode getAutoCalibrationMode() const {
+    return impl()->getAutoCalibrationMode();
+  }
 
-    /// Gets board configuration
-    BoardConfig getBoardConfig() const {
-        return impl()->getBoardConfig();
-    }
+  /// Gets board configuration
+  BoardConfig getBoardConfig() const { return impl()->getBoardConfig(); }
 
-    /// Get device configuration needed for this pipeline
-    Device::Config getDeviceConfig() const {
-        return impl()->getDeviceConfig();
-    }
+  /// Get device configuration needed for this pipeline
+  Device::Config getDeviceConfig() const { return impl()->getDeviceConfig(); }
 
-    bool isRunning() const {
-        return impl()->isRunning();
-    }
+  bool isRunning() const { return impl()->isRunning(); }
 
-    bool isBuilt() const {
-        return impl()->isBuilt();
-    }
+  bool isBuilt() const { return impl()->isBuilt(); }
 
-    void build() {
-        impl()->build();
-    }
-    void buildDevice() {
-        impl()->buildingOnHost = false;
-        impl()->build();
-    }
-    void start() {
-        impl()->start();
-    }
-    void wait() {
-        impl()->wait();
-    }
-    void stop() {
-        impl()->stop();
-    }
-    void processTasks(bool waitForTasks = false, double timeoutSeconds = -1.0) {
-        impl()->processTasks(waitForTasks, timeoutSeconds);
-    }
-    void run() {
-        impl()->run();
-    }
-    /*
-     * @note In case of a host only pipeline, this function returns a nullptr
-     */
-    std::shared_ptr<Device> getDefaultDevice() {
-        return impl()->defaultDevice;
-    }
-    std::shared_ptr<const Device> getDefaultDevice() const {
-        return impl()->defaultDevice;
-    }
+  void build() { impl()->build(); }
+  void buildDevice() {
+    impl()->buildingOnHost = false;
+    impl()->build();
+  }
+  void start() { impl()->start(); }
+  void wait() { impl()->wait(); }
+  void stop() { impl()->stop(); }
+  void processTasks(bool waitForTasks = false, double timeoutSeconds = -1.0) {
+    impl()->processTasks(waitForTasks, timeoutSeconds);
+  }
+  void run() { impl()->run(); }
+  /*
+   * @note In case of a host only pipeline, this function returns a nullptr
+   */
+  std::shared_ptr<Device> getDefaultDevice() { return impl()->defaultDevice; }
+  std::shared_ptr<const Device> getDefaultDevice() const {
+    return impl()->defaultDevice;
+  }
 
-    std::string getTelemetryPipelineId() const {
-        return impl()->telemetryPipelineId;
-    }
+  std::string getTelemetryPipelineId() const {
+    return impl()->telemetryPipelineId;
+  }
 
-    void addTask(std::function<void()> task) {
-        impl()->addTask(std::move(task));
-    }
+  void addTask(std::function<void()> task) { impl()->addTask(std::move(task)); }
 
-    /// Record and Replay
-    void enableHolisticRecord(const RecordConfig& config);
-    void enableHolisticReplay(const std::string& pathToRecording);
-    bool isHolisticRecordEnabled() const;
-    bool isHolisticReplayEnabled() const;
+  /// Record and Replay
+  void enableHolisticRecord(const RecordConfig &config);
+  void enableHolisticReplay(const std::string &pathToRecording);
+  bool isHolisticRecordEnabled() const;
+  bool isHolisticReplayEnabled() const;
 
-    /// Pipeline debugging
-    void enablePipelineDebugging(bool enable = true);
-    bool isPipelineDebuggingEnabled() const;
+  /// Pipeline debugging
+  void enablePipelineDebugging(bool enable = true);
+  bool isPipelineDebuggingEnabled() const;
 
-    // Access to pipeline state queues
-    std::shared_ptr<MessageQueue> getPipelineStateOut() const;
-    std::shared_ptr<InputQueue> getPipelineStateRequest() const;
+  // Access to pipeline state queues
+  std::shared_ptr<MessageQueue> getPipelineStateOut() const;
+  std::shared_ptr<InputQueue> getPipelineStateRequest() const;
 
-    // Pipeline state getters
-    PipelineStateApi getPipelineState();
+  // Pipeline state getters
+  PipelineStateApi getPipelineState();
 };
 
 }  // namespace dai

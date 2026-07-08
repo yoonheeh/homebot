@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INLCUDE_NOP_UTILITY_STREAM_WRITER_H_
 #define LIBNOP_INLCUDE_NOP_UTILITY_STREAM_WRITER_H_
 
+#include <nop/status.h>
+
 #include <cstdint>
 #include <ostream>
-
-#include <nop/status.h>
 
 namespace nop {
 
@@ -34,9 +34,9 @@ template <typename OStream>
 class StreamWriter {
  public:
   template <typename... Args>
-  StreamWriter(Args&&... args) : stream_{std::forward<Args>(args)...} {}
-  StreamWriter(const StreamWriter&) = default;
-  StreamWriter& operator=(const StreamWriter&) = default;
+  StreamWriter(Args &&...args) : stream_{std::forward<Args>(args)...} {}
+  StreamWriter(const StreamWriter &) = default;
+  StreamWriter &operator=(const StreamWriter &) = default;
 
   Status<void> Prepare(std::size_t /*size*/) { return {}; }
 
@@ -45,10 +45,10 @@ class StreamWriter {
     return ReturnStatus();
   }
 
-  Status<void> Write(const void* begin, const void* end) {
+  Status<void> Write(const void *begin, const void *end) {
     using CharType = typename OStream::char_type;
-    const CharType* begin_char = static_cast<const CharType*>(begin);
-    const CharType* end_char = static_cast<const CharType*>(end);
+    const CharType *begin_char = static_cast<const CharType *>(begin);
+    const CharType *end_char = static_cast<const CharType *>(end);
 
     const std::size_t length_bytes = std::distance(begin_char, end_char);
     stream_.write(begin_char, length_bytes);
@@ -61,16 +61,15 @@ class StreamWriter {
     for (std::size_t i = 0; i < padding_bytes; i++) {
       stream_.put(padding_value);
       auto status = ReturnStatus();
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};
   }
 
-  const OStream& stream() const { return stream_; }
-  OStream& stream() { return stream_; }
-  OStream&& take() { return std::move(stream_); }
+  const OStream &stream() const { return stream_; }
+  OStream &stream() { return stream_; }
+  OStream &&take() { return std::move(stream_); }
 
  private:
   Status<void> ReturnStatus() {

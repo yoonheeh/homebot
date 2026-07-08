@@ -45,22 +45,23 @@ namespace v1 {
  * @ivar metadata: Metadata of the parser.
  */
 struct Head {
-    /**
-     * Metadata of the parser.
-     */
-    Metadata metadata;
-    /**
-     * Optional name of the head.
-     */
-    std::optional<std::string> name;
-    /**
-     * Specify which outputs are fed into the parser. If None, all outputs are fed.
-     */
-    std::optional<std::vector<std::string>> outputs;
-    /**
-     * Name of the parser responsible for processing the models output.
-     */
-    std::string parser;
+  /**
+   * Metadata of the parser.
+   */
+  Metadata metadata;
+  /**
+   * Optional name of the head.
+   */
+  std::optional<std::string> name;
+  /**
+   * Specify which outputs are fed into the parser. If None, all outputs are
+   * fed.
+   */
+  std::optional<std::vector<std::string>> outputs;
+  /**
+   * Name of the parser responsible for processing the models output.
+   */
+  std::string parser;
 };
 }  // namespace v1
 }  // namespace nn_archive

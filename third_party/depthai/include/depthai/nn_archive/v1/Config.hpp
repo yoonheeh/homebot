@@ -34,15 +34,15 @@ namespace v1 {
  * the archive.
  */
 struct Config {
-    /**
-     * String representing config schema version in format 'x.y' where x is major version and y
-     * is minor version.
-     */
-    std::optional<std::string> configVersion;
-    /**
-     * A Model object representing the neural network used in the archive.
-     */
-    Model model;
+  /**
+   * String representing config schema version in format 'x.y' where x is major
+   * version and y is minor version.
+   */
+  std::optional<std::string> configVersion;
+  /**
+   * A Model object representing the neural network used in the archive.
+   */
+  Model model;
 };
 }  // namespace v1
 }  // namespace nn_archive

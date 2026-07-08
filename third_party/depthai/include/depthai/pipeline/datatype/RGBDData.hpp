@@ -19,51 +19,56 @@ namespace dai {
  * Frames can be either of type ImgFrame or EncodedFrame.
  */
 class RGBDData : public Buffer, public ProtoSerializable {
-   public:
-    using FrameVariant = std::variant<std::shared_ptr<ImgFrame>, std::shared_ptr<EncodedFrame>>;
+ public:
+  using FrameVariant =
+      std::variant<std::shared_ptr<ImgFrame>, std::shared_ptr<EncodedFrame>>;
 
-    /**
-     * Construct RGBD message.
-     */
-    RGBDData() = default;
+  /**
+   * Construct RGBD message.
+   */
+  RGBDData() = default;
 
-    ~RGBDData() override;
+  ~RGBDData() override;
 
-    // Setters
-    void setRGBFrame(const FrameVariant& frame);
-    void setDepthFrame(const FrameVariant& frame);
+  // Setters
+  void setRGBFrame(const FrameVariant &frame);
+  void setDepthFrame(const FrameVariant &frame);
 
-    // Getters: return std::nullopt if no frame is set, otherwise a valid FrameVariant is returned (it's not a nullptr)
-    std::optional<FrameVariant> getRGBFrame() const;
-    std::optional<FrameVariant> getDepthFrame() const;
+  // Getters: return std::nullopt if no frame is set, otherwise a valid
+  // FrameVariant is returned (it's not a nullptr)
+  std::optional<FrameVariant> getRGBFrame() const;
+  std::optional<FrameVariant> getDepthFrame() const;
 
-   private:
-    std::shared_ptr<ADatatype> colorFrame;  // nullptr if not set; ImgFrame or EncodedFrame are both ADatatype
-    std::shared_ptr<ADatatype> depthFrame;  // nullptr if not set; ImgFrame or EncodedFrame are both ADatatype
+ private:
+  std::shared_ptr<ADatatype> colorFrame;  // nullptr if not set; ImgFrame or
+                                          // EncodedFrame are both ADatatype
+  std::shared_ptr<ADatatype> depthFrame;  // nullptr if not set; ImgFrame or
+                                          // EncodedFrame are both ADatatype
 
-   public:
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::RGBDData;
-    }
+ public:
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
+  DatatypeEnum getDatatype() const override { return DatatypeEnum::RGBDData; }
 
 #ifdef DEPTHAI_ENABLE_PROTOBUF
-    /**
-     * Serialize message to proto buffer
-     *
-     * @returns serialized message
-     */
-    std::vector<std::uint8_t> serializeProto(bool metadataOnly = false) const override;
+  /**
+   * Serialize message to proto buffer
+   *
+   * @returns serialized message
+   */
+  std::vector<std::uint8_t> serializeProto(
+      bool metadataOnly = false) const override;
 
-    /**
-     * Serialize schema to proto buffer
-     *
-     * @returns serialized schema
-     */
-    ProtoSerializable::SchemaPair serializeSchema() const override;
+  /**
+   * Serialize schema to proto buffer
+   *
+   * @returns serialized schema
+   */
+  ProtoSerializable::SchemaPair serializeSchema() const override;
 #endif
 
-    DEPTHAI_SERIALIZE(RGBDData, colorFrame, depthFrame, Buffer::ts, Buffer::tsDevice, Buffer::sequenceNum);
+  DEPTHAI_SERIALIZE(RGBDData, colorFrame, depthFrame, Buffer::ts,
+                    Buffer::tsDevice, Buffer::sequenceNum);
 };
 
 }  // namespace dai

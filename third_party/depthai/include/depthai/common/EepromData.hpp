@@ -18,44 +18,33 @@ namespace dai {
  * Contains the Calibration and Board data stored on device
  */
 struct EepromData {
-    uint32_t version = 7;
-    std::string productName, boardCustom, boardName, boardRev, boardConf, hardwareConf, deviceName;
-    std::string batchName;  /// Deprecated, not used or stored
-    uint64_t batchTime{0};
-    uint32_t boardOptions{0};
-    std::unordered_map<CameraBoardSocket, CameraInfo> cameraData;
-    StereoRectification stereoRectificationData;
-    Extrinsics imuExtrinsics;
-    Extrinsics housingExtrinsics;
-    std::vector<uint8_t> miscellaneousData;
-    bool stereoUseSpecTranslation{true};
-    bool stereoEnableDistortionCorrection{false};
-    CameraBoardSocket verticalCameraSocket = dai::CameraBoardSocket::AUTO;
-    // IMU calibration payload serialized with EepromData via DEPTHAI_SERIALIZE_OPTIONAL_EXT;
-    // includes biases, scale/shear/rotation decomposition, and IMU noise parameters.
-    ImuCalibrationParams imuCalibrationParams;
+  uint32_t version = 7;
+  std::string productName, boardCustom, boardName, boardRev, boardConf,
+      hardwareConf, deviceName;
+  std::string batchName;  /// Deprecated, not used or stored
+  uint64_t batchTime{0};
+  uint32_t boardOptions{0};
+  std::unordered_map<CameraBoardSocket, CameraInfo> cameraData;
+  StereoRectification stereoRectificationData;
+  Extrinsics imuExtrinsics;
+  Extrinsics housingExtrinsics;
+  std::vector<uint8_t> miscellaneousData;
+  bool stereoUseSpecTranslation{true};
+  bool stereoEnableDistortionCorrection{false};
+  CameraBoardSocket verticalCameraSocket = dai::CameraBoardSocket::AUTO;
+  // IMU calibration payload serialized with EepromData via
+  // DEPTHAI_SERIALIZE_OPTIONAL_EXT; includes biases, scale/shear/rotation
+  // decomposition, and IMU noise parameters.
+  ImuCalibrationParams imuCalibrationParams;
 };
 
-DEPTHAI_SERIALIZE_OPTIONAL_EXT(EepromData,
-                               version,
-                               boardCustom,
-                               boardName,
-                               boardRev,
-                               boardConf,
-                               hardwareConf,
-                               productName,
-                               deviceName,
-                               batchName,
-                               batchTime,
-                               boardOptions,
-                               cameraData,
-                               stereoRectificationData,
-                               imuExtrinsics,
-                               housingExtrinsics,
-                               miscellaneousData,
-                               stereoUseSpecTranslation,
+DEPTHAI_SERIALIZE_OPTIONAL_EXT(EepromData, version, boardCustom, boardName,
+                               boardRev, boardConf, hardwareConf, productName,
+                               deviceName, batchName, batchTime, boardOptions,
+                               cameraData, stereoRectificationData,
+                               imuExtrinsics, housingExtrinsics,
+                               miscellaneousData, stereoUseSpecTranslation,
                                stereoEnableDistortionCorrection,
-                               verticalCameraSocket,
-                               imuCalibrationParams);
+                               verticalCameraSocket, imuCalibrationParams);
 
 }  // namespace dai

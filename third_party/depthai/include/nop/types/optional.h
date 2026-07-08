@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_OPTIONAL_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_OPTIONAL_H_
 
+#include <nop/traits/is_comparable.h>
+#include <nop/traits/is_template_base_of.h>
+
 #include <initializer_list>
 #include <type_traits>
 #include <utility>
-
-#include <nop/traits/is_comparable.h>
-#include <nop/traits/is_template_base_of.h>
 
 namespace nop {
 
@@ -63,23 +63,23 @@ class Optional {
   constexpr Optional() noexcept : state_{} {}
 
   // Constructs a non-empty Optional from lvalue and rvalue type T.
-  constexpr Optional(const T& value) : state_{value} {}
-  constexpr Optional(T&& value) : state_{std::move(value)} {}
+  constexpr Optional(const T &value) : state_{value} {}
+  constexpr Optional(T &&value) : state_{std::move(value)} {}
 
   // Copy and move constructors.
-  constexpr Optional(const Optional& other) : state_{other.state_} {}
-  constexpr Optional(Optional&& other) noexcept(
+  constexpr Optional(const Optional &other) : state_{other.state_} {}
+  constexpr Optional(Optional &&other) noexcept(
       std::is_nothrow_move_constructible<T>::value)
       : state_{std::move(other.state_)} {}
 
   // Constructs a non-empty Optional from a type U such that T{U()} is valid.
   template <typename U, typename Enabled = std::enable_if_t<
                             std::is_constructible<T, U>::value>>
-  constexpr Optional(U&& value) : state_{InPlace{}, std::forward<U>(value)} {}
+  constexpr Optional(U &&value) : state_{InPlace{}, std::forward<U>(value)} {}
 
   // In-place constructor with arbitrary argument forwarding.
   template <typename... Args>
-  explicit constexpr Optional(InPlace, Args&&... args)
+  explicit constexpr Optional(InPlace, Args &&...args)
       : state_{InPlace{}, std::forward<Args>(args)...} {}
 
   // In-place constructor with initializer list and arbitrary argument
@@ -87,7 +87,7 @@ class Optional {
   template <typename U, typename... Args,
             typename Enabled = std::enable_if_t<
                 std::is_constructible<T, std::initializer_list<U>>::value>>
-  constexpr Optional(InPlace, std::initializer_list<U> il, Args&&... args)
+  constexpr Optional(InPlace, std::initializer_list<U> il, Args &&...args)
       : state_{InPlace{}, il, std::forward<Args>(args)...} {}
 
   // Constructs a non-empty Optional from a compatible initializer list.
@@ -101,7 +101,7 @@ class Optional {
   ~Optional() = default;
 
   // Copy assignment operator.
-  constexpr Optional& operator=(const Optional& other) {
+  constexpr Optional &operator=(const Optional &other) {
     if (this != &other) {
       if (!other.empty()) {
         Assign(other.state_.storage.value);
@@ -113,9 +113,9 @@ class Optional {
   }
 
   // Move assignment operator.
-  constexpr Optional& operator=(Optional&& other) noexcept(
-      std::is_nothrow_move_assignable<T>::value&&
-          std::is_nothrow_move_constructible<T>::value) {
+  constexpr Optional &operator=(Optional &&other) noexcept(
+      std::is_nothrow_move_assignable<T>::value &&
+      std::is_nothrow_move_constructible<T>::value) {
     if (this != &other) {
       if (!other.empty()) {
         Assign(other.take());
@@ -129,8 +129,9 @@ class Optional {
 
   // Copy assignment from a different Optional type.
   template <typename U>
-  constexpr std::enable_if_t<std::is_constructible<T, const U&>::value, Optional&>
-  operator=(const Optional<U>& other) {
+  constexpr std::enable_if_t<std::is_constructible<T, const U &>::value,
+                             Optional &>
+  operator=(const Optional<U> &other) {
     if (!other.empty()) {
       Assign(other.get());
     } else {
@@ -141,8 +142,8 @@ class Optional {
 
   // Move assignment from a different Optional type.
   template <typename U>
-  constexpr std::enable_if_t<std::is_constructible<T, U&&>::value, Optional&> operator=(
-      Optional<U>&& other) {
+  constexpr std::enable_if_t<std::is_constructible<T, U &&>::value, Optional &>
+  operator=(Optional<U> &&other) {
     if (!other.empty()) {
       Assign(other.take());
       other.Destruct();
@@ -154,8 +155,8 @@ class Optional {
 
   // Copy/move assignment from type U.
   template <typename U>
-  std::enable_if_t<std::is_constructible<T, U>::value, Optional&> operator=(
-      U&& value) {
+  std::enable_if_t<std::is_constructible<T, U>::value, Optional &> operator=(
+      U &&value) {
     Assign(std::forward<U>(value));
     return *this;
   }
@@ -168,9 +169,9 @@ class Optional {
 
   // Returns the underlying value. These accessors may only be called when
   // non-empty.
-  constexpr const T& get() const { return state_.storage.value; }
-  constexpr T& get() { return state_.storage.value; }
-  constexpr T&& take() { return std::move(state_.storage.value); }
+  constexpr const T &get() const { return state_.storage.value; }
+  constexpr T &get() { return state_.storage.value; }
+  constexpr T &&take() { return std::move(state_.storage.value); }
 
   // Clears the optional to the empty state, destroying the underlying value if
   // necessary.
@@ -179,7 +180,7 @@ class Optional {
  private:
   // Handles assignment/construction for assignment operators.
   template <typename U>
-  constexpr void Assign(U&& value) {
+  constexpr void Assign(U &&value) {
     if (empty()) {
       ::new (&state_.storage.value) T(std::forward<U>(value));
       state_.empty = false;
@@ -223,7 +224,7 @@ class Optional {
 
     // Constructs the value type, making it active.
     template <typename... Args>
-    constexpr Storage(Args&&... args) noexcept
+    constexpr Storage(Args &&...args) noexcept
         : value(std::forward<Args>(args)...) {}
 
     // Non-trivial destructor. This doesn't do anything useful except enable to
@@ -249,7 +250,7 @@ class Optional {
 
     // Constructs the value type, making it active.
     template <typename... Args>
-    constexpr Storage(Args&&... args) noexcept
+    constexpr Storage(Args &&...args) noexcept
         : value(std::forward<Args>(args)...) {}
 
     // Trivial destructor.
@@ -271,15 +272,14 @@ class Optional {
 
     // Copy constructor. Copy constructs the value type if the other state is
     // non-empty.
-    constexpr State(const State& other)
+    constexpr State(const State &other)
         : empty{other.empty}, storage{TrivialInit{}} {
-      if (!other.empty)
-        ::new (&storage.value) U(other.storage.value);
+      if (!other.empty) ::new (&storage.value) U(other.storage.value);
     }
 
     // Move constructor. Move constructs the value type if the other state is
     // non-empty.
-    constexpr State(State&& other)
+    constexpr State(State &&other)
         : empty{other.empty}, storage{TrivialInit{}} {
       if (!other.empty)
         ::new (&storage.value) U(std::move(other.storage.value));
@@ -287,26 +287,25 @@ class Optional {
 
     // Value constructors. Sets the state to non-empty and copies or moves the
     // value to storage.
-    explicit constexpr State(const U& value) : empty{false}, storage{value} {}
-    explicit constexpr State(U&& value)
+    explicit constexpr State(const U &value) : empty{false}, storage{value} {}
+    explicit constexpr State(U &&value)
         : empty{false}, storage{std::move(value)} {}
 
     // In-place constructor for more complex initialization.
     template <typename... Args>
-    explicit State(InPlace, Args&&... args)
+    explicit State(InPlace, Args &&...args)
         : empty{false}, storage{std::forward<Args>(args)...} {}
 
     // In-place initializer list constructor.
     template <typename V, typename... Args,
               typename = std::enable_if_t<
                   std::is_constructible<U, std::initializer_list<V>>::value>>
-    explicit State(InPlace, std::initializer_list<V> il, Args&&... args)
+    explicit State(InPlace, std::initializer_list<V> il, Args &&...args)
         : empty{false}, storage{il, std::forward<Args>(args)...} {}
 
     // Non-trivial destructor. Destroys the value in storage if non-empty.
     ~State() {
-      if (!empty)
-        storage.value.U::~U();
+      if (!empty) storage.value.U::~U();
     }
 
     // Tracks whether the storage value is empty (un-initialized) or non-empty
@@ -327,23 +326,23 @@ class Optional {
 
     // Copy constructor. Copy constructs the value type if the other state is
     // non-empty.
-    constexpr State(const State& other)
+    constexpr State(const State &other)
         : empty{other.empty}, storage{other.storage.value} {}
 
     // Move constructor. Move constructs the value type if the other state is
     // non-empty.
-    constexpr State(State&& other)
+    constexpr State(State &&other)
         : empty{other.empty}, storage{std::move(other.storage.value)} {}
 
     // Value constructors. Sets the state to non-empty and copies or moves the
     // value to storage.
-    explicit constexpr State(const U& value) : empty{false}, storage{value} {}
-    explicit constexpr State(U&& value)
+    explicit constexpr State(const U &value) : empty{false}, storage{value} {}
+    explicit constexpr State(U &&value)
         : empty{false}, storage{std::move(value)} {}
 
     // In-place constructor for more complex initialization.
     template <typename... Args>
-    explicit constexpr State(InPlace, Args&&... args)
+    explicit constexpr State(InPlace, Args &&...args)
         : empty{false}, storage{std::forward<Args>(args)...} {}
 
     // In-place initializer list constructor.
@@ -351,7 +350,7 @@ class Optional {
               typename = std::enable_if_t<
                   std::is_constructible<U, std::initializer_list<V>>::value>>
     explicit constexpr State(InPlace, std::initializer_list<V> il,
-                             Args&&... args)
+                             Args &&...args)
         : empty{false}, storage{il, std::forward<Args>(args)...} {}
 
     // Trivial destructor.
@@ -373,7 +372,7 @@ class Optional {
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableEqual<T, U>>
-constexpr bool operator==(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator==(const Optional<T> &a, const Optional<U> &b) {
   if (a.empty() != b.empty())
     return false;
   else if (a.empty())
@@ -384,13 +383,13 @@ constexpr bool operator==(const Optional<T>& a, const Optional<U>& b) {
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableEqual<T, U>>
-constexpr bool operator!=(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator!=(const Optional<T> &a, const Optional<U> &b) {
   return !(a == b);
 }
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableLess<T, U>>
-constexpr bool operator<(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator<(const Optional<T> &a, const Optional<U> &b) {
   if (b.empty())
     return false;
   else if (a.empty())
@@ -401,19 +400,19 @@ constexpr bool operator<(const Optional<T>& a, const Optional<U>& b) {
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableLess<T, U>>
-constexpr bool operator>(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator>(const Optional<T> &a, const Optional<U> &b) {
   return b < a;
 }
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableLess<T, U>>
-constexpr bool operator<=(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator<=(const Optional<T> &a, const Optional<U> &b) {
   return !(b < a);
 }
 
 template <typename T, typename U,
           typename Enabled = EnableIfComparableLess<T, U>>
-constexpr bool operator>=(const Optional<T>& a, const Optional<U>& b) {
+constexpr bool operator>=(const Optional<T> &a, const Optional<U> &b) {
   return !(a < b);
 }
 
@@ -421,7 +420,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator==(const Optional<T>& a, const U& b) {
+constexpr bool operator==(const Optional<T> &a, const U &b) {
   return !a.empty() ? a.get() == b : false;
 }
 
@@ -429,7 +428,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator==(const T& a, const Optional<U>& b) {
+constexpr bool operator==(const T &a, const Optional<U> &b) {
   return !b.empty() ? a == b.get() : false;
 }
 
@@ -437,7 +436,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator!=(const Optional<T>& a, const U& b) {
+constexpr bool operator!=(const Optional<T> &a, const U &b) {
   return !(a == b);
 }
 
@@ -445,7 +444,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableEqual<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator!=(const T& a, const Optional<U>& b) {
+constexpr bool operator!=(const T &a, const Optional<U> &b) {
   return !(a == b);
 }
 
@@ -453,7 +452,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator<(const Optional<T>& a, const U& b) {
+constexpr bool operator<(const Optional<T> &a, const U &b) {
   return !a.empty() ? a.get() < b : true;
 }
 
@@ -461,7 +460,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator<(const T& a, const Optional<U>& b) {
+constexpr bool operator<(const T &a, const Optional<U> &b) {
   return !b.empty() ? a < b.get() : false;
 }
 
@@ -469,7 +468,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator>(const Optional<T>& a, const U& b) {
+constexpr bool operator>(const Optional<T> &a, const U &b) {
   return !a.empty() ? b < a.get() : false;
 }
 
@@ -477,7 +476,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator>(const T& a, const Optional<U>& b) {
+constexpr bool operator>(const T &a, const Optional<U> &b) {
   return !b.empty() ? b.get() < a : true;
 }
 
@@ -485,7 +484,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator<=(const Optional<T>& a, const U& b) {
+constexpr bool operator<=(const Optional<T> &a, const U &b) {
   return !a.empty() ? !(b < a.get()) : true;
 }
 
@@ -493,7 +492,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator<=(const T& a, const Optional<U>& b) {
+constexpr bool operator<=(const T &a, const Optional<U> &b) {
   return !b.empty() ? !(b.get() < a) : false;
 }
 
@@ -501,7 +500,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, U>::value>>
-constexpr bool operator>=(const Optional<T>& a, const U& b) {
+constexpr bool operator>=(const Optional<T> &a, const U &b) {
   return !a.empty() ? !(a.get() < b) : false;
 }
 
@@ -509,7 +508,7 @@ template <
     typename T, typename U,
     typename Enabled = std::enable_if_t<IsComparableLess<T, U>::value &&
                                         !IsTemplateBaseOf<Optional, T>::value>>
-constexpr bool operator>=(const T& a, const Optional<U>& b) {
+constexpr bool operator>=(const T &a, const Optional<U> &b) {
   return !b.empty() ? !(a < b.get()) : true;
 }
 

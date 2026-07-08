@@ -11,12 +11,13 @@ namespace dai {
 /**
  * Specify properties for PointCloud
  */
-struct PointCloudProperties : PropertiesSerializable<Properties, PointCloudProperties> {
-    PointCloudConfig initialConfig;
+struct PointCloudProperties
+    : PropertiesSerializable<Properties, PointCloudProperties> {
+  PointCloudConfig initialConfig;
 
-    int numFramesPool = 4;
+  int numFramesPool = 4;
 
-    ~PointCloudProperties() override;
+  ~PointCloudProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(PointCloudProperties, initialConfig, numFramesPool);

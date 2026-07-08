@@ -10,30 +10,32 @@ namespace dai {
 /**
  * Specify properties for Thermal
  */
-struct ThermalProperties : PropertiesSerializable<Properties, ThermalProperties> {
-    /**
-     * Initial Thermal config
-     */
-    ThermalConfig initialConfig;
+struct ThermalProperties
+    : PropertiesSerializable<Properties, ThermalProperties> {
+  /**
+   * Initial Thermal config
+   */
+  ThermalConfig initialConfig;
 
-    /**
-     * Num frames in output pool
-     */
-    int numFramesPool = 4;
+  /**
+   * Num frames in output pool
+   */
+  int numFramesPool = 4;
 
-    /**
-     * Which socket will color camera use
-     */
-    CameraBoardSocket boardSocket = CameraBoardSocket::AUTO;
+  /**
+   * Which socket will color camera use
+   */
+  CameraBoardSocket boardSocket = CameraBoardSocket::AUTO;
 
-    /**
-     * Camera sensor FPS
-     */
-    float fps = 25.0;
+  /**
+   * Camera sensor FPS
+   */
+  float fps = 25.0;
 
-    ~ThermalProperties() override;
+  ~ThermalProperties() override;
 };
 
-DEPTHAI_SERIALIZE_EXT(ThermalProperties, initialConfig, numFramesPool, boardSocket, fps);
+DEPTHAI_SERIALIZE_EXT(ThermalProperties, initialConfig, numFramesPool,
+                      boardSocket, fps);
 
 }  // namespace dai

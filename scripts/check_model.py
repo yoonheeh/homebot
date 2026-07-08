@@ -11,7 +11,7 @@ import numpy as np
 from rknnlite.api import RKNNLite
 
 # Default model path (relative to homebot root)
-DEFAULT_MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
+DEFAULT_MODEL_PATH = "object_detection/model/yolo/yolov5s-640-640.rknn"
 
 
 def check_model(model_path):
@@ -39,8 +39,8 @@ def check_model(model_path):
 
     # Try common input shapes for YOLO models
     test_shapes = [
-        (1, 640, 640, 3),   # NHWC - most common
-        (1, 3, 640, 640),   # NCHW
+        (1, 640, 640, 3),  # NHWC - most common
+        (1, 3, 640, 640),  # NCHW
     ]
 
     outputs = None
@@ -58,7 +58,9 @@ def check_model(model_path):
             continue
 
     if outputs is None:
-        print("ERROR: Could not determine input shape. Model may require different input dimensions.")
+        print(
+            "ERROR: Could not determine input shape. Model may require different input dimensions."
+        )
         return 1
 
     print(f"\nOutput Shapes:")
@@ -76,7 +78,7 @@ def check_model(model_path):
     return 0
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import os
 
     # Get model path from args or use default

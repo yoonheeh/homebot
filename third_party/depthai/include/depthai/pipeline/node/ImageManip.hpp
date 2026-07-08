@@ -11,84 +11,101 @@ namespace dai {
 namespace node {
 
 /**
- * @brief ImageManip node. Capability to crop, resize, warp, ... incoming image frames
+ * @brief ImageManip node. Capability to crop, resize, warp, ... incoming image
+ * frames
  */
-class ImageManip : public DeviceNodeCRTP<DeviceNode, ImageManip, ImageManipProperties>, public HostRunnable {
-   private:
-    bool runOnHostVar = false;
+class ImageManip
+    : public DeviceNodeCRTP<DeviceNode, ImageManip, ImageManipProperties>,
+      public HostRunnable {
+ private:
+  bool runOnHostVar = false;
 
-   protected:
-    Properties& getProperties() override;
+ protected:
+  Properties &getProperties() override;
 
-   public:
-    constexpr static const char* NAME = "ImageManip";
-    using DeviceNodeCRTP::DeviceNodeCRTP;
-    using Backend = ImageManipProperties::Backend;
-    using PerformanceMode = ImageManipProperties::PerformanceMode;
+ public:
+  constexpr static const char *NAME = "ImageManip";
+  using DeviceNodeCRTP::DeviceNodeCRTP;
+  using Backend = ImageManipProperties::Backend;
+  using PerformanceMode = ImageManipProperties::PerformanceMode;
 
-    ImageManip() = default;
-    ImageManip(std::unique_ptr<Properties> props);
+  ImageManip() = default;
+  ImageManip(std::unique_ptr<Properties> props);
 
-    std::shared_ptr<ImageManip> build() {
-        return std::static_pointer_cast<ImageManip>(shared_from_this());
-    }
-    /**
-     * Initial config to use when manipulating frames
-     */
-    std::shared_ptr<ImageManipConfig> initialConfig = std::make_shared<ImageManipConfig>();
+  std::shared_ptr<ImageManip> build() {
+    return std::static_pointer_cast<ImageManip>(shared_from_this());
+  }
+  /**
+   * Initial config to use when manipulating frames
+   */
+  std::shared_ptr<ImageManipConfig> initialConfig =
+      std::make_shared<ImageManipConfig>();
 
-    /**
-     * Input ImageManipConfig message with ability to modify parameters in runtime
-     */
-    Input inputConfig{*this, {"inputConfig", DEFAULT_GROUP, DEFAULT_BLOCKING, DEFAULT_QUEUE_SIZE, {{{DatatypeEnum::ImageManipConfig, true}}}, false}};
+  /**
+   * Input ImageManipConfig message with ability to modify parameters in runtime
+   */
+  Input inputConfig{*this,
+                    {"inputConfig",
+                     DEFAULT_GROUP,
+                     DEFAULT_BLOCKING,
+                     DEFAULT_QUEUE_SIZE,
+                     {{{DatatypeEnum::ImageManipConfig, true}}},
+                     false}};
 
-    /**
-     * Input image to be modified
-     */
-    Input inputImage{*this, {"inputImage", DEFAULT_GROUP, DEFAULT_BLOCKING, DEFAULT_QUEUE_SIZE, {{{DatatypeEnum::ImgFrame, true}}}, DEFAULT_WAIT_FOR_MESSAGE}};
+  /**
+   * Input image to be modified
+   */
+  Input inputImage{*this,
+                   {"inputImage",
+                    DEFAULT_GROUP,
+                    DEFAULT_BLOCKING,
+                    DEFAULT_QUEUE_SIZE,
+                    {{{DatatypeEnum::ImgFrame, true}}},
+                    DEFAULT_WAIT_FOR_MESSAGE}};
 
-    /**
-     * Outputs ImgFrame message that carries modified image.
-     */
-    // Output out{*this, "out", Output::Type::MSender, {{DatatypeEnum::ImgFrame, true}}};
-    Output out{*this, {"out", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
+  /**
+   * Outputs ImgFrame message that carries modified image.
+   */
+  // Output out{*this, "out", Output::Type::MSender, {{DatatypeEnum::ImgFrame,
+  // true}}};
+  Output out{*this, {"out", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, true}}}}};
 
-    /**
-     * Specify number of frames in pool.
-     * @param numFramesPool How many frames should the pool have
-     */
-    void setNumFramesPool(int numFramesPool);
+  /**
+   * Specify number of frames in pool.
+   * @param numFramesPool How many frames should the pool have
+   */
+  void setNumFramesPool(int numFramesPool);
 
-    /**
-     * Specify maximum size of output image.
-     * @param maxFrameSize Maximum frame size in bytes
-     */
-    void setMaxOutputFrameSize(int maxFrameSize);
+  /**
+   * Specify maximum size of output image.
+   * @param maxFrameSize Maximum frame size in bytes
+   */
+  void setMaxOutputFrameSize(int maxFrameSize);
 
-    /**
-     * Specify whether to run on host or device
-     * @param runOnHost Run node on host
-     */
-    ImageManip& setRunOnHost(bool runOnHost = true);
+  /**
+   * Specify whether to run on host or device
+   * @param runOnHost Run node on host
+   */
+  ImageManip &setRunOnHost(bool runOnHost = true);
 
-    /**
-     * Set CPU as backend preference
-     * @param backend Backend preference
-     */
-    ImageManip& setBackend(Backend backend);
+  /**
+   * Set CPU as backend preference
+   * @param backend Backend preference
+   */
+  ImageManip &setBackend(Backend backend);
 
-    /**
-     * Set performance mode
-     * @param performanceMode Performance mode
-     */
-    ImageManip& setPerformanceMode(PerformanceMode performanceMode);
+  /**
+   * Set performance mode
+   * @param performanceMode Performance mode
+   */
+  ImageManip &setPerformanceMode(PerformanceMode performanceMode);
 
-    /**
-     * Check if the node is set to run on host
-     */
-    bool runOnHost() const override;
+  /**
+   * Check if the node is set to run on host
+   */
+  bool runOnHost() const override;
 
-    void run() override;
+  void run() override;
 };
 
 }  // namespace node

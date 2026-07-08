@@ -66,8 +66,8 @@ template <typename T, typename U>
 struct HasType<T, U> : std::is_same<std::decay_t<T>, std::decay_t<U>> {};
 template <typename T, typename First, typename... Rest>
 struct HasType<T, First, Rest...>
-    : std::integral_constant<
-          bool, HasType<T, First>::value || HasType<T, Rest...>::value> {};
+    : std::integral_constant<bool, HasType<T, First>::value ||
+                                       HasType<T, Rest...>::value> {};
 
 // Defines set operations on a set of Types...
 template <typename... Types>
@@ -79,8 +79,8 @@ struct Set {
   struct IsSubset<T> : HasType<T, Types...> {};
   template <typename First, typename... Rest>
   struct IsSubset<First, Rest...>
-      : std::integral_constant<
-            bool, IsSubset<First>::value && IsSubset<Rest...>::value> {};
+      : std::integral_constant<bool, IsSubset<First>::value &&
+                                         IsSubset<Rest...>::value> {};
 };
 
 // Determines the number of elements of Types... that are constructible from
@@ -140,40 +140,38 @@ union Union<Type> {
   ~Union() {}
 
   template <typename T>
-  Union(std::int32_t index, std::int32_t* index_out, TypeTag<Type>, T&& value)
+  Union(std::int32_t index, std::int32_t *index_out, TypeTag<Type>, T &&value)
       : first_(std::forward<T>(value)) {
     *index_out = index;
   }
   template <typename T, typename = EnableIfAssignable<void, T, Type>>
-  Union(std::int32_t index, std::int32_t* index_out, T&& value)
+  Union(std::int32_t index, std::int32_t *index_out, T &&value)
       : first_(std::forward<T>(value)) {
     *index_out = index;
   }
-  Union(const Union& other, std::int32_t index) {
-    if (index == 0)
-      new (&first_) Type(other.first_);
+  Union(const Union &other, std::int32_t index) {
+    if (index == 0) new (&first_) Type(other.first_);
   }
-  Union(Union&& other, std::int32_t index) {
-    if (index == 0)
-      new (&first_) Type(std::move(other.first_));
+  Union(Union &&other, std::int32_t index) {
+    if (index == 0) new (&first_) Type(std::move(other.first_));
   }
-  Union(const Union&) = delete;
-  Union(Union&&) = delete;
-  void operator=(const Union&) = delete;
-  void operator=(Union&&) = delete;
+  Union(const Union &) = delete;
+  Union(Union &&) = delete;
+  void operator=(const Union &) = delete;
+  void operator=(Union &&) = delete;
 
-  Type& get(TypeTag<Type>) { return first_; }
-  const Type& get(TypeTag<Type>) const { return first_; }
+  Type &get(TypeTag<Type>) { return first_; }
+  const Type &get(TypeTag<Type>) const { return first_; }
   EmptyVariant get(TypeTag<EmptyVariant>) const { return {}; }
   constexpr std::int32_t index(TypeTag<Type>) const { return 0; }
 
   template <typename... Args>
-  std::int32_t Construct(TypeTag<Type>, Args&&... args) {
+  std::int32_t Construct(TypeTag<Type>, Args &&...args) {
     new (&first_) Type(std::forward<Args>(args)...);
     return 0;
   }
   template <typename... Args>
-  EnableIfConstructible<std::int32_t, Type, Args...> Construct(Args&&... args) {
+  EnableIfConstructible<std::int32_t, Type, Args...> Construct(Args &&...args) {
     new (&first_) Type(std::forward<Args>(args)...);
     return 0;
   }
@@ -185,7 +183,7 @@ union Union<Type> {
   }
 
   template <typename T>
-  bool Assign(TypeTag<Type>, std::int32_t target_index, T&& value) {
+  bool Assign(TypeTag<Type>, std::int32_t target_index, T &&value) {
     if (target_index == 0) {
       first_ = std::forward<T>(value);
       return true;
@@ -195,7 +193,7 @@ union Union<Type> {
   }
   template <typename T>
   EnableIfConstructible<bool, Type, T> Assign(std::int32_t target_index,
-                                              T&& value) {
+                                              T &&value) {
     if (target_index == 0) {
       first_ = std::forward<T>(value);
       return true;
@@ -205,19 +203,19 @@ union Union<Type> {
   }
   template <typename T>
   EnableIfNotConstructible<bool, Type, T> Assign(std::int32_t /*target_index*/,
-                                                 T&& /*value*/) {
+                                                 T && /*value*/) {
     return false;
   }
 
   template <typename Op>
-  decltype(auto) Visit(std::int32_t target_index, Op&& op) {
+  decltype(auto) Visit(std::int32_t target_index, Op &&op) {
     if (target_index == index(TypeTag<Type>{}))
       return std::forward<Op>(op)(get(TypeTag<Type>{}));
     else
       return std::forward<Op>(op)(get(TypeTag<EmptyVariant>{}));
   }
   template <typename Op>
-  decltype(auto) Visit(std::int32_t target_index, Op&& op) const {
+  decltype(auto) Visit(std::int32_t target_index, Op &&op) const {
     if (target_index == index(TypeTag<Type>{}))
       return std::forward<Op>(op)(get(TypeTag<Type>{}));
     else
@@ -225,7 +223,7 @@ union Union<Type> {
   }
 
   template <typename... Args>
-  bool Become(std::int32_t target_index, Args&&... args) {
+  bool Become(std::int32_t target_index, Args &&...args) {
     if (target_index == index(TypeTag<Type>{})) {
       Construct(TypeTag<Type>{}, std::forward<Args>(args)...);
       return true;
@@ -245,29 +243,29 @@ union Union<First, Rest...> {
   ~Union() {}
 
   template <typename T>
-  Union(std::int32_t index, std::int32_t* index_out, TypeTag<First>, T&& value)
+  Union(std::int32_t index, std::int32_t *index_out, TypeTag<First>, T &&value)
       : first_(std::forward<T>(value)) {
     *index_out = index;
   }
   template <typename T, typename U>
-  Union(std::int32_t index, std::int32_t* index_out, TypeTag<T>, U&& value)
+  Union(std::int32_t index, std::int32_t *index_out, TypeTag<T>, U &&value)
       : rest_(index + 1, index_out, TypeTag<T>{}, std::forward<U>(value)) {}
-  Union(const Union& other, std::int32_t index) {
+  Union(const Union &other, std::int32_t index) {
     if (index == 0)
       new (&first_) First(other.first_);
     else
       new (&rest_) Union<Rest...>(other.rest_, index - 1);
   }
-  Union(Union&& other, std::int32_t index) {
+  Union(Union &&other, std::int32_t index) {
     if (index == 0)
       new (&first_) First(std::move(other.first_));
     else
       new (&rest_) Union<Rest...>(std::move(other.rest_), index - 1);
   }
-  Union(const Union&) = delete;
-  Union(Union&&) = delete;
-  void operator=(const Union&) = delete;
-  void operator=(Union&&) = delete;
+  Union(const Union &) = delete;
+  Union(Union &&) = delete;
+  void operator=(const Union &) = delete;
+  void operator=(Union &&) = delete;
 
   struct FirstType {};
   struct RestType {};
@@ -276,29 +274,29 @@ union Union<First, Rest...> {
       Select<ConstructibleCount<T, First>::value == 1, FirstType, RestType>;
 
   template <typename T>
-  Union(std::int32_t index, std::int32_t* index_out, T&& value)
+  Union(std::int32_t index, std::int32_t *index_out, T &&value)
       : Union(index, index_out, std::forward<T>(value),
               SelectConstructor<T>{}) {}
 
   template <typename T>
-  Union(std::int32_t index, std::int32_t* index_out, T&& value, FirstType)
+  Union(std::int32_t index, std::int32_t *index_out, T &&value, FirstType)
       : first_(std::forward<T>(value)) {
     *index_out = index;
   }
   template <typename T>
-  Union(std::int32_t index, std::int32_t* index_out, T&& value, RestType)
+  Union(std::int32_t index, std::int32_t *index_out, T &&value, RestType)
       : rest_(index + 1, index_out, std::forward<T>(value)) {}
 
-  First& get(TypeTag<First>) { return first_; }
-  const First& get(TypeTag<First>) const { return first_; }
+  First &get(TypeTag<First>) { return first_; }
+  const First &get(TypeTag<First>) const { return first_; }
   constexpr std::int32_t index(TypeTag<First>) const { return 0; }
 
   template <typename T>
-  T& get(TypeTag<T>) {
+  T &get(TypeTag<T>) {
     return rest_.get(TypeTag<T>{});
   }
   template <typename T>
-  const T& get(TypeTag<T>) const {
+  const T &get(TypeTag<T>) const {
     return rest_.get(TypeTag<T>{});
   }
   template <typename T>
@@ -307,25 +305,24 @@ union Union<First, Rest...> {
   }
 
   template <typename... Args>
-  std::int32_t Construct(TypeTag<First>, Args&&... args) {
+  std::int32_t Construct(TypeTag<First>, Args &&...args) {
     new (&first_) First(std::forward<Args>(args)...);
     return 0;
   }
   template <typename T, typename... Args>
-  std::int32_t Construct(TypeTag<T>, Args&&... args) {
-    return 1 +
-           rest_.Construct(TypeTag<T>{}, std::forward<Args>(args)...);
+  std::int32_t Construct(TypeTag<T>, Args &&...args) {
+    return 1 + rest_.Construct(TypeTag<T>{}, std::forward<Args>(args)...);
   }
 
   template <typename... Args>
   EnableIfConstructible<std::int32_t, First, Args...> Construct(
-      Args&&... args) {
+      Args &&...args) {
     new (&first_) First(std::forward<Args>(args)...);
     return 0;
   }
   template <typename... Args>
   EnableIfNotConstructible<std::int32_t, First, Args...> Construct(
-      Args&&... args) {
+      Args &&...args) {
     return 1 + rest_.Construct(std::forward<Args>(args)...);
   }
 
@@ -338,7 +335,7 @@ union Union<First, Rest...> {
   }
 
   template <typename T>
-  bool Assign(TypeTag<First>, std::int32_t target_index, T&& value) {
+  bool Assign(TypeTag<First>, std::int32_t target_index, T &&value) {
     if (target_index == 0) {
       first_ = std::forward<T>(value);
       return true;
@@ -347,12 +344,12 @@ union Union<First, Rest...> {
     }
   }
   template <typename T, typename U>
-  bool Assign(TypeTag<T>, std::int32_t target_index, U&& value) {
+  bool Assign(TypeTag<T>, std::int32_t target_index, U &&value) {
     return rest_.Assign(TypeTag<T>{}, target_index - 1, std::forward<U>(value));
   }
   template <typename T>
   EnableIfConstructible<bool, First, T> Assign(std::int32_t target_index,
-                                               T&& value) {
+                                               T &&value) {
     if (target_index == 0) {
       first_ = std::forward<T>(value);
       return true;
@@ -362,21 +359,21 @@ union Union<First, Rest...> {
   }
   template <typename T>
   EnableIfNotConstructible<bool, First, T> Assign(std::int32_t target_index,
-                                                  T&& value) {
+                                                  T &&value) {
     return rest_.Assign(target_index - 1, std::forward<T>(value));
   }
 
   // Recursively traverses the union and calls Op on the active value when the
   // active type is found. If the union is empty Op is called on EmptyVariant.
   template <typename Op>
-  decltype(auto) Visit(std::int32_t target_index, Op&& op) {
+  decltype(auto) Visit(std::int32_t target_index, Op &&op) {
     if (target_index == index(TypeTag<First>{}))
       return std::forward<Op>(op)(get(TypeTag<First>{}));
     else
       return rest_.Visit(target_index - 1, std::forward<Op>(op));
   }
   template <typename Op>
-  decltype(auto) Visit(std::int32_t target_index, Op&& op) const {
+  decltype(auto) Visit(std::int32_t target_index, Op &&op) const {
     if (target_index == index(TypeTag<First>{}))
       return std::forward<Op>(op)(get(TypeTag<First>{}));
     else
@@ -384,7 +381,7 @@ union Union<First, Rest...> {
   }
 
   template <typename... Args>
-  bool Become(std::int32_t target_index, Args&&... args) {
+  bool Become(std::int32_t target_index, Args &&...args) {
     if (target_index == index(TypeTag<First>{})) {
       Construct(TypeTag<First>{}, std::forward<Args>(args)...);
       return true;

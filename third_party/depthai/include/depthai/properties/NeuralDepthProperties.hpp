@@ -8,9 +8,10 @@ namespace dai {
 /**
  * Specify properties for NeuralDepth
  */
-struct NeuralDepthProperties : PropertiesSerializable<Properties, NeuralDepthProperties> {
-    NeuralDepthConfig initialConfig;
-    ~NeuralDepthProperties() override;
+struct NeuralDepthProperties
+    : PropertiesSerializable<Properties, NeuralDepthProperties> {
+  NeuralDepthConfig initialConfig;
+  ~NeuralDepthProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(NeuralDepthProperties, initialConfig);

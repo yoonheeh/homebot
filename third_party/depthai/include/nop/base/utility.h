@@ -17,11 +17,11 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_UTILITY_H_
 #define LIBNOP_INCLUDE_NOP_BASE_UTILITY_H_
 
-#include <cstddef>
-#include <type_traits>
-
 #include <nop/traits/is_template_base_of.h>
 #include <nop/traits/void.h>
+
+#include <cstddef>
+#include <type_traits>
 
 namespace nop {
 

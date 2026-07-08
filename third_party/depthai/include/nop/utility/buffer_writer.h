@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_WRITER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_BUFFER_WRITER_H_
 
+#include <nop/base/encoding.h>
+#include <nop/base/utility.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-
-#include <nop/base/encoding.h>
-#include <nop/base/utility.h>
 
 namespace nop {
 
@@ -35,15 +35,15 @@ namespace nop {
 class BufferWriter {
  public:
   BufferWriter() = default;
-  BufferWriter(const BufferWriter&) = default;
+  BufferWriter(const BufferWriter &) = default;
   template <std::size_t Size>
   BufferWriter(std::uint8_t (&buffer)[Size]) : buffer_{buffer}, size_{Size} {}
-  BufferWriter(std::uint8_t* buffer, std::size_t size)
+  BufferWriter(std::uint8_t *buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
-  BufferWriter(void* buffer, std::size_t size)
-      : buffer_{static_cast<std::uint8_t*>(buffer)}, size_{size} {}
+  BufferWriter(void *buffer, std::size_t size)
+      : buffer_{static_cast<std::uint8_t *>(buffer)}, size_{size} {}
 
-  BufferWriter& operator=(const BufferWriter&) = default;
+  BufferWriter &operator=(const BufferWriter &) = default;
 
   Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
@@ -55,7 +55,7 @@ class BufferWriter {
   Status<void> Write(std::uint8_t byte) { return Write(&byte, &byte + 1); }
 
   template <typename T, typename Enable = EnableIfArithmetic<T>>
-  Status<void> Write(const T* begin, const T* end) {
+  Status<void> Write(const T *begin, const T *end) {
     const std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
@@ -76,7 +76,7 @@ class BufferWriter {
   std::size_t capacity() const { return size_; }
 
  private:
-  std::uint8_t* buffer_{nullptr};
+  std::uint8_t *buffer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

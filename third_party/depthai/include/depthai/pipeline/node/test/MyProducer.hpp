@@ -10,15 +10,15 @@ namespace test {
  * @brief XLinkOut node. Sends messages over XLink.
  */
 class MyProducer : public NodeCRTP<ThreadedHostNode, MyProducer> {
-   public:
-    constexpr static const char* NAME = "MyProducer";
+ public:
+  constexpr static const char *NAME = "MyProducer";
 
-    /**
-     * Outputs message of same type as sent from host.
-     */
-    Output out{*this, {"out", DEFAULT_GROUP, {{{DatatypeEnum::Buffer, true}}}}};
+  /**
+   * Outputs message of same type as sent from host.
+   */
+  Output out{*this, {"out", DEFAULT_GROUP, {{{DatatypeEnum::Buffer, true}}}}};
 
-    void run() override;
+  void run() override;
 };
 
 }  // namespace test

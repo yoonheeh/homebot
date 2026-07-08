@@ -45,12 +45,12 @@ template <typename ErrorEnum, typename T>
 struct Encoding<Result<ErrorEnum, T>> : EncodingIO<Result<ErrorEnum, T>> {
   using Type = Result<ErrorEnum, T>;
 
-  static constexpr EncodingByte Prefix(const Type& value) {
+  static constexpr EncodingByte Prefix(const Type &value) {
     return value.has_value() ? Encoding<T>::Prefix(value.get())
                              : EncodingByte::Error;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     if (value.has_value()) {
       return Encoding<T>::Size(value.get());
     } else {
@@ -64,8 +64,9 @@ struct Encoding<Result<ErrorEnum, T>> : EncodingIO<Result<ErrorEnum, T>> {
   }
 
   template <typename Writer>
-  static constexpr Status<void> WritePayload(EncodingByte prefix, const Type& value,
-                                   Writer* writer) {
+  static constexpr Status<void> WritePayload(EncodingByte prefix,
+                                             const Type &value,
+                                             Writer *writer) {
     if (value.has_value())
       return Encoding<T>::WritePayload(prefix, value.get(), writer);
     else
@@ -73,13 +74,12 @@ struct Encoding<Result<ErrorEnum, T>> : EncodingIO<Result<ErrorEnum, T>> {
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type* value,
-                                  Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, Type *value,
+                                            Reader *reader) {
     if (prefix == EncodingByte::Error) {
       ErrorEnum error_value = ErrorEnum::None;
       auto status = Encoding<ErrorEnum>::Read(&error_value, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       *value = error_value;
       return {};
@@ -104,11 +104,11 @@ using EnableIfResultType =
 
 // Deduces the Result<ErrorNum, T> that the argument is derived from.
 template <typename ErrorEnum, typename T>
-Result<ErrorEnum, T> DeduceResultType(const Result<ErrorEnum, T>*);
+Result<ErrorEnum, T> DeduceResultType(const Result<ErrorEnum, T> *);
 
 // Evaluates to the Result<> that T is derived from.
 template <typename T>
-using ResultType = decltype(DeduceResultType(std::declval<T*>()));
+using ResultType = decltype(DeduceResultType(std::declval<T *>()));
 
 // Enables the serialization of types derived from Result<>.
 template <typename T>

@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_STRING_H_
 #define LIBNOP_INCLUDE_NOP_BASE_STRING_H_
 
-#include <string>
-
 #include <nop/base/encoding.h>
+
+#include <string>
 
 namespace nop {
 
@@ -37,11 +37,11 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
   using Type = std::basic_string<CharType, Traits, Allocator>;
   enum : std::size_t { CharSize = sizeof(CharType) };
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::String;
   }
 
-  static std::size_t Size(const Type& value) {
+  static std::size_t Size(const Type &value) {
     const std::size_t length_bytes = value.length() * CharSize;
     return BaseEncodingSize(Prefix(value)) +
            Encoding<SizeType>::Size(length_bytes) + length_bytes;
@@ -53,20 +53,19 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     const std::size_t length = value.length();
     const std::size_t length_bytes = length * CharSize;
     auto status = Encoding<SizeType>::Write(length_bytes, writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     return writer->Write(&value[0], &value[length]);
   }
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     SizeType length_bytes = 0;
     auto status = Encoding<SizeType>::Read(&length_bytes, reader);
     if (!status)
@@ -79,8 +78,7 @@ struct Encoding<std::basic_string<CharType, Traits, Allocator>>
     // Make sure the reader has enough data to fulfill the requested size as a
     // defense against abusive or erroneous string sizes.
     status = reader->Ensure(size);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     value->resize(size);
     return reader->Read(&(*value)[0], &(*value)[size]);

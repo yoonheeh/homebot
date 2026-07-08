@@ -17,54 +17,65 @@ namespace node {
  * @brief Thermal node.
  */
 class Thermal : public DeviceNodeCRTP<DeviceNode, Thermal, ThermalProperties> {
-   public:
-    constexpr static const char* NAME = "Thermal";
-    using DeviceNodeCRTP::DeviceNodeCRTP;
+ public:
+  constexpr static const char *NAME = "Thermal";
+  using DeviceNodeCRTP::DeviceNodeCRTP;
 
-   protected:
-    Properties& getProperties();
+ protected:
+  Properties &getProperties();
 
-   public:
-    Thermal() = default;
-    Thermal(std::unique_ptr<Properties> props);
+ public:
+  Thermal() = default;
+  Thermal(std::unique_ptr<Properties> props);
 
-    /**
-     * Initial config to use for thermal sensor.
-     */
-    std::shared_ptr<ThermalConfig> initialConfig = std::make_shared<ThermalConfig>();
+  /**
+   * Initial config to use for thermal sensor.
+   */
+  std::shared_ptr<ThermalConfig> initialConfig =
+      std::make_shared<ThermalConfig>();
 
-    /**
-     * Input ThermalConfig message with ability to modify parameters in runtime.
-     * Default queue is non-blocking with size 4.
-     */
-    Input inputConfig{*this,
-                      {"inputConfig", DEFAULT_GROUP, DEFAULT_BLOCKING, DEFAULT_QUEUE_SIZE, {{{DatatypeEnum::ThermalConfig, false}}}, DEFAULT_WAIT_FOR_MESSAGE}};
+  /**
+   * Input ThermalConfig message with ability to modify parameters in runtime.
+   * Default queue is non-blocking with size 4.
+   */
+  Input inputConfig{*this,
+                    {"inputConfig",
+                     DEFAULT_GROUP,
+                     DEFAULT_BLOCKING,
+                     DEFAULT_QUEUE_SIZE,
+                     {{{DatatypeEnum::ThermalConfig, false}}},
+                     DEFAULT_WAIT_FOR_MESSAGE}};
 
-    /**
-     * Outputs FP16 (degC) thermal image.
-     */
-    Output temperature{*this, {"temperature", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
+  /**
+   * Outputs FP16 (degC) thermal image.
+   */
+  Output temperature{
+      *this,
+      {"temperature", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
 
-    /**
-     * Outputs YUV422i grayscale thermal image.
-     */
-    Output color{*this, {"color", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
+  /**
+   * Outputs YUV422i grayscale thermal image.
+   */
+  Output color{*this,
+               {"color", DEFAULT_GROUP, {{{DatatypeEnum::ImgFrame, false}}}}};
 
-    /**
-     * Build with a specific board socket and fps.
-     */
-    std::shared_ptr<Thermal> build(dai::CameraBoardSocket boardSocket = dai::CameraBoardSocket::AUTO, float fps = 25);
+  /**
+   * Build with a specific board socket and fps.
+   */
+  std::shared_ptr<Thermal> build(
+      dai::CameraBoardSocket boardSocket = dai::CameraBoardSocket::AUTO,
+      float fps = 25);
 
-    /**
-     * Retrieves which board socket to use
-     * @returns Board socket to use
-     */
-    CameraBoardSocket getBoardSocket() const;
+  /**
+   * Retrieves which board socket to use
+   * @returns Board socket to use
+   */
+  CameraBoardSocket getBoardSocket() const;
 
-    void setFps(float fps);
+  void setFps(float fps);
 
-   private:
-    bool isBuilt = false;
+ private:
+  bool isBuilt = false;
 };
 
 }  // namespace node

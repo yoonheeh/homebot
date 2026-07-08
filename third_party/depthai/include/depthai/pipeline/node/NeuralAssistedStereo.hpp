@@ -14,7 +14,8 @@ namespace dai {
 namespace node {
 
 /**
- * @brief NeuralAssistedStereo node. Combines Neural Depth with VPP and traditional Stereo Depth.
+ * @brief NeuralAssistedStereo node. Combines Neural Depth with VPP and
+ * traditional Stereo Depth.
  *
  * This composite node internally creates and connects:
  * - Rectification node (full resolution)
@@ -25,118 +26,117 @@ namespace node {
  * Pipeline structure:
  *   Left/Right Cameras → Rectification → [Full res to VPP]
  *                                      ↓
- *                             NeuralDepth (low res) → [disparity + confidence to VPP]
- *                                      ↓
- *                                    VPP (combines neural depth with full res images)
- *                                      ↓
- *                                 StereoDepth → Final Depth Output
+ *                             NeuralDepth (low res) → [disparity + confidence
+ * to VPP] ↓ VPP (combines neural depth with full res images) ↓ StereoDepth →
+ * Final Depth Output
  */
 class NeuralAssistedStereo : public DeviceNodeGroup {
-   public:
-    using Input = Node::Input;
-    using Output = Node::Output;
+ public:
+  using Input = Node::Input;
+  using Output = Node::Output;
 
-    constexpr static const char* NAME = "NeuralAssistedStereo";
+  constexpr static const char *NAME = "NeuralAssistedStereo";
 
-    virtual ~NeuralAssistedStereo();
+  virtual ~NeuralAssistedStereo();
 
-    NeuralAssistedStereo(const std::shared_ptr<Device>& device);
+  NeuralAssistedStereo(const std::shared_ptr<Device> &device);
 
-   private:
-    void setInitialValues();
+ private:
+  void setInitialValues();
 
-   public:
-    /**
-     * Build the composite node by connecting left and right camera outputs
-     * @param left Left camera output
-     * @param right Right camera output
-     * @param neuralModel Neural depth model to use
-     * @return Shared pointer to this node
-     */
+ public:
+  /**
+   * Build the composite node by connecting left and right camera outputs
+   * @param left Left camera output
+   * @param right Right camera output
+   * @param neuralModel Neural depth model to use
+   * @return Shared pointer to this node
+   */
 
-    [[nodiscard]] static std::shared_ptr<NeuralAssistedStereo> create(const std::shared_ptr<Device>& device) {
-        auto nasPtr = std::make_shared<NeuralAssistedStereo>(device);
-        nasPtr->buildInternal();
-        return nasPtr;
-    }
+  [[nodiscard]] static std::shared_ptr<NeuralAssistedStereo> create(
+      const std::shared_ptr<Device> &device) {
+    auto nasPtr = std::make_shared<NeuralAssistedStereo>(device);
+    nasPtr->buildInternal();
+    return nasPtr;
+  }
 
-    std::shared_ptr<NeuralAssistedStereo> build(Output& leftInput,
-                                                Output& rightInput,
-                                                DeviceModelZoo neuralModel = DeviceModelZoo::NEURAL_DEPTH_384X240,
-                                                bool rectifyImages = true);
+  std::shared_ptr<NeuralAssistedStereo> build(
+      Output &leftInput, Output &rightInput,
+      DeviceModelZoo neuralModel = DeviceModelZoo::NEURAL_DEPTH_384X240,
+      bool rectifyImages = true);
 
-    // /**
-    //  * Subnodes that compose this pipeline
-    //  */
-    Subnode<node::Rectification> rectification{*this, "rectification"};
-    Subnode<node::NeuralDepth> neuralDepth{*this, "neuralDepth"};
-    Subnode<node::Vpp> vpp{*this, "vpp"};
-    Subnode<node::StereoDepth> stereoDepth{*this, "stereoDepth"};
+  // /**
+  //  * Subnodes that compose this pipeline
+  //  */
+  Subnode<node::Rectification> rectification{*this, "rectification"};
+  Subnode<node::NeuralDepth> neuralDepth{*this, "neuralDepth"};
+  Subnode<node::Vpp> vpp{*this, "vpp"};
+  Subnode<node::StereoDepth> stereoDepth{*this, "stereoDepth"};
 
 #ifndef DEPTHAI_INTERNAL_DEVICE_BUILD_RVC4
-    // /**
-    //  * Input for left ImgFrame
-    //  */
-    Input& left{rectification->input1};
+  // /**
+  //  * Input for left ImgFrame
+  //  */
+  Input &left{rectification->input1};
 
-    // /**
-    //  * Input for right ImgFrame
-    //  */
-    Input& right{rectification->input2};
+  // /**
+  //  * Input for right ImgFrame
+  //  */
+  Input &right{rectification->input2};
 
-    // /**
-    //  * Output rectified left (full resolution)
-    //  */
-    Output& rectifiedLeft{rectification->output1};
+  // /**
+  //  * Output rectified left (full resolution)
+  //  */
+  Output &rectifiedLeft{rectification->output1};
 
-    // /**
-    //  * Output rectified right (full resolution)
-    //  */
-    Output& rectifiedRight{rectification->output2};
+  // /**
+  //  * Output rectified right (full resolution)
+  //  */
+  Output &rectifiedRight{rectification->output2};
 
-    // /**
-    //  * Output VPP-enhanced left
-    //  */
-    Output& vppLeft{vpp->leftOut};
+  // /**
+  //  * Output VPP-enhanced left
+  //  */
+  Output &vppLeft{vpp->leftOut};
 
-    // /**
-    //  * Output VPP-enhanced right
-    //  */
-    Output& vppRight{vpp->rightOut};
-    // /**
-    //  * Neural disparity output
-    //  */
-    Output& neuralDisparity{neuralDepth->disparity};
+  // /**
+  //  * Output VPP-enhanced right
+  //  */
+  Output &vppRight{vpp->rightOut};
+  // /**
+  //  * Neural disparity output
+  //  */
+  Output &neuralDisparity{neuralDepth->disparity};
 
-    // /**
-    //  * Neural depth confidence output
-    //  */
-    Output& neuralConfidence{neuralDepth->confidence};
+  // /**
+  //  * Neural depth confidence output
+  //  */
+  Output &neuralConfidence{neuralDepth->confidence};
 
-    // /**
-    //  * VPP configuration input
-    //  */
-    Input& inputVppConfig{vpp->inputConfig};
+  // /**
+  //  * VPP configuration input
+  //  */
+  Input &inputVppConfig{vpp->inputConfig};
 
-    // /**
-    //  * StereoDepth configuration input
-    //  */
-    Input& inputStereoConfig{stereoDepth->inputConfig};
+  // /**
+  //  * StereoDepth configuration input
+  //  */
+  Input &inputStereoConfig{stereoDepth->inputConfig};
 
-    // /**
-    //  * NeuralDepth configuration input
-    //  */
-    Input& inputNeuralConfig{neuralDepth->inputConfig};
+  // /**
+  //  * NeuralDepth configuration input
+  //  */
+  Input &inputNeuralConfig{neuralDepth->inputConfig};
 
-    // /**
-    //  * Final depth output from StereoDepth
-    //  */
-    Output& depth{stereoDepth->depth};
+  // /**
+  //  * Final depth output from StereoDepth
+  //  */
+  Output &depth{stereoDepth->depth};
 
-    // /**
-    //  * Disparity output from StereoDepth
-    //  */
-    Output& disparity{stereoDepth->disparity};
+  // /**
+  //  * Disparity output from StereoDepth
+  //  */
+  Output &disparity{stereoDepth->disparity};
 #endif
 };
 

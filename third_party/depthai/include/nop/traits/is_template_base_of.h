@@ -25,7 +25,7 @@ namespace detail {
 
 // Utility to deduce the template type from a derived type.
 template <template <typename...> class TT, typename... Ts>
-std::true_type DeduceTemplateType(const TT<Ts...>*);
+std::true_type DeduceTemplateType(const TT<Ts...> *);
 template <template <typename...> class TT>
 std::false_type DeduceTemplateType(...);
 
@@ -34,7 +34,7 @@ std::false_type DeduceTemplateType(...);
 // Utility determining whether template type TT<...> is a base of type T.
 template <template <typename...> class TT, typename T>
 using IsTemplateBaseOf =
-    decltype(detail::DeduceTemplateType<TT>(std::declval<T*>()));
+    decltype(detail::DeduceTemplateType<TT>(std::declval<T *>()));
 
 }  // namespace nop
 

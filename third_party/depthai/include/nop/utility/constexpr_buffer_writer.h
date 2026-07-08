@@ -17,11 +17,11 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_CONSTEXPR_BUFFER_WRITER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_CONSTEXPR_BUFFER_WRITER_H_
 
-#include <cstddef>
-#include <cstdint>
-
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
+
+#include <cstddef>
+#include <cstdint>
 
 namespace nop {
 
@@ -31,14 +31,14 @@ namespace nop {
 class ConstexprBufferWriter {
  public:
   constexpr ConstexprBufferWriter() = default;
-  constexpr ConstexprBufferWriter(const ConstexprBufferWriter&) = default;
+  constexpr ConstexprBufferWriter(const ConstexprBufferWriter &) = default;
   template <std::size_t Size>
   constexpr ConstexprBufferWriter(std::uint8_t (&buffer)[Size])
       : buffer_{buffer}, size_{Size} {}
-  constexpr ConstexprBufferWriter(std::uint8_t* buffer, std::size_t size)
+  constexpr ConstexprBufferWriter(std::uint8_t *buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
 
-  constexpr ConstexprBufferWriter& operator=(const ConstexprBufferWriter&) =
+  constexpr ConstexprBufferWriter &operator=(const ConstexprBufferWriter &) =
       default;
 
   constexpr Status<void> Prepare(std::size_t size) {
@@ -58,13 +58,12 @@ class ConstexprBufferWriter {
   }
 
   template <typename T, typename Enable = EnableIfArithmetic<T>>
-  constexpr Status<void> Write(const T* begin, const T* end) {
+  constexpr Status<void> Write(const T *begin, const T *end) {
     const std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
 
-    if (length_bytes > (size_ - index_))
-      return ErrorStatus::WriteLimitReached;
+    if (length_bytes > (size_ - index_)) return ErrorStatus::WriteLimitReached;
 
     for (std::size_t i = 0; i < length; i++)
       WriteElement(begin[i], i * element_size);
@@ -76,8 +75,7 @@ class ConstexprBufferWriter {
   constexpr Status<void> Skip(std::size_t padding_bytes,
                               std::uint8_t padding_value = 0x00) {
     auto status = Prepare(padding_bytes);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     while (padding_bytes) {
       buffer_[index_++] = padding_value;
@@ -135,7 +133,7 @@ class ConstexprBufferWriter {
   // TODO(eieio): At the time of this writing there isn't simple way to get the
   // raw bytes of a floating point type in a constexpr expression.
 
-  std::uint8_t* buffer_{nullptr};
+  std::uint8_t *buffer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

@@ -17,18 +17,18 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_DETAIL_MEMBER_POINTER_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_DETAIL_MEMBER_POINTER_H_
 
-#include <functional>
-#include <tuple>
-
 #include <nop/base/encoding.h>
 #include <nop/base/utility.h>
 #include <nop/traits/is_detected.h>
 #include <nop/types/detail/logical_buffer.h>
 
+#include <functional>
+#include <tuple>
+
 namespace nop {
 
 // Captures the type and value of a pointer to member.
-template <typename T, T, typename U = void*, U = nullptr,
+template <typename T, T, typename U = void *, U = nullptr,
           typename Enable = void>
 struct MemberPointer;
 
@@ -39,40 +39,40 @@ struct MemberPointer<T Class::*, Pointer> {
 
   // Resolves a pointer to member with the given instance, yielding a pointer or
   // reference to the member in that instnace.
-  static constexpr Type* Resolve(Class* instance) {
+  static constexpr Type *Resolve(Class *instance) {
     return &(instance->*Pointer);
   }
-  static constexpr const Type& Resolve(const Class& instance) {
+  static constexpr const Type &Resolve(const Class &instance) {
     return (instance.*Pointer);
   }
 
-  static constexpr std::size_t Size(const Class& instance) {
+  static constexpr std::size_t Size(const Class &instance) {
     return Encoding<Type>::Size(Resolve(instance));
   }
 
   template <typename Writer, typename MemberList>
-  static constexpr Status<void> Write(const Class& instance, Writer* writer,
+  static constexpr Status<void> Write(const Class &instance, Writer *writer,
                                       MemberList /*member_list*/) {
     return Encoding<Type>::Write(Resolve(instance), writer);
   }
 
   template <typename Writer, typename MemberList>
   static constexpr Status<void> WritePayload(EncodingByte prefix,
-                                             const Class& instance,
-                                             Writer* writer,
+                                             const Class &instance,
+                                             Writer *writer,
                                              MemberList /*member_list*/) {
     return Encoding<Type>::WritePayload(prefix, Resolve(instance), writer);
   }
 
   template <typename Reader, typename MemberList>
-  static constexpr Status<void> Read(Class* instance, Reader* reader,
+  static constexpr Status<void> Read(Class *instance, Reader *reader,
                                      MemberList /*member_list*/) {
     return Encoding<Type>::Read(Resolve(instance), reader);
   }
 
   template <typename Reader, typename MemberList>
   static constexpr Status<void> ReadPayload(EncodingByte prefix,
-                                            Class* instance, Reader* reader,
+                                            Class *instance, Reader *reader,
                                             MemberList /*member_list*/) {
     return Encoding<Type>::ReadPayload(prefix, Resolve(instance), reader);
   }
@@ -81,7 +81,7 @@ struct MemberPointer<T Class::*, Pointer> {
 // Test expression for the external unbounded logical buffer tag.
 template <typename Class>
 using ExternalUnboundedBufferTest =
-    decltype(NOP__GetUnboundedBuffer(std::declval<Class*>()));
+    decltype(NOP__GetUnboundedBuffer(std::declval<Class *>()));
 
 // Test expression for the internal unbounded logical buffer tag.
 template <typename Class>
@@ -101,22 +101,22 @@ struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
                      SecondPointer, EnableIfLogicalBufferPair<First, Second>> {
   using Type = LogicalBuffer<First, Second, IsUnboundedBuffer<Class>::value>;
 
-  static constexpr const Type Resolve(const Class& instance) {
-    return {const_cast<First&>(instance.*FirstPointer),
-            const_cast<Second&>(instance.*SecondPointer)};
+  static constexpr const Type Resolve(const Class &instance) {
+    return {const_cast<First &>(instance.*FirstPointer),
+            const_cast<Second &>(instance.*SecondPointer)};
   }
 
-  static constexpr Type Resolve(Class* instance) {
+  static constexpr Type Resolve(Class *instance) {
     return {instance->*FirstPointer, instance->*SecondPointer};
   }
 
-  static constexpr std::size_t Size(const Class& instance) {
+  static constexpr std::size_t Size(const Class &instance) {
     const Type pair = Resolve(instance);
     return Encoding<Type>::Size(pair);
   }
 
   template <typename Writer, typename MemberList>
-  static constexpr Status<void> Write(const Class& instance, Writer* writer,
+  static constexpr Status<void> Write(const Class &instance, Writer *writer,
                                       MemberList /*member_list*/) {
     const Type pair = Resolve(instance);
     return Encoding<Type>::Write(pair, writer);
@@ -124,15 +124,15 @@ struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
 
   template <typename Writer, typename MemberList>
   static constexpr Status<void> WritePayload(EncodingByte prefix,
-                                             const Class& instance,
-                                             Writer* writer,
+                                             const Class &instance,
+                                             Writer *writer,
                                              MemberList /*member_list*/) {
     const Type pair = Resolve(instance);
     return Encoding<Type>::WritePayload(prefix, pair, writer);
   }
 
   template <typename Reader, typename MemberList>
-  static constexpr Status<void> Read(Class* instance, Reader* reader,
+  static constexpr Status<void> Read(Class *instance, Reader *reader,
                                      MemberList /*member_list*/) {
     Type pair = Resolve(instance);
     return Encoding<Type>::Read(&pair, reader);
@@ -140,7 +140,7 @@ struct MemberPointer<First Class::*, FirstPointer, Second Class::*,
 
   template <typename Reader, typename MemberList>
   static constexpr Status<void> ReadPayload(EncodingByte prefix,
-                                            Class* instance, Reader* reader,
+                                            Class *instance, Reader *reader,
                                             MemberList /*member_list*/) {
     Type pair = Resolve(instance);
     return Encoding<Type>::ReadPayload(prefix, &pair, reader);
@@ -164,7 +164,7 @@ struct MemberList {
 // NOP__GetExternalMemberTraits that this utility finds using ADL.
 template <typename T>
 using ExternalMemberTraits =
-    decltype(NOP__GetExternalMemberTraits(std::declval<T*>()));
+    decltype(NOP__GetExternalMemberTraits(std::declval<T *>()));
 
 // Work around access check bug in GCC. Keeping original code here to document
 // the desired behavior. Bug filed with GCC:
@@ -188,7 +188,7 @@ template <typename T, typename = void>
 struct HasInternalMemberList {
  private:
   template <typename U>
-  static constexpr bool Test(const typename U::NOP__MEMBERS*) {
+  static constexpr bool Test(const typename U::NOP__MEMBERS *) {
     return IsTemplateBaseOf<MemberList, typename U::NOP__MEMBERS>::value;
   }
   template <typename U>
@@ -260,7 +260,7 @@ template <typename T, typename = void>
 struct IsValueWrapper {
  private:
   template <typename U>
-  static constexpr bool Test(const typename U::NOP__VALUE*) {
+  static constexpr bool Test(const typename U::NOP__VALUE *) {
     return IsTemplateBaseOf<MemberList, typename U::NOP__VALUE>::value;
   }
   template <typename U>

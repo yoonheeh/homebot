@@ -25,44 +25,46 @@ namespace dai {
  * @ingroup dcl_results
  */
 struct CoverageData : public Buffer {
-    CoverageData() = default;
-    virtual ~CoverageData();
+  CoverageData() = default;
+  virtual ~CoverageData();
 
-    /**
-     * @brief Serialize CoverageData to buffer.
-     */
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
+  /**
+   * @brief Serialize CoverageData to buffer.
+   */
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
 
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::CoverageData;
-    }
+  DatatypeEnum getDatatype() const override {
+    return DatatypeEnum::CoverageData;
+  }
 
-    /** @name Spatial coverage matrices */
-    ///@{
+  /** @name Spatial coverage matrices */
+  ///@{
 
-    /** 2D coverage matrix for input A (e.g. left image). Values are ∈ [0, 1]. */
-    std::vector<std::vector<float>> coveragePerCellA;
+  /** 2D coverage matrix for input A (e.g. left image). Values are ∈ [0, 1]. */
+  std::vector<std::vector<float>> coveragePerCellA;
 
-    /** 2D coverage matrix for input B (e.g. right image). Values are ∈ [0, 1]. */
-    std::vector<std::vector<float>> coveragePerCellB;
+  /** 2D coverage matrix for input B (e.g. right image). Values are ∈ [0, 1]. */
+  std::vector<std::vector<float>> coveragePerCellB;
 
-    ///@}
+  ///@}
 
-    /** @name Summary coverage metrics */
-    ///@{
+  /** @name Summary coverage metrics */
+  ///@{
 
-    /** Overall mean coverage across both inputs ∈ [0, 1]. */
-    float meanCoverage = 0.0f;
+  /** Overall mean coverage across both inputs ∈ [0, 1]. */
+  float meanCoverage = 0.0f;
 
-    /** Proportion of desired spatial coverage acquired so far. */
-    float coverageAcquired = 0.0f;
+  /** Proportion of desired spatial coverage acquired so far. */
+  float coverageAcquired = 0.0f;
 
-    /** Proportion of calibration-relevant data acquired from the frame. */
-    float dataAcquired = 0.0f;
+  /** Proportion of calibration-relevant data acquired from the frame. */
+  float dataAcquired = 0.0f;
 
-    ///@}
+  ///@}
 
-    DEPTHAI_SERIALIZE(CoverageData, coveragePerCellA, coveragePerCellB, meanCoverage, dataAcquired, coverageAcquired);
+  DEPTHAI_SERIALIZE(CoverageData, coveragePerCellA, coveragePerCellB,
+                    meanCoverage, dataAcquired, coverageAcquired);
 };
 
 /**
@@ -74,61 +76,66 @@ struct CoverageData : public Buffer {
  * @ingroup dcl_results
  */
 struct CalibrationQuality : public Buffer {
-    /**
-     * @brief Quality metrics describing differences between current
-     *        and predicted calibration.
-     *
-     * @ingroup dcl_results
-     */
-    struct Data {
-        /** Rotation difference between old and new extrinsics (degrees). */
-        std::array<float, 3> rotationChange;
-
-        /**
-         * Predicted relative depth error difference between current and new calibration.
-         * Reported at reference distances [1m, 2m, 5m, 10m].
-         * Units: percent [%].
-         */
-        std::vector<double> depthErrorDifference;
-
-        /** Sampson error of currently installed calibration. */
-        float sampsonErrorCurrent = 0.0f;
-
-        /** Estimated new Sampson error if the new calibration is applied. */
-        float sampsonErrorNew = 0.0f;
-
-        DEPTHAI_SERIALIZE(Data, rotationChange, sampsonErrorCurrent, sampsonErrorNew, depthErrorDifference);
-    };
-
-    CalibrationQuality() = default;
-    virtual ~CalibrationQuality();
+  /**
+   * @brief Quality metrics describing differences between current
+   *        and predicted calibration.
+   *
+   * @ingroup dcl_results
+   */
+  struct Data {
+    /** Rotation difference between old and new extrinsics (degrees). */
+    std::array<float, 3> rotationChange;
 
     /**
-     * @brief Construct a CalibrationQuality message with data.
-     * @param qualityData Metrics describing the quality difference.
-     * @param info Informational text describing the result.
+     * Predicted relative depth error difference between current and new
+     * calibration. Reported at reference distances [1m, 2m, 5m, 10m]. Units:
+     * percent [%].
      */
-    CalibrationQuality(Data qualityData, std::string info) : qualityData(std::make_optional(std::move(qualityData))), info(std::move(info)) {}
+    std::vector<double> depthErrorDifference;
 
-    /**
-     * @brief Construct a CalibrationQuality message without metric data.
-     * @param info Informational text describing the result.
-     */
-    CalibrationQuality(std::string info) : qualityData(std::nullopt), info(std::move(info)) {}
+    /** Sampson error of currently installed calibration. */
+    float sampsonErrorCurrent = 0.0f;
 
-    /** Optional quality metrics. */
-    std::optional<Data> qualityData;
+    /** Estimated new Sampson error if the new calibration is applied. */
+    float sampsonErrorNew = 0.0f;
 
-    /** Human-readable result description. */
-    std::string info;
+    DEPTHAI_SERIALIZE(Data, rotationChange, sampsonErrorCurrent,
+                      sampsonErrorNew, depthErrorDifference);
+  };
 
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
+  CalibrationQuality() = default;
+  virtual ~CalibrationQuality();
 
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::CalibrationQuality;
-    }
+  /**
+   * @brief Construct a CalibrationQuality message with data.
+   * @param qualityData Metrics describing the quality difference.
+   * @param info Informational text describing the result.
+   */
+  CalibrationQuality(Data qualityData, std::string info)
+      : qualityData(std::make_optional(std::move(qualityData))),
+        info(std::move(info)) {}
 
-    DEPTHAI_SERIALIZE(CalibrationQuality, qualityData, info);
+  /**
+   * @brief Construct a CalibrationQuality message without metric data.
+   * @param info Informational text describing the result.
+   */
+  CalibrationQuality(std::string info)
+      : qualityData(std::nullopt), info(std::move(info)) {}
+
+  /** Optional quality metrics. */
+  std::optional<Data> qualityData;
+
+  /** Human-readable result description. */
+  std::string info;
+
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
+
+  DatatypeEnum getDatatype() const override {
+    return DatatypeEnum::CalibrationQuality;
+  }
+
+  DEPTHAI_SERIALIZE(CalibrationQuality, qualityData, info);
 };
 
 /**
@@ -140,28 +147,29 @@ struct CalibrationQuality : public Buffer {
  * @ingroup dcl_results
  */
 struct CalibrationMetrics : public Buffer {
-    CalibrationMetrics() : calibrationConfidence(0.0), dataConfidence(0.0) {}
-    virtual ~CalibrationMetrics();
+  CalibrationMetrics() : calibrationConfidence(0.0), dataConfidence(0.0) {}
+  virtual ~CalibrationMetrics();
 
-    /** * @brief Confidence score of the computed calibration.
-     * * A normalized value between 0.0 and 1.0 indicating how much you can
-     * trust the resulting calibration.
-     */
-    double calibrationConfidence;
+  /** * @brief Confidence score of the computed calibration.
+   * * A normalized value between 0.0 and 1.0 indicating how much you can
+   * trust the resulting calibration.
+   */
+  double calibrationConfidence;
 
-    /** * @brief Quality score of the input data.
-     * * A normalized value between 0.0 and 1.0 indicating how much you can
-     * trust the data.
-     */
-    double dataConfidence;
+  /** * @brief Quality score of the input data.
+   * * A normalized value between 0.0 and 1.0 indicating how much you can
+   * trust the data.
+   */
+  double dataConfidence;
 
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::CalibrationMetrics;
-    }
+  DatatypeEnum getDatatype() const override {
+    return DatatypeEnum::CalibrationMetrics;
+  }
 
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
 
-    DEPTHAI_SERIALIZE(CalibrationMetrics, calibrationConfidence, dataConfidence);
+  DEPTHAI_SERIALIZE(CalibrationMetrics, calibrationConfidence, dataConfidence);
 };
 
 /**
@@ -175,52 +183,57 @@ struct CalibrationMetrics : public Buffer {
  * @ingroup dcl_results
  */
 struct DynamicCalibrationResult : public Buffer {
-    /**
-     * @brief Detailed calibration result.
-     *
-     * @ingroup dcl_results
-     */
-    struct Data {
-        /** Calibration produced by dynamic calibration. */
-        dai::CalibrationHandler newCalibration;
+  /**
+   * @brief Detailed calibration result.
+   *
+   * @ingroup dcl_results
+   */
+  struct Data {
+    /** Calibration produced by dynamic calibration. */
+    dai::CalibrationHandler newCalibration;
 
-        /** Calibration present before dynamic calibration. */
-        dai::CalibrationHandler currentCalibration;
+    /** Calibration present before dynamic calibration. */
+    dai::CalibrationHandler currentCalibration;
 
-        /** Per-metric comparison of new vs old calibration. */
-        CalibrationQuality::Data calibrationDifference;
+    /** Per-metric comparison of new vs old calibration. */
+    CalibrationQuality::Data calibrationDifference;
 
-        double dataConfidence = 0.0;
+    double dataConfidence = 0.0;
 
-        DEPTHAI_SERIALIZE(Data, newCalibration, currentCalibration, calibrationDifference, dataConfidence);
-    };
+    DEPTHAI_SERIALIZE(Data, newCalibration, currentCalibration,
+                      calibrationDifference, dataConfidence);
+  };
 
-    DynamicCalibrationResult() = default;
-    virtual ~DynamicCalibrationResult();
+  DynamicCalibrationResult() = default;
+  virtual ~DynamicCalibrationResult();
 
-    /**
-     * @brief Construct result including calibration data.
-     */
-    DynamicCalibrationResult(const Data& data, std::string information) : calibrationData(std::make_optional(data)), info(std::move(information)) {}
+  /**
+   * @brief Construct result including calibration data.
+   */
+  DynamicCalibrationResult(const Data &data, std::string information)
+      : calibrationData(std::make_optional(data)),
+        info(std::move(information)) {}
 
-    /**
-     * @brief Construct result containing only info text.
-     */
-    DynamicCalibrationResult(std::string information) : calibrationData(std::nullopt), info(std::move(information)) {}
+  /**
+   * @brief Construct result containing only info text.
+   */
+  DynamicCalibrationResult(std::string information)
+      : calibrationData(std::nullopt), info(std::move(information)) {}
 
-    /** Optional calibration result data. */
-    std::optional<Data> calibrationData;
+  /** Optional calibration result data. */
+  std::optional<Data> calibrationData;
 
-    /** Informational result message. */
-    std::string info;
+  /** Informational result message. */
+  std::string info;
 
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
 
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::DynamicCalibrationResult;
-    }
+  DatatypeEnum getDatatype() const override {
+    return DatatypeEnum::DynamicCalibrationResult;
+  }
 
-    DEPTHAI_SERIALIZE(DynamicCalibrationResult, calibrationData, info);
+  DEPTHAI_SERIALIZE(DynamicCalibrationResult, calibrationData, info);
 };
 
 /** @}  End of dcl_results group */

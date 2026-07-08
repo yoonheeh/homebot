@@ -11,29 +11,29 @@ namespace dai {
 
 /// Abstract message
 class ADatatype {
-   protected:
-    friend class DataInputQueue;
-    friend class StreamMessageParser;
+ protected:
+  friend class DataInputQueue;
+  friend class StreamMessageParser;
 
-   public:
+ public:
 #ifdef DEPTHAI_MESSAGES_NO_HEAP
-    explicit ADatatype() = default;
+  explicit ADatatype() = default;
 #else
-    explicit ADatatype() : data{std::make_shared<VectorMemory>(std::vector<uint8_t>())} {};
+  explicit ADatatype()
+      : data{std::make_shared<VectorMemory>(std::vector<uint8_t>())} {};
 #endif
 
-    virtual ~ADatatype();
-    virtual void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const;
+  virtual ~ADatatype();
+  virtual void serialize(std::vector<std::uint8_t> &metadata,
+                         DatatypeEnum &datatype) const;
 
-    /**
-     * @brief Get the datatype of this specific message
-     * @return DatatypeEnum
-     */
-    virtual DatatypeEnum getDatatype() const {
-        return DatatypeEnum::ADatatype;
-    }
+  /**
+   * @brief Get the datatype of this specific message
+   * @return DatatypeEnum
+   */
+  virtual DatatypeEnum getDatatype() const { return DatatypeEnum::ADatatype; }
 
-    std::shared_ptr<Memory> data;
+  std::shared_ptr<Memory> data;
 };
 
 }  // namespace dai

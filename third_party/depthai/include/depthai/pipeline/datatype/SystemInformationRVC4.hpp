@@ -15,26 +15,29 @@ namespace dai {
  * Carries memory usage, cpu usage and chip temperatures.
  */
 class SystemInformationRVC4 : public Buffer {
-   public:
-    /**
-     * Construct SystemInformation message.
-     */
-    SystemInformationRVC4() = default;
-    virtual ~SystemInformationRVC4();
+ public:
+  /**
+   * Construct SystemInformation message.
+   */
+  SystemInformationRVC4() = default;
+  virtual ~SystemInformationRVC4();
 
-    MemoryInfo ddrMemoryUsage;
-    int64_t processMemoryUsage;
-    CpuUsage cpuAvgUsage;
-    CpuUsage processCpuAvgUsage;
-    std::vector<CpuUsage> cpuUsages;
-    ChipTemperatureRVC4 chipTemperature;
+  MemoryInfo ddrMemoryUsage;
+  int64_t processMemoryUsage;
+  CpuUsage cpuAvgUsage;
+  CpuUsage processCpuAvgUsage;
+  std::vector<CpuUsage> cpuUsages;
+  ChipTemperatureRVC4 chipTemperature;
 
-    void serialize(std::vector<std::uint8_t>& metadata, DatatypeEnum& datatype) const override;
-    DatatypeEnum getDatatype() const override {
-        return DatatypeEnum::SystemInformationRVC4;
-    }
+  void serialize(std::vector<std::uint8_t> &metadata,
+                 DatatypeEnum &datatype) const override;
+  DatatypeEnum getDatatype() const override {
+    return DatatypeEnum::SystemInformationRVC4;
+  }
 
-    DEPTHAI_SERIALIZE(SystemInformationRVC4, ddrMemoryUsage, processMemoryUsage, cpuAvgUsage, processCpuAvgUsage, cpuUsages, chipTemperature);
+  DEPTHAI_SERIALIZE(SystemInformationRVC4, ddrMemoryUsage, processMemoryUsage,
+                    cpuAvgUsage, processCpuAvgUsage, cpuUsages,
+                    chipTemperature);
 };
 
 }  // namespace dai

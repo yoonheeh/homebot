@@ -13,14 +13,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from object_detection.yolo_engine import YoloEngine
 
 # Configuration
-MODEL_PATH = 'object_detection/model/yolo/yolov5s-640-640.rknn'
-DEFAULT_IMAGE = 'data/snapshot.jpg'
-OUTPUT_IMAGE = 'data/result.jpg'
+MODEL_PATH = "object_detection/model/yolo/yolov5s-640-640.rknn"
+DEFAULT_IMAGE = "data/snapshot.jpg"
+OUTPUT_IMAGE = "data/result.jpg"
+
 
 def draw(image, boxes, scores, classes, class_names):
     """Draw the boxes on the image"""
-    print("\n{:^12} {:^12}  {}".format('class', 'score', 'xmin, ymin, xmax, ymax'))
-    print('-' * 50)
+    print("\n{:^12} {:^12}  {}".format("class", "score", "xmin, ymin, xmax, ymax"))
+    print("-" * 50)
     for box, score, cl in zip(boxes, scores, classes):
         xmin, ymin, xmax, ymax = box
         xmin = int(xmin)
@@ -29,12 +30,22 @@ def draw(image, boxes, scores, classes, class_names):
         ymax = int(ymax)
 
         cv2.rectangle(image, (xmin, ymin), (xmax, ymax), (255, 0, 0), 2)
-        cv2.putText(image, '{0} {1:.2f}'.format(class_names[cl], score),
-                    (xmin, ymin - 6),
-                    cv2.FONT_HERSHEY_SIMPLEX,
-                    0.6, (0, 0, 255), 2)
+        cv2.putText(
+            image,
+            "{0} {1:.2f}".format(class_names[cl], score),
+            (xmin, ymin - 6),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            (0, 0, 255),
+            2,
+        )
 
-        print("{:^12} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(class_names[cl], score, xmin, ymin, xmax, ymax))
+        print(
+            "{:^12} {:^12.3f} [{:>4}, {:>4}, {:>4}, {:>4}]".format(
+                class_names[cl], score, xmin, ymin, xmax, ymax
+            )
+        )
+
 
 def main():
     # Get image path
@@ -68,7 +79,7 @@ def main():
         print("No detections found!")
     else:
         print(f"Detections found: {len(boxes)}")
-        
+
         # Draw and save
         draw(img, boxes, scores, classes, engine.CLASSES)
         cv2.imwrite(OUTPUT_IMAGE, img)
@@ -76,5 +87,6 @@ def main():
 
     engine.release()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

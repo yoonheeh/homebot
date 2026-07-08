@@ -1,0 +1,9 @@
+load("@aspect_rules_lint//format:defs.bzl", "format_multirun")
+
+format_multirun(
+    name = "format",
+    cc = "@llvm_toolchain//:bin/clang-format",
+    cc_fix_args = ["-style=Google", "-i"],
+    python = "@aspect_rules_lint//format:ruff",
+)
+

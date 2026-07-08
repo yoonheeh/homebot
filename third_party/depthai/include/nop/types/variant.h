@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_VARIANT_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_VARIANT_H_
 
+#include <nop/types/detail/variant.h>
+#include <nop/utility/compiler.h>
+
 #include <cstdint>
 #include <tuple>
 #include <type_traits>
-
-#include <nop/types/detail/variant.h>
-#include <nop/utility/compiler.h>
 
 namespace nop {
 
@@ -68,11 +68,11 @@ class Variant {
 
   // Constructs by type tag when T is an direct element of Types...
   template <typename T>
-  explicit Variant(T&& value, Direct)
+  explicit Variant(T &&value, Direct)
       : value_(0, &index_, DecayedTypeTag<T>{}, std::forward<T>(value)) {}
   // Conversion constructor when T is not a direct element of Types...
   template <typename T>
-  explicit Variant(T&& value, Convert)
+  explicit Variant(T &&value, Convert)
       : value_(0, &index_, std::forward<T>(value)) {}
 
  public:
@@ -82,41 +82,41 @@ class Variant {
   explicit Variant(EmptyVariant value) { Construct(value); }
   ~Variant() { Destruct(); }
 
-  Variant(const Variant& other)
+  Variant(const Variant &other)
       : index_{other.index_}, value_{other.value_, other.index_} {}
-  Variant(Variant&& other)
+  Variant(Variant &&other)
       : index_{other.index_}, value_{std::move(other.value_), other.index_} {}
 
   // Copy and move construction from Variant types. Each element of OtherTypes
   // must be convertible to an element of Types.
   template <typename... OtherTypes>
-  explicit Variant(const Variant<OtherTypes...>& other) {
-    other.Visit([this](const auto& value) { this->Construct(value); });
+  explicit Variant(const Variant<OtherTypes...> &other) {
+    other.Visit([this](const auto &value) { this->Construct(value); });
   }
   template <typename... OtherTypes>
-  explicit Variant(Variant<OtherTypes...>&& other) {
-    other.Visit([this](auto&& value) { this->Construct(std::move(value)); });
+  explicit Variant(Variant<OtherTypes...> &&other) {
+    other.Visit([this](auto &&value) { this->Construct(std::move(value)); });
   }
 
-  Variant& operator=(const Variant& other) {
-    other.Visit([this](const auto& value) { *this = value; });
+  Variant &operator=(const Variant &other) {
+    other.Visit([this](const auto &value) { *this = value; });
     return *this;
   }
-  Variant& operator=(Variant&& other) {
-    other.Visit([this](auto&& value) { *this = std::move(value); });
+  Variant &operator=(Variant &&other) {
+    other.Visit([this](auto &&value) { *this = std::move(value); });
     return *this;
   }
 
   // Construction from non-Variant types.
   template <typename T, typename = EnableIfAssignable<void, T>>
-  explicit Variant(T&& value)
+  explicit Variant(T &&value)
       : Variant(std::forward<T>(value), SelectConstructor<T>{}) {}
 
   // Performs assignment from type T belonging to Types. This overload takes
   // priority to prevent implicit conversion in cases where T is implicitly
   // convertible to multiple elements of Types.
   template <typename T>
-  EnableIfElement<Variant&, T> operator=(T&& value) {
+  EnableIfElement<Variant &, T> operator=(T &&value) {
     Assign(DecayedTypeTag<T>{}, std::forward<T>(value));
     return *this;
   }
@@ -124,14 +124,14 @@ class Variant {
   // Performs assignment from type T not belonging to Types. This overload
   // matches in cases where conversion is the only viable option.
   template <typename T>
-  EnableIfConvertible<Variant&, T> operator=(T&& value) {
+  EnableIfConvertible<Variant &, T> operator=(T &&value) {
     Assign(std::forward<T>(value));
     return *this;
   }
 
   // Handles assignment from the empty type. This overload supports assignment
   // in visitors using generic lambdas.
-  Variant& operator=(EmptyVariant) {
+  Variant &operator=(EmptyVariant) {
     Destruct();
     return *this;
   }
@@ -140,13 +140,13 @@ class Variant {
   // convertible to an element of Types. Forwards through non-Variant assignment
   // operators to apply conversion checks.
   template <typename... OtherTypes>
-  Variant& operator=(const Variant<OtherTypes...>& other) {
-    other.Visit([this](const auto& value) { *this = value; });
+  Variant &operator=(const Variant<OtherTypes...> &other) {
+    other.Visit([this](const auto &value) { *this = value; });
     return *this;
   }
   template <typename... OtherTypes>
-  Variant& operator=(Variant<OtherTypes...>&& other) {
-    other.Visit([this](auto&& value) { *this = std::move(value); });
+  Variant &operator=(Variant<OtherTypes...> &&other) {
+    other.Visit([this](auto &&value) { *this = std::move(value); });
     return *this;
   }
 
@@ -156,7 +156,7 @@ class Variant {
   // constructing an element of the new type using |Args|. An invalid target
   // type index results in an empty Variant.
   template <typename... Args>
-  void Become(std::int32_t target_index, Args&&... args) {
+  void Become(std::int32_t target_index, Args &&...args) {
     if (target_index != index()) {
       Destruct();
       index_ = value_.Become(target_index, std::forward<Args>(args)...)
@@ -168,11 +168,11 @@ class Variant {
   // Invokes |Op| on the active element. If the Variant is empty |Op| is invoked
   // on EmptyVariant.
   template <typename Op>
-  decltype(auto) Visit(Op&& op) {
+  decltype(auto) Visit(Op &&op) {
     return value_.Visit(index_, std::forward<Op>(op));
   }
   template <typename Op>
-  decltype(auto) Visit(Op&& op) const {
+  decltype(auto) Visit(Op &&op) const {
     return value_.Visit(index_, std::forward<Op>(op));
   }
 
@@ -203,28 +203,28 @@ class Variant {
   // Element accessors. Returns a pointer to the active value if the given
   // type/index is active, otherwise nullptr is returned.
   template <typename T>
-  T* get() {
+  T *get() {
     if (is<T>())
       return &value_.get(DecayedTypeTag<T>{});
     else
       return nullptr;
   }
   template <typename T>
-  const T* get() const {
+  const T *get() const {
     if (is<T>())
       return &value_.get(DecayedTypeTag<T>{});
     else
       return nullptr;
   }
   template <std::size_t I>
-  TypeForIndex<I>* get() {
+  TypeForIndex<I> *get() {
     if (is<TypeForIndex<I>>())
       return &value_.get(TypeTagForIndex<I>{});
     else
       return nullptr;
   }
   template <std::size_t I>
-  const TypeForIndex<I>* get() const {
+  const TypeForIndex<I> *get() const {
     if (is<TypeForIndex<I>>())
       return &value_.get(TypeTagForIndex<I>{});
     else
@@ -238,7 +238,7 @@ class Variant {
   // Constructs an element from the given arguments and sets the Variant to the
   // resulting type.
   template <typename... Args>
-  void Construct(Args&&... args) {
+  void Construct(Args &&...args) {
     index_ = value_.NOP_TEMPLATE Construct(std::forward<Args>(args)...);
   }
   void Construct(EmptyVariant) {}
@@ -255,14 +255,15 @@ class Variant {
   // prevent implicit conversion in cases where T is implicitly convertible to
   // multiple element types.
   template <typename T, typename U>
-  void Assign(TypeTag<T>, U&& value) {
-    if (!value_.NOP_TEMPLATE Assign(TypeTag<T>{}, index_, std::forward<U>(value))) {
+  void Assign(TypeTag<T>, U &&value) {
+    if (!value_.NOP_TEMPLATE Assign(TypeTag<T>{}, index_,
+                                    std::forward<U>(value))) {
       Destruct();
       Construct(TypeTag<T>{}, std::forward<U>(value));
     }
   }
   template <typename T>
-  void Assign(T&& value) {
+  void Assign(T &&value) {
     if (!value_.NOP_TEMPLATE Assign(index_, std::forward<T>(value))) {
       Destruct();
       Construct(std::forward<T>(value));
@@ -289,14 +290,14 @@ struct IfAnyOf {
   // Calls Op on the underlying value of the variant and returns true when the
   // variant is a valid type, otherwise does nothing and returns false.
   template <typename Op, typename... Types>
-  static bool Call(Variant<Types...>* variant, Op&& op) {
+  static bool Call(Variant<Types...> *variant, Op &&op) {
     static_assert(
         detail::Set<Types...>::template IsSubset<ValidTypes...>::value,
         "ValidTypes may only contain element types from the Variant.");
     return variant->Visit(CallOp<Op>{std::forward<Op>(op)});
   }
   template <typename Op, typename... Types>
-  static bool Call(const Variant<Types...>* variant, Op&& op) {
+  static bool Call(const Variant<Types...> *variant, Op &&op) {
     static_assert(
         detail::Set<Types...>::template IsSubset<ValidTypes...>::value,
         "ValidTypes may only contain element types from the Variant.");
@@ -307,43 +308,43 @@ struct IfAnyOf {
   // true when the variant is a valid type, otherwise does nothing and returns
   // false.
   template <typename T, typename... Types>
-  static bool Get(const Variant<Types...>* variant, T* value_out) {
+  static bool Get(const Variant<Types...> *variant, T *value_out) {
     return Call(variant,
-                [value_out](const auto& value) { *value_out = value; });
+                [value_out](const auto &value) { *value_out = value; });
   }
 
   // Moves the underlying value of the variant and returns true when the variant
   // is a valid type, otherwise does nothing and returns false.
   template <typename T, typename... Types>
-  static bool Take(Variant<Types...>* variant, T* value_out) {
+  static bool Take(Variant<Types...> *variant, T *value_out) {
     return Call(variant,
-                [value_out](auto&& value) { *value_out = std::move(value); });
+                [value_out](auto &&value) { *value_out = std::move(value); });
   }
 
   // Swaps the underlying value of the variant with |*value_out| and returns
   // true when the variant is a valid type, otherwise does nothing and returns
   // false.
   template <typename T, typename... Types>
-  static bool Swap(Variant<Types...>* variant, T* value_out) {
+  static bool Swap(Variant<Types...> *variant, T *value_out) {
     return Call(variant,
-                [value_out](auto&& value) { std::swap(*value_out, value); });
+                [value_out](auto &&value) { std::swap(*value_out, value); });
   }
 
  private:
   template <typename Op>
   struct CallOp {
-    Op&& op;
+    Op &&op;
     template <typename U>
-    detail::EnableIfNotElement<bool, U, ValidTypes...> operator()(U&&) {
+    detail::EnableIfNotElement<bool, U, ValidTypes...> operator()(U &&) {
       return false;
     }
     template <typename U>
-    detail::EnableIfElement<bool, U, ValidTypes...> operator()(const U& value) {
+    detail::EnableIfElement<bool, U, ValidTypes...> operator()(const U &value) {
       std::forward<Op>(op)(value);
       return true;
     }
     template <typename U>
-    detail::EnableIfElement<bool, U, ValidTypes...> operator()(U&& value) {
+    detail::EnableIfElement<bool, U, ValidTypes...> operator()(U &&value) {
       std::forward<Op>(op)(std::forward<U>(value));
       return true;
     }
@@ -356,30 +357,30 @@ struct IfAnyOf {
 namespace std {
 
 template <typename T, typename... Types>
-inline T& get(::nop::Variant<Types...>& v) {
+inline T &get(::nop::Variant<Types...> &v) {
   return *v.NOP_TEMPLATE get<T>();
 }
 template <typename T, typename... Types>
-inline T&& get(::nop::Variant<Types...>&& v) {
+inline T &&get(::nop::Variant<Types...> &&v) {
   return std::move(*v.NOP_TEMPLATE get<T>());
 }
 template <typename T, typename... Types>
-inline const T& get(const ::nop::Variant<Types...>& v) {
+inline const T &get(const ::nop::Variant<Types...> &v) {
   return *v.NOP_TEMPLATE get<T>();
 }
 template <std::size_t I, typename... Types>
-inline ::nop::detail::TypeForIndex<I, Types...>& get(
-    ::nop::Variant<Types...>& v) {
+inline ::nop::detail::TypeForIndex<I, Types...> &get(
+    ::nop::Variant<Types...> &v) {
   return *v.NOP_TEMPLATE get<I>();
 }
 template <std::size_t I, typename... Types>
-inline ::nop::detail::TypeForIndex<I, Types...>&& get(
-    ::nop::Variant<Types...>&& v) {
+inline ::nop::detail::TypeForIndex<I, Types...> &&get(
+    ::nop::Variant<Types...> &&v) {
   return std::move(*v.NOP_TEMPLATE get<I>());
 }
 template <std::size_t I, typename... Types>
-inline const ::nop::detail::TypeForIndex<I, Types...>& get(
-    const ::nop::Variant<Types...>& v) {
+inline const ::nop::detail::TypeForIndex<I, Types...> &get(
+    const ::nop::Variant<Types...> &v) {
   return *v.NOP_TEMPLATE get<I>();
 }
 

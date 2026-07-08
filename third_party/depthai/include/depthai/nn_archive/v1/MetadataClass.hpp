@@ -36,18 +36,18 @@ namespace v1 {
  * @ivar path: Relative path to the model executable.
  */
 struct MetadataClass {
-    /**
-     * Name of the model.
-     */
-    std::string name;
-    /**
-     * Relative path to the model executable.
-     */
-    std::string path;
-    /**
-     * Precision of the model weights.
-     */
-    std::optional<DataType> precision;
+  /**
+   * Name of the model.
+   */
+  std::string name;
+  /**
+   * Relative path to the model executable.
+   */
+  std::string path;
+  /**
+   * Precision of the model weights.
+   */
+  std::optional<DataType> precision;
 };
 }  // namespace v1
 }  // namespace nn_archive

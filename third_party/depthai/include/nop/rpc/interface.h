@@ -17,19 +17,19 @@
 #ifndef LIBNOP_INCLUDE_NOP_RPC_INTERFACE_H_
 #define LIBNOP_INCLUDE_NOP_RPC_INTERFACE_H_
 
-#include <cstdint>
-#include <tuple>
-#include <type_traits>
-#include <utility>
-
 #include <nop/base/encoding.h>
 #include <nop/base/members.h>
 #include <nop/base/tuple.h>
 #include <nop/base/utility.h>
 #include <nop/traits/function_traits.h>
 #include <nop/types/variant.h>
-#include <nop/utility/sip_hash.h>
 #include <nop/utility/compiler.h>
+#include <nop/utility/sip_hash.h>
+
+#include <cstdint>
+#include <tuple>
+#include <type_traits>
+#include <utility>
 
 namespace nop {
 
@@ -99,7 +99,7 @@ struct InterfaceMethod {
   template <typename Sender, typename... Args,
             typename Return = typename InterfaceTraits::Return>
   static EnableIfConforming<Return(Args...), Status<Return>> Invoke(
-      Sender* sender, Args&&... args) {
+      Sender *sender, Args &&...args) {
     Status<Return> return_value;
 
     Helper<ConformingSignature<Return(Args...)>>::Invoke(
@@ -110,7 +110,7 @@ struct InterfaceMethod {
 
   template <typename Sender, typename Return, typename... Args>
   static EnableIfConforming<Return(Args...), Status<void>> Invoke(
-      Sender* sender, Return* return_value, Args&&... args) {
+      Sender *sender, Return *return_value, Args &&...args) {
     Helper<ConformingSignature<Return(Args...)>>::Invoke(
         sender, return_value, std::forward<Args>(args)...);
   }
@@ -172,8 +172,8 @@ struct InterfaceMethod {
     // given passthrough arguments. The return value of the handler is then
     // serialized using the given receiver to be returned to the remote caller.
     template <typename Receiver, typename... Passthrough>
-    Status<void> Dispatch(Receiver* receiver,
-                          Passthrough&&... passthrough) const {
+    Status<void> Dispatch(Receiver *receiver,
+                          Passthrough &&...passthrough) const {
       return Helper<typename FunctionTraits<Op>::Signature>::Dispatch(
           receiver, op, std::forward<Passthrough>(passthrough)...);
     }
@@ -200,8 +200,8 @@ struct InterfaceMethod {
     // given passthrough arguments. The return value of the handler is then
     // serialized using the given receiver to be returned to the remote caller.
     template <typename Receiver, typename... Passthrough>
-    Status<void> Dispatch(Receiver* receiver, Class* instance,
-                          Passthrough&&... passthrough) const {
+    Status<void> Dispatch(Receiver *receiver, Class *instance,
+                          Passthrough &&...passthrough) const {
       return Helper<typename FunctionTraits<Method>::Signature>::Dispatch(
           receiver, instance, method,
           std::forward<Passthrough>(passthrough)...);
@@ -210,7 +210,7 @@ struct InterfaceMethod {
 
   // Returns an instance of Binding holding the given callable object.
   template <typename Op, typename Enable = EnableIfCompatibleHandler<Op>>
-  static constexpr auto Bind(Op&& op) {
+  static constexpr auto Bind(Op &&op) {
     return FunctionBinding<Op>{std::forward<Op>(op)};
   }
 
@@ -243,22 +243,21 @@ struct InterfaceMethod {
 
     // Invokes the remote method using the given sender.
     template <typename Sender>
-    static void Invoke(Sender* sender, Status<Return>* return_value,
+    static void Invoke(Sender *sender, Status<Return> *return_value,
                        Args... args) {
       sender->NOP_TEMPLATE SendMethod(InterfaceMethod::Selector, return_value,
-                                  std::forward_as_tuple(args...));
+                                      std::forward_as_tuple(args...));
     }
 
     // Dispatches the given handler op, getting the arguments from the given
     // receiver and passthough arguments and then passing the return value back
     // to the receiver.
     template <typename Receiver, typename Op, typename... Passthrough>
-    static Status<void> Dispatch(Receiver* receiver, Op&& op,
-                                 Passthrough&&... passthrough) {
+    static Status<void> Dispatch(Receiver *receiver, Op &&op,
+                                 Passthrough &&...passthrough) {
       ArgsTuple args;
       auto status = receiver->GetArgs(&args);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       Return return_value{Call(std::forward<Op>(op), &args,
                                std::make_index_sequence<sizeof...(Args)>{},
@@ -272,12 +271,11 @@ struct InterfaceMethod {
     // to the receiver.
     template <typename Receiver, typename Class, typename Op,
               typename... Passthrough>
-    static Status<void> Dispatch(Receiver* receiver, Class* instance, Op&& op,
-                                 Passthrough&&... passthrough) {
+    static Status<void> Dispatch(Receiver *receiver, Class *instance, Op &&op,
+                                 Passthrough &&...passthrough) {
       ArgsTuple args;
       auto status = receiver->GetArgs(&args);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       Return return_value{Call(instance, std::forward<Op>(op), &args,
                                std::make_index_sequence<sizeof...(Args)>{},
@@ -289,8 +287,8 @@ struct InterfaceMethod {
     // Helper function to marshall passthough arguments and deserialized
     // arugments to the given handler op.
     template <typename Op, std::size_t... Is, typename... Passthrough>
-    static Return Call(Op&& op, ArgsTuple* args, std::index_sequence<Is...>,
-                       Passthrough&&... passthrough) {
+    static Return Call(Op &&op, ArgsTuple *args, std::index_sequence<Is...>,
+                       Passthrough &&...passthrough) {
       // Silence compiler warning in case the handler doesn't have arguments.
       (void)args;
 
@@ -303,9 +301,9 @@ struct InterfaceMethod {
     // arugments to the given handler op.
     template <typename Class, typename Op, std::size_t... Is,
               typename... Passthrough>
-    static Return Call(Class* instance, Op&& op, ArgsTuple* args,
+    static Return Call(Class *instance, Op &&op, ArgsTuple *args,
                        std::index_sequence<Is...>,
-                       Passthrough&&... passthrough) {
+                       Passthrough &&...passthrough) {
       // Silence compiler warning in case the handler doesn't have arguments.
       (void)args;
 
@@ -414,7 +412,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
 
   // Constructs an instance with the given bindings. Bindings are instances of
   // InterfaceMethod::*Binding returned by the method InterfaceMethod::Bind().
-  constexpr InterfaceBindings(Bindings&&... bindings)
+  constexpr InterfaceBindings(Bindings &&...bindings)
       : bindings_{std::forward<Bindings>(bindings)...} {}
 
   // Returns true if the given selector matches one of the interface methods
@@ -427,11 +425,10 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // passthrough args. If the selector does not match one of the bound methods
   // in this dispatch table ErrorStatus::InvalidInterfaceMethod is returned.
   template <typename Receiver>
-  Status<void> operator()(Receiver* receiver, Args&&... args) const {
+  Status<void> operator()(Receiver *receiver, Args &&...args) const {
     MethodSelector method_selector;
     auto status = receiver->GetMethodSelector(&method_selector);
-    if (!status)
-      return status.error();
+    if (!status) return status.error();
 
     return DispatchTable(receiver, method_selector,
                          Index<sizeof...(Bindings)>{},
@@ -466,17 +463,17 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
   // Terminates recursion when searching for the given method selector to
   // dispatch.
   template <typename Receiver, typename MethodSelector>
-  Status<void> DispatchTable(Receiver* /*receiver*/,
+  Status<void> DispatchTable(Receiver * /*receiver*/,
                              MethodSelector /*method_selector*/, Index<0>,
-                             Args&&... /*args*/) const {
+                             Args &&.../*args*/) const {
     return ErrorStatus::InvalidInterfaceMethod;
   }
 
   // Recurses through the bindings in this dispatch table looking for the given
   // method selector.
   template <typename Receiver, typename MethodSelector, std::size_t index>
-  Status<void> DispatchTable(Receiver* receiver, MethodSelector method_selector,
-                             Index<index>, Args&&... args) const {
+  Status<void> DispatchTable(Receiver *receiver, MethodSelector method_selector,
+                             Index<index>, Args &&...args) const {
     if (At<index - 1>::Match(method_selector)) {
       return std::get<index - 1>(bindings_).Dispatch(
           receiver, std::forward<Args>(args)...);
@@ -492,7 +489,7 @@ class InterfaceBindings<Passthrough<Args...>, Bindings...> {
 // arguments that each binding handler must accept.
 template <typename... Args, typename... Bindings>
 constexpr InterfaceBindings<Passthrough<Args...>, Bindings...> BindInterface(
-    Bindings&&... bindings) {
+    Bindings &&...bindings) {
   return {std::forward<Bindings>(bindings)...};
 }
 
@@ -500,7 +497,7 @@ constexpr InterfaceBindings<Passthrough<Args...>, Bindings...> BindInterface(
 // BindInterface.
 template <typename Receiver, typename... PassthroughArgs>
 using InterfaceDispatcher =
-    std::function<Status<void>(Receiver*, PassthroughArgs...)>;
+    std::function<Status<void>(Receiver *, PassthroughArgs...)>;
 
 // Keys passed to SipHash::Compute when generating method selectors at
 // compile-time.

@@ -17,46 +17,52 @@
 namespace dai {
 
 enum struct ImgResizeMode {
-    /**
-     * Keeps aspect ratio.
-     * Crops the image to get the correct output aspect ratio.
-     * Crops some FOV to match the required FOV, then scale. No potential NN accuracy decrease.
-     */
-    CROP,
-    /**
-     * Doesn't keep aspect ratio.
-     * Squishes or streches the image to fill the required pixel area.
-     * Preserves full FOV, but frames are stretched to match the FOV, which might decrease NN accuracy.
-     */
-    STRETCH,
-    /**
-     * Keeps aspect ratio.
-     * Envelop the image with a background color to get the corect output aspect ratio.
-     * Preserves full FOV by padding/letterboxing, but smaller frame means less features which might decrease NN accuracy.
-     */
-    LETTERBOX,
+  /**
+   * Keeps aspect ratio.
+   * Crops the image to get the correct output aspect ratio.
+   * Crops some FOV to match the required FOV, then scale. No potential NN
+   * accuracy decrease.
+   */
+  CROP,
+  /**
+   * Doesn't keep aspect ratio.
+   * Squishes or streches the image to fill the required pixel area.
+   * Preserves full FOV, but frames are stretched to match the FOV, which might
+   * decrease NN accuracy.
+   */
+  STRETCH,
+  /**
+   * Keeps aspect ratio.
+   * Envelop the image with a background color to get the corect output aspect
+   * ratio. Preserves full FOV by padding/letterboxing, but smaller frame means
+   * less features which might decrease NN accuracy.
+   */
+  LETTERBOX,
 };
 
-class ImgFrameCapability : public CapabilityCRTP<Capability, ImgFrameCapability> {
-   public:
-    constexpr static const char* NAME = "dai/img-frame";
-    // Capability getIntersection(const Capability& other) override;
+class ImgFrameCapability
+    : public CapabilityCRTP<Capability, ImgFrameCapability> {
+ public:
+  constexpr static const char *NAME = "dai/img-frame";
+  // Capability getIntersection(const Capability& other) override;
 
-    CapabilityRange<std::pair<uint32_t, uint32_t>> size;
-    CapabilityRange<float> fps;
-    std::optional<ImgFrame::Type> type;
-    ImgResizeMode resizeMode{ImgResizeMode::CROP};
-    std::optional<bool> enableUndistortion;
-    bool ispOutput = false;
-    // TODO(jakgra) add optional CapabilityRange fov / max-min horiz. / vertical crop;
+  CapabilityRange<std::pair<uint32_t, uint32_t>> size;
+  CapabilityRange<float> fps;
+  std::optional<ImgFrame::Type> type;
+  ImgResizeMode resizeMode{ImgResizeMode::CROP};
+  std::optional<bool> enableUndistortion;
+  bool ispOutput = false;
+  // TODO(jakgra) add optional CapabilityRange fov / max-min horiz. / vertical
+  // crop;
 
-    ~ImgFrameCapability() override;
+  ~ImgFrameCapability() override;
 
-    DEPTHAI_SERIALIZE(ImgFrameCapability, size, fps, type, resizeMode, enableUndistortion, ispOutput);
+  DEPTHAI_SERIALIZE(ImgFrameCapability, size, fps, type, resizeMode,
+                    enableUndistortion, ispOutput);
 
-   private:
-    class Impl;
-    spimpl::impl_ptr<Impl> pimpl;
+ private:
+  class Impl;
+  spimpl::impl_ptr<Impl> pimpl;
 };
 
 }  // namespace dai

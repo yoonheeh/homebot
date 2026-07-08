@@ -35,11 +35,11 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
   using Type = Handle<Policy>;
   using HandleType = decltype(Policy::HandleType());
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Handle;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     // Overestimate the size as though the handle reference is I64 because the
     // handle reference value, and therefore size, is not known ahead of
     // serialization.
@@ -54,22 +54,20 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     auto status = Encoding<HandleType>::Write(Policy::HandleType(), writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     auto push_status = writer->template PushHandle<Type>(value);
-    if (!push_status)
-      return push_status.error();
+    if (!push_status) return push_status.error();
 
     return Encoding<HandleReference>::Write(push_status.get(), writer);
   }
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     HandleType handle_type;
     auto status = Encoding<HandleType>::Read(&handle_type, reader);
     if (!status)
@@ -79,12 +77,10 @@ struct Encoding<Handle<Policy>> : EncodingIO<Handle<Policy>> {
 
     HandleReference handle_reference = kEmptyHandleReference;
     status = Encoding<HandleReference>::Read(&handle_reference, reader);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     auto get_status = reader->template GetHandle<Type>(handle_reference);
-    if (!get_status)
-      return get_status.error();
+    if (!get_status) return get_status.error();
 
     *value = get_status.take();
     return {};

@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_ENUM_H_
 #define LIBNOP_INCLUDE_NOP_BASE_ENUM_H_
 
-#include <type_traits>
-
 #include <nop/base/encoding.h>
+
+#include <type_traits>
 
 namespace nop {
 
@@ -35,11 +35,11 @@ using EnableIfEnum =
 
 template <typename T>
 struct Encoding<T, EnableIfEnum<T>> : EncodingIO<T> {
-  static constexpr EncodingByte Prefix(const T& value) {
+  static constexpr EncodingByte Prefix(const T &value) {
     return Encoding<IntegerType>::Prefix(static_cast<IntegerType>(value));
   }
 
-  static constexpr std::size_t Size(const T& value) {
+  static constexpr std::size_t Size(const T &value) {
     return Encoding<IntegerType>::Size(static_cast<IntegerType>(value));
   }
 
@@ -49,16 +49,16 @@ struct Encoding<T, EnableIfEnum<T>> : EncodingIO<T> {
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte prefix,
-                                             const T& value, Writer* writer) {
+                                             const T &value, Writer *writer) {
     return Encoding<IntegerType>::WritePayload(
-        prefix, reinterpret_cast<const IntegerType&>(value), writer);
+        prefix, reinterpret_cast<const IntegerType &>(value), writer);
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte prefix, T* value,
-                                            Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, T *value,
+                                            Reader *reader) {
     return Encoding<IntegerType>::ReadPayload(
-        prefix, reinterpret_cast<IntegerType*>(value), reader);
+        prefix, reinterpret_cast<IntegerType *>(value), reader);
   }
 
  private:

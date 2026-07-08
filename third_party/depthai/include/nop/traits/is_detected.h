@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_TRAITS_IS_DETECTED_H_
 #define LIBNOP_INCLUDE_NOP_TRAITS_IS_DETECTED_H_
 
-#include <type_traits>
-
 #include <nop/traits/void.h>
+
+#include <type_traits>
 
 namespace nop {
 

@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_READER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_READER_H_
 
+#include <nop/base/encoding.h>
+#include <nop/base/utility.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
-
-#include <nop/base/encoding.h>
-#include <nop/base/utility.h>
 
 namespace nop {
 
@@ -33,16 +33,16 @@ namespace nop {
 class PedanticBufferReader {
  public:
   PedanticBufferReader() = default;
-  PedanticBufferReader(const PedanticBufferReader&) = default;
+  PedanticBufferReader(const PedanticBufferReader &) = default;
   template <std::size_t Size>
   PedanticBufferReader(const std::uint8_t (&buffer)[Size])
       : buffer_{buffer}, size_{Size} {}
-  PedanticBufferReader(const std::uint8_t* buffer, std::size_t size)
+  PedanticBufferReader(const std::uint8_t *buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
-  PedanticBufferReader(const void* buffer, std::size_t size)
-      : buffer_{static_cast<const std::uint8_t*>(buffer)}, size_{size} {}
+  PedanticBufferReader(const void *buffer, std::size_t size)
+      : buffer_{static_cast<const std::uint8_t *>(buffer)}, size_{size} {}
 
-  PedanticBufferReader& operator=(const PedanticBufferReader&) = default;
+  PedanticBufferReader &operator=(const PedanticBufferReader &) = default;
 
   Status<void> Ensure(std::size_t size) {
     if (size_ - index_ < size)
@@ -51,16 +51,15 @@ class PedanticBufferReader {
       return {};
   }
 
-  Status<void> Read(std::uint8_t* byte) { return Read(byte, byte + 1); }
+  Status<void> Read(std::uint8_t *byte) { return Read(byte, byte + 1); }
 
   template <typename T, typename Enable = EnableIfArithmetic<T>>
-  Status<void> Read(T* begin, T* end) {
+  Status<void> Read(T *begin, T *end) {
     const std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
 
-    if (length_bytes > (size_ - index_))
-      return ErrorStatus::ReadLimitReached;
+    if (length_bytes > (size_ - index_)) return ErrorStatus::ReadLimitReached;
 
     std::memcpy(begin, &buffer_[index_], length_bytes);
     index_ += length_bytes;
@@ -68,8 +67,7 @@ class PedanticBufferReader {
   }
 
   Status<void> Skip(std::size_t padding_bytes) {
-    if (padding_bytes > (size_ - index_))
-      return ErrorStatus::ReadLimitReached;
+    if (padding_bytes > (size_ - index_)) return ErrorStatus::ReadLimitReached;
 
     index_ += padding_bytes;
     return {};
@@ -81,7 +79,7 @@ class PedanticBufferReader {
   std::size_t capacity() const { return size_; }
 
  private:
-  const std::uint8_t* buffer_{nullptr};
+  const std::uint8_t *buffer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

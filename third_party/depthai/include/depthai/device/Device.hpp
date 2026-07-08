@@ -23,23 +23,23 @@ namespace dai {
  * Implements the host-side queues to connect with XLinkIn and XLinkOut nodes
  */
 class Device : public DeviceBase {
-   public:
-    using DeviceBase::DeviceBase;  // inherit the ctors
-    using DeviceBase::ReconnectionStatus;
+ public:
+  using DeviceBase::DeviceBase;  // inherit the ctors
+  using DeviceBase::ReconnectionStatus;
 
-    /**
-     * Connects to any available device with a DEFAULT_SEARCH_TIME timeout.
-     * Uses OpenVINO version OpenVINO::VERSION_UNIVERSAL
-     */
-    Device();
+  /**
+   * Connects to any available device with a DEFAULT_SEARCH_TIME timeout.
+   * Uses OpenVINO version OpenVINO::VERSION_UNIVERSAL
+   */
+  Device();
 
-    /**
-     * @brief dtor to close the device
-     */
-    ~Device() override;
+  /**
+   * @brief dtor to close the device
+   */
+  ~Device() override;
 
-   private:
-    void closeImpl() override;
+ private:
+  void closeImpl() override;
 };
 
 }  // namespace dai

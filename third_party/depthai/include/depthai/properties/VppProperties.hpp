@@ -10,17 +10,17 @@ namespace dai {
  * Specify properties for Vpp node
  */
 struct VppProperties : PropertiesSerializable<Properties, VppProperties> {
-    /**
-     * Initial VPP configuration
-     */
-    VppConfig initialConfig;
+  /**
+   * Initial VPP configuration
+   */
+  VppConfig initialConfig;
 
-    /**
-     * Number of frames in pool for output frames
-     */
-    int numFramesPool = 4;
+  /**
+   * Number of frames in pool for output frames
+   */
+  int numFramesPool = 4;
 
-    virtual ~VppProperties();
+  virtual ~VppProperties();
 };
 
 DEPTHAI_SERIALIZE_EXT(VppProperties, initialConfig, numFramesPool);

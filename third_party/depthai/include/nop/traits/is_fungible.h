@@ -17,14 +17,6 @@
 #ifndef LIBNOP_INCLUDE_NOP_TRAITS_IS_FUNGIBLE_H_
 #define LIBNOP_INCLUDE_NOP_TRAITS_IS_FUNGIBLE_H_
 
-#include <array>
-#include <map>
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
-#include <vector>
-
 #include <nop/base/logical_buffer.h>
 #include <nop/base/members.h>
 #include <nop/base/table.h>
@@ -32,6 +24,14 @@
 #include <nop/types/optional.h>
 #include <nop/types/result.h>
 #include <nop/types/variant.h>
+
+#include <array>
+#include <map>
+#include <tuple>
+#include <type_traits>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 // This header defines rules for which types have equivalent encodings. Types
 // with equivalent encodings my be legally substituted during serialization and

@@ -85,28 +85,28 @@ class LogicalBuffer<BufferType, SizeType, IsUnbounded_,
                 "Unbounded logical buffers must have trivially destructible "
                 "value types!");
 
-  constexpr LogicalBuffer(BufferType& data, SizeType& size)
+  constexpr LogicalBuffer(BufferType &data, SizeType &size)
       : data_{data}, size_{size} {}
-  constexpr LogicalBuffer(const LogicalBuffer&) = default;
-  constexpr LogicalBuffer& operator=(const LogicalBuffer&) = default;
+  constexpr LogicalBuffer(const LogicalBuffer &) = default;
+  constexpr LogicalBuffer &operator=(const LogicalBuffer &) = default;
 
-  constexpr ValueType& operator[](std::size_t index) { return data_[index]; }
-  constexpr const ValueType& operator[](std::size_t index) const {
+  constexpr ValueType &operator[](std::size_t index) { return data_[index]; }
+  constexpr const ValueType &operator[](std::size_t index) const {
     return data_[index];
   }
 
-  constexpr SizeType& size() { return size_; }
-  constexpr const SizeType& size() const { return size_; }
+  constexpr SizeType &size() { return size_; }
+  constexpr const SizeType &size() const { return size_; }
 
-  constexpr ValueType* begin() { return &data_[0]; }
-  constexpr const ValueType* begin() const { return &data_[0]; }
+  constexpr ValueType *begin() { return &data_[0]; }
+  constexpr const ValueType *begin() const { return &data_[0]; }
 
-  constexpr ValueType* end() { return &data_[size_]; }
-  constexpr const ValueType* end() const { return &data_[size_]; }
+  constexpr ValueType *end() { return &data_[size_]; }
+  constexpr const ValueType *end() const { return &data_[size_]; }
 
  private:
-  BufferType& data_;
-  SizeType& size_;
+  BufferType &data_;
+  SizeType &size_;
 };
 
 }  // namespace nop

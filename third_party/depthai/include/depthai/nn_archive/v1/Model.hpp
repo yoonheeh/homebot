@@ -43,22 +43,23 @@ namespace v1 {
  * defined, we assume a raw output.
  */
 struct Model {
-    /**
-     * List of Head objects defining the model heads. If not defined, we assume a raw output.
-     */
-    std::optional<std::vector<Head>> heads;
-    /**
-     * List of Input objects defining the model inputs.
-     */
-    std::vector<Input> inputs;
-    /**
-     * Metadata object defining the model metadata.
-     */
-    MetadataClass metadata;
-    /**
-     * List of Output objects defining the model outputs.
-     */
-    std::vector<Output> outputs;
+  /**
+   * List of Head objects defining the model heads. If not defined, we assume a
+   * raw output.
+   */
+  std::optional<std::vector<Head>> heads;
+  /**
+   * List of Input objects defining the model inputs.
+   */
+  std::vector<Input> inputs;
+  /**
+   * Metadata object defining the model metadata.
+   */
+  MetadataClass metadata;
+  /**
+   * List of Output objects defining the model outputs.
+   */
+  std::vector<Output> outputs;
 };
 }  // namespace v1
 }  // namespace nn_archive

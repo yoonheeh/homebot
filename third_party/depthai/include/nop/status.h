@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_STATUS_H_
 #define LIBNOP_INCLUDE_NOP_STATUS_H_
 
-#include <string>
-
 #include <nop/types/result.h>
+
+#include <string>
 
 //
 // Status<T> is the return type used by the serialization engine to return
@@ -55,7 +55,7 @@ template <typename T>
 struct Status : Result<ErrorStatus, T> {
   using Result<ErrorStatus, T>::Result;
 
-  const char* GetErrorMessage() const {
+  const char *GetErrorMessage() const {
     switch (this->error()) {
       case ErrorStatus::None:
         return "No Error";

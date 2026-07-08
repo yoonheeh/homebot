@@ -174,87 +174,89 @@ namespace v1 {
  * @ivar postprocessor_path: Path to the postprocessor.
  */
 struct Metadata {
-    /**
-     * Predefined bounding boxes of different sizes and aspect ratios. The innermost lists are
-     * length 2 tuples of box sizes. The middle lists are anchors for each output. The outmost
-     * lists go from smallest to largest output.
-     */
-    std::optional<std::vector<std::vector<std::vector<double>>>> anchors;
-    /**
-     * Names of object classes recognized by the model.
-     */
-    std::optional<std::vector<std::string>> classes;
-    /**
-     * Confidence score threshold above which a detected object is considered valid.
-     */
-    std::optional<double> confThreshold;
-    /**
-     * Non-max supression threshold limiting boxes intersection.
-     */
-    std::optional<double> iouThreshold;
-    /**
-     * Maximum detections per image.
-     */
-    std::optional<int64_t> maxDet;
-    /**
-     * Number of object classes recognized by the model.
-     */
-    std::optional<int64_t> nClasses;
-    /**
-     * Path to the postprocessor.
-     */
-    std::optional<std::string> postprocessorPath;
-    /**
-     * True, if output is already softmaxed.
-     *
-     * True, if output is already softmaxed in YOLO instance segmentation.
-     */
-    std::optional<bool> isSoftmax;
-    /**
-     * Output name corresponding to predicted bounding box coordinates.
-     */
-    std::optional<std::string> boxesOutputs;
-    /**
-     * Output name corresponding to predicted bounding box confidence scores.
-     */
-    std::optional<std::string> scoresOutputs;
-    /**
-     * A list of output names for the angles.
-     */
-    std::optional<std::vector<std::string>> anglesOutputs;
-    /**
-     * A list of output names for the keypoints.
-     */
-    std::optional<std::vector<std::string>> keypointsOutputs;
-    /**
-     * A list of output names for each mask output.
-     */
-    std::optional<std::vector<std::string>> maskOutputs;
-    /**
-     * Number of keypoints per bbox in YOLO keypoint detection.
-     */
-    std::optional<int64_t> nKeypoints;
-    /**
-     * Number of prototypes per bbox in YOLO instance segmnetation.
-     */
-    std::optional<int64_t> nPrototypes;
-    /**
-     * Output name for the protos.
-     */
-    std::optional<std::string> protosOutputs;
-    /**
-     * YOLO family decoding subtype (e.g. yolov5, yolov6, yolov7 etc.).
-     */
-    std::optional<std::string> subtype;
-    /**
-     * A list of output names for each of the different YOLO grid sizes.
-     */
-    std::optional<std::vector<std::string>> yoloOutputs;
+  /**
+   * Predefined bounding boxes of different sizes and aspect ratios. The
+   * innermost lists are length 2 tuples of box sizes. The middle lists are
+   * anchors for each output. The outmost lists go from smallest to largest
+   * output.
+   */
+  std::optional<std::vector<std::vector<std::vector<double>>>> anchors;
+  /**
+   * Names of object classes recognized by the model.
+   */
+  std::optional<std::vector<std::string>> classes;
+  /**
+   * Confidence score threshold above which a detected object is considered
+   * valid.
+   */
+  std::optional<double> confThreshold;
+  /**
+   * Non-max supression threshold limiting boxes intersection.
+   */
+  std::optional<double> iouThreshold;
+  /**
+   * Maximum detections per image.
+   */
+  std::optional<int64_t> maxDet;
+  /**
+   * Number of object classes recognized by the model.
+   */
+  std::optional<int64_t> nClasses;
+  /**
+   * Path to the postprocessor.
+   */
+  std::optional<std::string> postprocessorPath;
+  /**
+   * True, if output is already softmaxed.
+   *
+   * True, if output is already softmaxed in YOLO instance segmentation.
+   */
+  std::optional<bool> isSoftmax;
+  /**
+   * Output name corresponding to predicted bounding box coordinates.
+   */
+  std::optional<std::string> boxesOutputs;
+  /**
+   * Output name corresponding to predicted bounding box confidence scores.
+   */
+  std::optional<std::string> scoresOutputs;
+  /**
+   * A list of output names for the angles.
+   */
+  std::optional<std::vector<std::string>> anglesOutputs;
+  /**
+   * A list of output names for the keypoints.
+   */
+  std::optional<std::vector<std::string>> keypointsOutputs;
+  /**
+   * A list of output names for each mask output.
+   */
+  std::optional<std::vector<std::string>> maskOutputs;
+  /**
+   * Number of keypoints per bbox in YOLO keypoint detection.
+   */
+  std::optional<int64_t> nKeypoints;
+  /**
+   * Number of prototypes per bbox in YOLO instance segmnetation.
+   */
+  std::optional<int64_t> nPrototypes;
+  /**
+   * Output name for the protos.
+   */
+  std::optional<std::string> protosOutputs;
+  /**
+   * YOLO family decoding subtype (e.g. yolov5, yolov6, yolov7 etc.).
+   */
+  std::optional<std::string> subtype;
+  /**
+   * A list of output names for each of the different YOLO grid sizes.
+   */
+  std::optional<std::vector<std::string>> yoloOutputs;
 
-    /**
-     * Additional parameters
-     */
-    nlohmann::json extraParams;
+  /**
+   * Additional parameters
+   */
+  nlohmann::json extraParams;
 };
 }  // namespace v1
 }  // namespace nn_archive

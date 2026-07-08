@@ -18,11 +18,10 @@
 #define LIBNOP_INCLUDE_NOP_TYPES_FILE_HANDLE_H_
 
 #include <fcntl.h>
+#include <nop/types/handle.h>
 #include <unistd.h>
 
 #include <string>
-
-#include <nop/types/handle.h>
 
 namespace nop {
 
@@ -38,11 +37,11 @@ struct FileHandlePolicy {
   static constexpr int Default() { return kEmptyHandle; }
   static bool IsValid(int fd) { return fd >= 0; }
 
-  static void Close(int* fd) {
+  static void Close(int *fd) {
     ::close(*fd);
     *fd = kEmptyHandle;
   }
-  static int Release(int* fd) {
+  static int Release(int *fd) {
     int temp = kEmptyHandle;
     std::swap(*fd, temp);
     return temp;
@@ -63,7 +62,7 @@ class UniqueFileHandle : public UniqueHandle<FileHandlePolicy> {
 
   // Named constructor that opens a UniqueFileHandle given a path, flags, and
   // optional file mode.
-  static UniqueFileHandle Open(const std::string& path, int flags,
+  static UniqueFileHandle Open(const std::string &path, int flags,
                                mode_t mode = 0) {
     return UniqueFileHandle{::open(path.c_str(), flags, mode)};
   }
@@ -71,7 +70,7 @@ class UniqueFileHandle : public UniqueHandle<FileHandlePolicy> {
   // Named constructor that opens a UniqueFileHandle relative to the given
   // directory with the given path, flags, and optional file mode.
   static UniqueFileHandle OpenAt(FileHandle directory_handle,
-                                 const std::string& path, int flags,
+                                 const std::string &path, int flags,
                                  mode_t mode = 0) {
     return UniqueFileHandle{
         ::openat(directory_handle.get(), path.c_str(), flags, mode)};

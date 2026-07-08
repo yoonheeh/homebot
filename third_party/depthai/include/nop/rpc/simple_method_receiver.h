@@ -29,38 +29,38 @@ namespace nop {
 template <typename Serializer, typename Deserializer>
 class SimpleMethodReceiver {
  public:
-  constexpr SimpleMethodReceiver(Serializer* serializer,
-                                 Deserializer* deserializer)
+  constexpr SimpleMethodReceiver(Serializer *serializer,
+                                 Deserializer *deserializer)
       : serializer_{serializer}, deserializer_{deserializer} {}
 
   template <typename MethodSelector>
-  constexpr Status<void> GetMethodSelector(MethodSelector* method_selector) {
+  constexpr Status<void> GetMethodSelector(MethodSelector *method_selector) {
     return deserializer_->Read(method_selector);
   }
 
   template <typename... Args>
-  constexpr Status<void> GetArgs(std::tuple<Args...>* args) {
+  constexpr Status<void> GetArgs(std::tuple<Args...> *args) {
     return deserializer_->Read(args);
   }
 
   template <typename Return>
-  constexpr Status<void> SendReturn(const Return& return_value) {
+  constexpr Status<void> SendReturn(const Return &return_value) {
     return serializer_->Write(return_value);
   }
 
-  constexpr const Serializer& serializer() const { return *serializer_; }
-  constexpr Serializer& serializer() { return *serializer_; }
-  constexpr const Deserializer& deserializer() const { return *deserializer_; }
-  constexpr Deserializer& deserializer() { return *deserializer_; }
+  constexpr const Serializer &serializer() const { return *serializer_; }
+  constexpr Serializer &serializer() { return *serializer_; }
+  constexpr const Deserializer &deserializer() const { return *deserializer_; }
+  constexpr Deserializer &deserializer() { return *deserializer_; }
 
  private:
-  Serializer* serializer_;
-  Deserializer* deserializer_;
+  Serializer *serializer_;
+  Deserializer *deserializer_;
 };
 
 template <typename Serializer, typename Deserializer>
 SimpleMethodReceiver<Serializer, Deserializer> MakeSimpleMethodReceiver(
-    Serializer* serializer, Deserializer* deserializer) {
+    Serializer *serializer, Deserializer *deserializer) {
   return {serializer, deserializer};
 }
 

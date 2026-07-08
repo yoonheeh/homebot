@@ -63,3 +63,9 @@ bazel_dep(name = "libzmq", version = "4.3.5.bcr.5")
 
 # OpenCV
 bazel_dep(name = "opencv", version = "5.0.0")
+
+# Formatter
+bazel_dep(name = "aspect_rules_lint", version = "1.12.0")
+# needed to resolve transitive dependency running formatter
+bazel_dep(name = "rules_nodejs", version = "6.7.5") 
+

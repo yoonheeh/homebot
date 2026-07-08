@@ -17,12 +17,12 @@
 #ifndef LIBNOP_INCLUDE_NOP_TABLE_H_
 #define LIBNOP_INCLUDE_NOP_TABLE_H_
 
-#include <type_traits>
-
 #include <nop/base/macros.h>
 #include <nop/structure.h>
 #include <nop/types/optional.h>
 #include <nop/utility/sip_hash.h>
+
+#include <type_traits>
 
 namespace nop {
 
@@ -173,7 +173,7 @@ template <typename T, typename = void>
 struct HasEntryList {
  private:
   template <typename U>
-  static constexpr bool Test(const typename U::NOP__ENTRIES*) {
+  static constexpr bool Test(const typename U::NOP__ENTRIES *) {
     return IsTemplateBaseOf<EntryList, typename U::NOP__ENTRIES>::value;
   }
   template <typename U>

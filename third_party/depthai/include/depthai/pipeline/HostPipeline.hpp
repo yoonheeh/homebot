@@ -26,22 +26,24 @@
 //     friend class Node;
 
 //    public:
-//     HostPipelineImpl(HostPipeline& pipeline) : assetManager("/pipeline/"), parent(pipeline) {}
-//     HostPipelineImpl(const HostPipelineImpl&) = default;
+//     HostPipelineImpl(HostPipeline& pipeline) : assetManager("/pipeline/"),
+//     parent(pipeline) {} HostPipelineImpl(const HostPipelineImpl&) = default;
 //     ~HostPipelineImpl();
 
 //    private:
 //     // static functions
-//     static bool isSamePipeline(const Node::Output& out, const Node::Input& in);
-//     static bool canConnect(const Node::Output& out, const Node::Input& in);
+//     static bool isSamePipeline(const Node::Output& out, const Node::Input&
+//     in); static bool canConnect(const Node::Output& out, const Node::Input&
+//     in);
 
 //     // Functions
 //     Node::Id getNextUniqueId();
-//     PipelineSchema getPipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE) const;
-//     std::optional<OpenVINO::Version> getPipelineOpenVINOVersion() const;
-//     OpenVINO::Version getOpenVINOVersion() const;
-//     std::optional<OpenVINO::Version> getRequiredOpenVINOVersion() const;
-//     bool isOpenVINOVersionCompatible(OpenVINO::Version version) const;
+//     PipelineSchema getPipelineSchema(SerializationType type =
+//     DEFAULT_SERIALIZATION_TYPE) const; std::optional<OpenVINO::Version>
+//     getPipelineOpenVINOVersion() const; OpenVINO::Version
+//     getOpenVINOVersion() const; std::optional<OpenVINO::Version>
+//     getRequiredOpenVINOVersion() const; bool
+//     isOpenVINOVersionCompatible(OpenVINO::Version version) const;
 //     Device::Config getDeviceConfig() const;
 //     void setCameraTuningBlobPath(const std::filesystem::path& path);
 //     void setXLinkChunkSize(int sizeBytes);
@@ -52,8 +54,10 @@
 //     std::shared_ptr<const Node> getNode(Node::Id id) const;
 //     std::shared_ptr<Node> getNode(Node::Id id);
 
-//     void serialize(PipelineSchema& schema, Assets& assets, std::vector<std::uint8_t>& assetStorage, SerializationType type = DEFAULT_SERIALIZATION_TYPE)
-//     const; nlohmann::json serializeToJson() const; void remove(std::shared_ptr<Node> node);
+//     void serialize(PipelineSchema& schema, Assets& assets,
+//     std::vector<std::uint8_t>& assetStorage, SerializationType type =
+//     DEFAULT_SERIALIZATION_TYPE) const; nlohmann::json serializeToJson()
+//     const; void remove(std::shared_ptr<Node> node);
 
 //     std::vector<Node::Connection> getConnections() const;
 //     void link(const Node::Output& out, const Node::Input& in);
@@ -74,7 +78,8 @@
 //     // Optimized for adding, searching and removing connections
 //     using NodeMap = std::unordered_map<Node::Id, std::shared_ptr<Node>>;
 //     NodeMap nodeMap;
-//     using NodeConnectionMap = std::unordered_map<Node::Id, std::unordered_set<Node::Connection>>;
+//     using NodeConnectionMap = std::unordered_map<Node::Id,
+//     std::unordered_set<Node::Connection>>;
 //     // Connection map, NodeId represents id of node connected TO (input)
 //     NodeConnectionMap nodeConnectionMap;
 //     // parent
@@ -86,7 +91,8 @@
 //     template <class N>
 //     std::shared_ptr<N> create(const std::shared_ptr<PipelineImpl>& itself) {
 //         // Check that passed type 'N' is subclass of Node
-//         static_assert(std::is_base_of<Node, N>::value, "Specified class is not a subclass of Node");
+//         static_assert(std::is_base_of<Node, N>::value, "Specified class is
+//         not a subclass of Node");
 //         // Get unique id for this new node
 //         auto id = getNextUniqueId();
 //         // Create and store the node in the map
@@ -133,10 +139,12 @@
 //     /**
 //      * @returns Pipeline schema
 //      */
-//     PipelineSchema getPipelineSchema(SerializationType type = DEFAULT_SERIALIZATION_TYPE) const;
+//     PipelineSchema getPipelineSchema(SerializationType type =
+//     DEFAULT_SERIALIZATION_TYPE) const;
 
 //     // void loadAssets(AssetManager& assetManager);
-//     void serialize(PipelineSchema& schema, Assets& assets, std::vector<std::uint8_t>& assetStorage) const {
+//     void serialize(PipelineSchema& schema, Assets& assets,
+//     std::vector<std::uint8_t>& assetStorage) const {
 //         impl()->serialize(schema, assets, assetStorage);
 //     }
 
@@ -235,9 +243,11 @@
 //     }
 
 //     /**
-//      * Sets the calibration in pipeline which overrides the calibration data in eeprom
+//      * Sets the calibration in pipeline which overrides the calibration data
+//      in eeprom
 //      *
-//      * @param calibrationDataHandler CalibrationHandler object which is loaded with calibration information.
+//      * @param calibrationDataHandler CalibrationHandler object which is
+//      loaded with calibration information.
 //      */
 //     void setCalibrationData(CalibrationHandler calibrationDataHandler) {
 //         impl()->setCalibrationData(calibrationDataHandler);
@@ -268,16 +278,20 @@
 //     }
 
 //     /**
-//      * Set chunk size for splitting device-sent XLink packets, in bytes. A larger value could
-//      * increase performance, with 0 disabling chunking. A negative value won't modify the
-//      * device defaults - configured per protocol, currently 64*1024 for both USB and Ethernet.
+//      * Set chunk size for splitting device-sent XLink packets, in bytes. A
+//      larger value could
+//      * increase performance, with 0 disabling chunking. A negative value
+//      won't modify the
+//      * device defaults - configured per protocol, currently 64*1024 for both
+//      USB and Ethernet.
 //      */
 //     void setXLinkChunkSize(int sizeBytes) {
 //         impl()->setXLinkChunkSize(sizeBytes);
 //     }
 
-//     /// Checks whether a given OpenVINO version is compatible with the pipeline
-//     bool isOpenVINOVersionCompatible(OpenVINO::Version version) const {
+//     /// Checks whether a given OpenVINO version is compatible with the
+//     pipeline bool isOpenVINOVersionCompatible(OpenVINO::Version version)
+//     const {
 //         return impl()->isOpenVINOVersionCompatible(version);
 //     }
 

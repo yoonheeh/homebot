@@ -17,14 +17,14 @@
 #ifndef LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_WRITER_H_
 #define LIBNOP_INCLUDE_NOP_UTILITY_PEDANTIC_BUFFER_WRITER_H_
 
+#include <nop/base/encoding.h>
+#include <nop/base/handle.h>
+#include <nop/base/utility.h>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
 #include <type_traits>
-
-#include <nop/base/encoding.h>
-#include <nop/base/handle.h>
-#include <nop/base/utility.h>
 
 namespace nop {
 
@@ -35,16 +35,16 @@ namespace nop {
 class PedanticBufferWriter {
  public:
   PedanticBufferWriter() = default;
-  PedanticBufferWriter(const PedanticBufferWriter&) = default;
+  PedanticBufferWriter(const PedanticBufferWriter &) = default;
   template <std::size_t Size>
   PedanticBufferWriter(std::uint8_t (&buffer)[Size])
       : buffer_{buffer}, size_{Size} {}
-  PedanticBufferWriter(std::uint8_t* buffer, std::size_t size)
+  PedanticBufferWriter(std::uint8_t *buffer, std::size_t size)
       : buffer_{buffer}, size_{size} {}
-  PedanticBufferWriter(void* buffer, std::size_t size)
-      : buffer_{static_cast<std::uint8_t*>(buffer)}, size_{size} {}
+  PedanticBufferWriter(void *buffer, std::size_t size)
+      : buffer_{static_cast<std::uint8_t *>(buffer)}, size_{size} {}
 
-  PedanticBufferWriter& operator=(const PedanticBufferWriter&) = default;
+  PedanticBufferWriter &operator=(const PedanticBufferWriter &) = default;
 
   Status<void> Prepare(std::size_t size) {
     if (index_ + size > size_)
@@ -53,18 +53,15 @@ class PedanticBufferWriter {
       return {};
   }
 
-  Status<void> Write(std::uint8_t byte) {
-    return Write(&byte, &byte + 1);
-  }
+  Status<void> Write(std::uint8_t byte) { return Write(&byte, &byte + 1); }
 
   template <typename T, typename Enable = EnableIfArithmetic<T>>
-  Status<void> Write(const T* begin, const T* end) {
+  Status<void> Write(const T *begin, const T *end) {
     const std::size_t element_size = sizeof(T);
     const std::size_t length = end - begin;
     const std::size_t length_bytes = length * element_size;
 
-    if (length_bytes > (size_ - index_))
-      return ErrorStatus::WriteLimitReached;
+    if (length_bytes > (size_ - index_)) return ErrorStatus::WriteLimitReached;
 
     std::memcpy(&buffer_[index_], begin, length_bytes);
     index_ += length_bytes;
@@ -74,8 +71,7 @@ class PedanticBufferWriter {
   Status<void> Skip(std::size_t padding_bytes,
                     std::uint8_t padding_value = 0x00) {
     auto status = Prepare(padding_bytes);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     std::memset(&buffer_[index_], padding_value, padding_bytes);
     index_ += padding_bytes;
@@ -86,7 +82,7 @@ class PedanticBufferWriter {
   std::size_t capacity() const { return size_; }
 
  private:
-  std::uint8_t* buffer_{nullptr};
+  std::uint8_t *buffer_{nullptr};
   std::size_t size_{0};
   std::size_t index_{0};
 };

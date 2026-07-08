@@ -17,11 +17,11 @@
 #ifndef LIBNOP_INCLUDE_NOP_BASE_MAP_H_
 #define LIBNOP_INCLUDE_NOP_BASE_MAP_H_
 
+#include <nop/base/encoding.h>
+
 #include <map>
 #include <numeric>
 #include <unordered_map>
-
-#include <nop/base/encoding.h>
 
 namespace nop {
 
@@ -40,16 +40,16 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
     : EncodingIO<std::map<Key, T, Compare, Allocator>> {
   using Type = std::map<Key, T, Compare, Allocator>;
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Map;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<SizeType>::Size(value.size()) +
            std::accumulate(
                value.cbegin(), value.cend(), static_cast<size_t>(0),
-               [](const std::size_t& sum, const std::pair<Key, T>& element) {
+               [](const std::size_t &sum, const std::pair<Key, T> &element) {
                  return sum + Encoding<Key>::Size(element.first) +
                         Encoding<T>::Size(element.second);
                });
@@ -61,20 +61,17 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     auto status = Encoding<SizeType>::Write(value.size(), writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
-    for (const auto& element : value) {
+    for (const auto &element : value) {
       status = Encoding<Key>::Write(element.first, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       status = Encoding<T>::Write(element.second, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};
@@ -82,22 +79,19 @@ struct Encoding<std::map<Key, T, Compare, Allocator>>
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     value->clear();
     for (SizeType i = 0; i < size; i++) {
       std::pair<Key, T> element;
       status = Encoding<Key>::Read(&element.first, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       status = Encoding<T>::Read(&element.second, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       value->emplace(std::move(element));
     }
@@ -112,16 +106,16 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
     : EncodingIO<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>> {
   using Type = std::unordered_map<Key, T, Hash, KeyEqual, Allocator>;
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Map;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<SizeType>::Size(value.size()) +
            std::accumulate(
                value.cbegin(), value.cend(), static_cast<size_t>(0),
-               [](const std::size_t& sum, const std::pair<Key, T>& element) {
+               [](const std::size_t &sum, const std::pair<Key, T> &element) {
                  return sum + Encoding<Key>::Size(element.first) +
                         Encoding<T>::Size(element.second);
                });
@@ -133,20 +127,17 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     auto status = Encoding<SizeType>::Write(value.size(), writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
-    for (const auto& element : value) {
+    for (const auto &element : value) {
       status = Encoding<Key>::Write(element.first, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       status = Encoding<T>::Write(element.second, writer);
-      if (!status)
-        return status;
+      if (!status) return status;
     }
 
     return {};
@@ -154,22 +145,19 @@ struct Encoding<std::unordered_map<Key, T, Hash, KeyEqual, Allocator>>
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     SizeType size = 0;
     auto status = Encoding<SizeType>::Read(&size, reader);
-    if (!status)
-      return status;
+    if (!status) return status;
 
     value->clear();
     for (SizeType i = 0; i < size; i++) {
       std::pair<Key, T> element;
       status = Encoding<Key>::Read(&element.first, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       status = Encoding<T>::Read(&element.second, reader);
-      if (!status)
-        return status;
+      if (!status) return status;
 
       value->emplace(std::move(element));
     }

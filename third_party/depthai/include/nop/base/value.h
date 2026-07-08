@@ -40,11 +40,11 @@ struct Encoding<T, EnableIfIsValueWrapper<T>> : EncodingIO<T> {
   using Pointer = typename ValueWrapperTraits<T>::Pointer;
   using Type = typename Pointer::Type;
 
-  static constexpr EncodingByte Prefix(const T& value) {
+  static constexpr EncodingByte Prefix(const T &value) {
     return Encoding<Type>::Prefix(Pointer::Resolve(value));
   }
 
-  static constexpr std::size_t Size(const T& value) {
+  static constexpr std::size_t Size(const T &value) {
     return Pointer::Size(value);
   }
 
@@ -54,13 +54,13 @@ struct Encoding<T, EnableIfIsValueWrapper<T>> : EncodingIO<T> {
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte prefix,
-                                             const T& value, Writer* writer) {
+                                             const T &value, Writer *writer) {
     return Pointer::WritePayload(prefix, value, writer, MemberList{});
   }
 
   template <typename Reader>
-  static constexpr Status<void> ReadPayload(EncodingByte prefix, T* value,
-                                            Reader* reader) {
+  static constexpr Status<void> ReadPayload(EncodingByte prefix, T *value,
+                                            Reader *reader) {
     return Pointer::ReadPayload(prefix, value, reader, MemberList{});
   }
 };

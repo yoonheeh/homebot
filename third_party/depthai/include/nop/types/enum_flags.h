@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INCLUDE_NOP_TYPES_ENUM_FLAGS_H_
 #define LIBNOP_INCLUDE_NOP_TYPES_ENUM_FLAGS_H_
 
-#include <type_traits>
-
 #include <nop/base/utility.h>
 #include <nop/utility/compiler.h>
+
+#include <type_traits>
 
 namespace nop {
 
@@ -57,7 +57,7 @@ namespace nop {
 // T. This type alias uses ADL to find the traits type for type T in the
 // namespace type T is defined in.
 template <typename T>
-using EnumFlagsTraits = decltype(NOP__GetEnumFlagsTraits(std::declval<T*>()));
+using EnumFlagsTraits = decltype(NOP__GetEnumFlagsTraits(std::declval<T *>()));
 
 // Evaluates to std::true_type if the given type T has been tagged as an enum
 // flags type by NOP_ENUM_FLAGS() or std::false_type otherwise.
@@ -84,8 +84,8 @@ using EnableIfEnumFlags = typename std::enable_if<IsEnumFlags<T>::value>::type;
     static_assert(std::is_enum<type>::value,                                  \
                   "Only enum types may be used for enum flags: type=" #type); \
   };                                                                          \
-  inline NOP__ENUM_FLAGS_TRAITS<type> NOP__GetEnumFlagsTraits                 \
-      NOP_GNU_USED (type*) {                                                 \
+  inline NOP__ENUM_FLAGS_TRAITS<type> NOP__GetEnumFlagsTraits NOP_GNU_USED(   \
+      type *) {                                                               \
     return {};                                                                \
   }
 
@@ -110,17 +110,17 @@ T operator^(T a, T b) {
 }
 
 template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
-T& operator|=(T& a, T b) {
+T &operator|=(T &a, T b) {
   a = a | b;
   return a;
 }
 template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
-T& operator&=(T& a, T b) {
+T &operator&=(T &a, T b) {
   a = a & b;
   return a;
 }
 template <typename T, typename Enable = ::nop::EnableIfEnumFlags<T>>
-T& operator^=(T& a, T b) {
+T &operator^=(T &a, T b) {
   a = a ^ b;
   return a;
 }

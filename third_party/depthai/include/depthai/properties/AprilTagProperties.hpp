@@ -9,16 +9,17 @@ namespace dai {
 /**
  * Specify properties for AprilTag
  */
-struct AprilTagProperties : PropertiesSerializable<Properties, AprilTagProperties> {
-    AprilTagConfig initialConfig;
+struct AprilTagProperties
+    : PropertiesSerializable<Properties, AprilTagProperties> {
+  AprilTagConfig initialConfig;
 
-    /// Whether to wait for config at 'inputConfig' IO
-    bool inputConfigSync = false;
+  /// Whether to wait for config at 'inputConfig' IO
+  bool inputConfigSync = false;
 
-    /// How many threads to use for AprilTag detection
-    int numThreads = 1;
+  /// How many threads to use for AprilTag detection
+  int numThreads = 1;
 
-    ~AprilTagProperties() override;
+  ~AprilTagProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(AprilTagProperties, initialConfig, inputConfigSync);

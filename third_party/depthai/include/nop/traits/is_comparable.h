@@ -17,9 +17,9 @@
 #ifndef LIBNOP_INCLUDE_NOP_TRAITS_IS_COMPARABLE_H_
 #define LIBNOP_INCLUDE_NOP_TRAITS_IS_COMPARABLE_H_
 
-#include <type_traits>
-
 #include <nop/traits/void.h>
+
+#include <type_traits>
 
 namespace nop {
 
@@ -29,7 +29,8 @@ template <typename T, typename U, typename = void>
 struct IsComparableEqual : std::false_type {};
 template <typename T, typename U>
 struct IsComparableEqual<
-    T, U, Void<decltype(std::declval<const T&>() == std::declval<const U&>())>>
+    T, U,
+    Void<decltype(std::declval<const T &>() == std::declval<const U &>())>>
     : std::true_type {};
 
 // Enable if T is comparable to U for equality.
@@ -44,7 +45,7 @@ template <typename T, typename U, typename = void>
 struct IsComparableLess : std::false_type {};
 template <typename T, typename U>
 struct IsComparableLess<
-    T, U, Void<decltype(std::declval<const T&>() < std::declval<const U&>())>>
+    T, U, Void<decltype(std::declval<const T &>() < std::declval<const U &>())>>
     : std::true_type {};
 
 // Enable if T is comparable to U for less than inequality.

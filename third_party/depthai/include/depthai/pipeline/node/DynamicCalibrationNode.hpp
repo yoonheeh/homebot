@@ -15,17 +15,20 @@ namespace dai {
 namespace node {
 
 /*u
- * @brief Dynamic calibration node. Performs calibration check and dynamically calibrates the device
+ * @brief Dynamic calibration node. Performs calibration check and dynamically
+ * calibrates the device
  */
-class DynamicCalibration : public DeviceNodeCRTP<DeviceNode, DynamicCalibration, DynamicCalibrationProperties>, public HostRunnable {
-   public:
-    constexpr static const char* NAME = "DynamicCalibration";
+class DynamicCalibration : public DeviceNodeCRTP<DeviceNode, DynamicCalibration,
+                                                 DynamicCalibrationProperties>,
+                           public HostRunnable {
+ public:
+  constexpr static const char *NAME = "DynamicCalibration";
 
-    using DeviceNodeCRTP::DeviceNodeCRTP;
+  using DeviceNodeCRTP::DeviceNodeCRTP;
 
-    ~DynamicCalibration() override = default;
+  ~DynamicCalibration() override = default;
 
-    // clang-format off
+  // clang-format off
     /**
      * Input DynamicCalibrationControl message with ability to modify parameters in runtime.
      */
@@ -90,130 +93,134 @@ class DynamicCalibration : public DeviceNodeCRTP<DeviceNode, DynamicCalibration,
 	    {{DatatypeEnum::MessageGroup, true}}
 	}
     };
-    // clang-format on
+  // clang-format on
 
-    void buildInternal() override;
+  void buildInternal() override;
 
-    Subnode<node::Sync> sync{*this, "sync"};
-    InputMap& inputs = sync->inputs;
-    std::string leftInputName = "left";
-    std::string rightInputName = "right";
-    /**
-     * Input left image
-     */
-    Input& left = inputs[leftInputName];
+  Subnode<node::Sync> sync{*this, "sync"};
+  InputMap &inputs = sync->inputs;
+  std::string leftInputName = "left";
+  std::string rightInputName = "right";
+  /**
+   * Input left image
+   */
+  Input &left = inputs[leftInputName];
 
-    /**
-     * Input right image
-     */
-    Input& right = inputs[rightInputName];
+  /**
+   * Input right image
+   */
+  Input &right = inputs[rightInputName];
 
-    /**
-     * Specify whether to run on host or device
-     * By default, the node will run on host on RVC2 and on device on RVC4.
-     */
+  /**
+   * Specify whether to run on host or device
+   * By default, the node will run on host on RVC2 and on device on RVC4.
+   */
 
-    void setRunOnHost(bool runOnHost);
+  void setRunOnHost(bool runOnHost);
 
-    bool runOnHost() const override;
+  bool runOnHost() const override;
 
-   protected:
-    Properties& getProperties() override;
+ protected:
+  Properties &getProperties() override;
 
-   private:
-    class Impl;
-    spimpl::impl_ptr<Impl> pimplDCL;
-    enum ErrorCode : int {
-        OK = 0,
-        QUALITY_CHECK_FAILED = 1,
-        CALIBRATION_FAILED = 2,
-        PIPELINE_INITIALIZATION_FAILED = 4,
-        EMPTY_IMAGE_QUEUE = 5,
-        MISSING_IMAGE = 6,
-        CALIBRATION_DOES_NOT_EXIST = 7,
-        STOP_LOADING_IMAGES_DURING_CALIBRATION = 8,
-        INVALID_COMMAND = 9,
-    };
+ private:
+  class Impl;
+  spimpl::impl_ptr<Impl> pimplDCL;
+  enum ErrorCode : int {
+    OK = 0,
+    QUALITY_CHECK_FAILED = 1,
+    CALIBRATION_FAILED = 2,
+    PIPELINE_INITIALIZATION_FAILED = 4,
+    EMPTY_IMAGE_QUEUE = 5,
+    MISSING_IMAGE = 6,
+    CALIBRATION_DOES_NOT_EXIST = 7,
+    STOP_LOADING_IMAGES_DURING_CALIBRATION = 8,
+    INVALID_COMMAND = 9,
+  };
 
-    /**
-     * Check if the node is set to run on host
-     */
+  /**
+   * Check if the node is set to run on host
+   */
 
-    void run() override;
+  void run() override;
 
-    CameraBoardSocket getBorderSockerA() {
-        return daiSocketA;
-    }
+  CameraBoardSocket getBorderSockerA() { return daiSocketA; }
 
-    CameraBoardSocket getBorderSockerB() {
-        return daiSocketB;
-    }
+  CameraBoardSocket getBorderSockerB() { return daiSocketB; }
 
-    ErrorCode runQualityCheck(const bool force = false);
+  ErrorCode runQualityCheck(const bool force = false);
 
-    ErrorCode runCalibration(const dai::CalibrationHandler& calibHandler, const bool force = false);
+  ErrorCode runCalibration(const dai::CalibrationHandler &calibHandler,
+                           const bool force = false);
 
 #ifdef DEPTHAI_HAVE_OPENCV_SUPPORT
-    ErrorCode runLoadImage(const bool blocking = false);
+  ErrorCode runLoadImage(const bool blocking = false);
 #endif
-    ErrorCode computeCoverage();
+  ErrorCode computeCoverage();
 
-    ErrorCode initializePipeline(const std::shared_ptr<dai::Device> daiDevice);
+  ErrorCode initializePipeline(const std::shared_ptr<dai::Device> daiDevice);
 
-    ErrorCode doWork(std::chrono::steady_clock::time_point& previousLoadingAndCalibrationTime);
+  ErrorCode doWork(
+      std::chrono::steady_clock::time_point &previousLoadingAndCalibrationTime);
 
-    ErrorCode evaluateCommand(const std::shared_ptr<DynamicCalibrationControl>& control);
+  ErrorCode evaluateCommand(
+      const std::shared_ptr<DynamicCalibrationControl> &control);
 
-    void computeMetrics(const CalibrationHandler& handler);
+  void computeMetrics(const CalibrationHandler &handler);
 
-    /**
-     * From dai::CalibrationHandler data convert to DCL dcl::CameraCalibrationHandle, which includes all necesarry data for calibration
-     * @return dcl::CameraCalibrationHanlder
-     */
-    /**
-     * Overwrites the internal calibration of DCL with new Calibration data provided by node.
-     */
-    void setCalibration(CalibrationHandler& handler, bool flash);
+  /**
+   * From dai::CalibrationHandler data convert to DCL
+   * dcl::CameraCalibrationHandle, which includes all necesarry data for
+   * calibration
+   * @return dcl::CameraCalibrationHanlder
+   */
+  /**
+   * Overwrites the internal calibration of DCL with new Calibration data
+   * provided by node.
+   */
+  void setCalibration(CalibrationHandler &handler, bool flash);
 
-    /**
-     * DAI held properties
-     */
-    CalibrationHandler calibrationHandler;
-    ImgTransformation imgTransformationA;
-    ImgTransformation imgTransformationB;
+  /**
+   * DAI held properties
+   */
+  CalibrationHandler calibrationHandler;
+  ImgTransformation imgTransformationA;
+  ImgTransformation imgTransformationB;
 
-    CameraBoardSocket daiSocketA = CameraBoardSocket::CAM_B;
-    CameraBoardSocket daiSocketB = CameraBoardSocket::CAM_C;
-    std::pair<int, int> resolutionA;
-    std::pair<int, int> resolutionB;
-    std::shared_ptr<::spdlog::async_logger> logger;
+  CameraBoardSocket daiSocketA = CameraBoardSocket::CAM_B;
+  CameraBoardSocket daiSocketB = CameraBoardSocket::CAM_C;
+  std::pair<int, int> resolutionA;
+  std::pair<int, int> resolutionB;
+  std::shared_ptr<::spdlog::async_logger> logger;
 
-    // std::chrono::milliseconds sleepingTime = 250ms;
-    // static constexpr std::chrono::milliseconds kSleepingTime{250};
-    std::chrono::milliseconds sleepingTime{250};
-    // Time between loading consecutive images, in seconds.
-    // Controls how frequently the system fetches a new frame.
-    float loadImagePeriod = 0.5f;
+  // std::chrono::milliseconds sleepingTime = 250ms;
+  // static constexpr std::chrono::milliseconds kSleepingTime{250};
+  std::chrono::milliseconds sleepingTime{250};
+  // Time between loading consecutive images, in seconds.
+  // Controls how frequently the system fetches a new frame.
+  float loadImagePeriod = 0.5f;
 
-    // Time between calibration runs, in seconds.
-    // Determines how often the calibration procedure is executed.
-    float calibrationPeriod = 5.0f;
-    DynamicCalibrationControl::PerformanceMode performanceMode = DynamicCalibrationControl::PerformanceMode::DEFAULT;
-    bool calibrationShouldRun = false;
-    bool slept = false;
+  // Time between calibration runs, in seconds.
+  // Determines how often the calibration procedure is executed.
+  float calibrationPeriod = 5.0f;
+  DynamicCalibrationControl::PerformanceMode performanceMode =
+      DynamicCalibrationControl::PerformanceMode::DEFAULT;
+  bool calibrationShouldRun = false;
+  bool slept = false;
 
-    /**
-     * Calibration state machine, which holds the state of Node and provides a stable environment;
-     * - Initialization of pipeline,
-     * - Loading images in DCL,
-     * - Starting Calibration Check,
-     * - Starting of Calibration
-     * - Resetting of data
-     */
-    bool runOnHostVar = true;
+  /**
+   * Calibration state machine, which holds the state of Node and provides a
+   * stable environment;
+   * - Initialization of pipeline,
+   * - Loading images in DCL,
+   * - Starting Calibration Check,
+   * - Starting of Calibration
+   * - Resetting of data
+   */
+  bool runOnHostVar = true;
 
-    // When old calibration is encountered, issue a warning once
-    bool oldCalibrationWarningIssued = false;
+  // When old calibration is encountered, issue a warning once
+  bool oldCalibrationWarningIssued = false;
 };
 
 }  // namespace node

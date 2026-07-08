@@ -5,9 +5,10 @@
 
 namespace dai {
 
-struct GPUStereoProperties : PropertiesSerializable<Properties, GPUStereoProperties> {
-    GPUStereoConfig initialConfig;
-    ~GPUStereoProperties() override;
+struct GPUStereoProperties
+    : PropertiesSerializable<Properties, GPUStereoProperties> {
+  GPUStereoConfig initialConfig;
+  ~GPUStereoProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(GPUStereoProperties, initialConfig);

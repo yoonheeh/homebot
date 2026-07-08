@@ -61,14 +61,14 @@ struct Encoding<EmptyVariant> : EncodingIO<EmptyVariant> {
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
                                              EmptyVariant /*value*/,
-                                             Writer* /*writer*/) {
+                                             Writer * /*writer*/) {
     return {};
   }
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            EmptyVariant* /*value*/,
-                                            Reader* /*reader*/) {
+                                            EmptyVariant * /*value*/,
+                                            Reader * /*reader*/) {
     return {};
   }
 };
@@ -77,14 +77,14 @@ template <typename... Ts>
 struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
   using Type = Variant<Ts...>;
 
-  static constexpr EncodingByte Prefix(const Type& /*value*/) {
+  static constexpr EncodingByte Prefix(const Type & /*value*/) {
     return EncodingByte::Variant;
   }
 
-  static constexpr std::size_t Size(const Type& value) {
+  static constexpr std::size_t Size(const Type &value) {
     return BaseEncodingSize(Prefix(value)) +
            Encoding<std::int32_t>::Size(value.index()) +
-           value.Visit([](const auto& element) {
+           value.Visit([](const auto &element) {
              using Element = typename std::decay<decltype(element)>::type;
              return Encoding<Element>::Size(element);
            });
@@ -96,13 +96,12 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
 
   template <typename Writer>
   static constexpr Status<void> WritePayload(EncodingByte /*prefix*/,
-                                             const Type& value,
-                                             Writer* writer) {
+                                             const Type &value,
+                                             Writer *writer) {
     auto status = Encoding<std::int32_t>::Write(value.index(), writer);
-    if (!status)
-      return status;
+    if (!status) return status;
 
-    return value.Visit([writer](const auto& element) {
+    return value.Visit([writer](const auto &element) {
       using Element = typename std::decay<decltype(element)>::type;
       return Encoding<Element>::Write(element, writer);
     });
@@ -110,7 +109,7 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
 
   template <typename Reader>
   static constexpr Status<void> ReadPayload(EncodingByte /*prefix*/,
-                                            Type* value, Reader* reader) {
+                                            Type *value, Reader *reader) {
     std::int32_t type = 0;
     auto status = Encoding<std::int32_t>::Read(&type, reader);
     if (!status) {
@@ -122,7 +121,7 @@ struct Encoding<Variant<Ts...>> : EncodingIO<Variant<Ts...>> {
 
     value->Become(type);
 
-    return value->Visit([reader](auto&& element) {
+    return value->Visit([reader](auto &&element) {
       using Element = typename std::decay<decltype(element)>::type;
       return Encoding<Element>::Read(&element, reader);
     });

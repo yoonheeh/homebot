@@ -9,7 +9,7 @@
 import cv2
 import time
 
-STREAM_URL = 'http://192.168.4.1:81/stream'
+STREAM_URL = "http://192.168.4.1:81/stream"
 
 
 def main():
@@ -50,15 +50,22 @@ def main():
             start_time = time.time()
 
         # Draw FPS on frame
-        cv2.putText(frame, f"FPS: {fps:.1f}", (10, 30),
-                   cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+        cv2.putText(
+            frame,
+            f"FPS: {fps:.1f}",
+            (10, 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2,
+        )
 
-        cv2.imshow('ESP32-CAM Stream', frame)
+        cv2.imshow("ESP32-CAM Stream", frame)
 
         key = cv2.waitKey(1) & 0xFF
-        if key == ord('q'):
+        if key == ord("q"):
             break
-        elif key == ord('s'):
+        elif key == ord("s"):
             timestamp = time.strftime("%Y%m%d_%H%M%S")
             filename = f"snapshot_{timestamp}.jpg"
             cv2.imwrite(filename, frame)
@@ -69,5 +76,5 @@ def main():
     print("Stream closed")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

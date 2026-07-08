@@ -5,10 +5,11 @@
 
 namespace dai {
 
-struct AutoCalibrationProperties : PropertiesSerializable<Properties, AutoCalibrationProperties> {
-    AutoCalibrationConfig initialConfig;
+struct AutoCalibrationProperties
+    : PropertiesSerializable<Properties, AutoCalibrationProperties> {
+  AutoCalibrationConfig initialConfig;
 
-    ~AutoCalibrationProperties() override;
+  ~AutoCalibrationProperties() override;
 };
 
 DEPTHAI_SERIALIZE_EXT(AutoCalibrationProperties, initialConfig);

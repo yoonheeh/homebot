@@ -17,10 +17,10 @@
 #ifndef LIBNOP_INLCUDE_NOP_UTILITY_STREAM_READER_H_
 #define LIBNOP_INLCUDE_NOP_UTILITY_STREAM_READER_H_
 
+#include <nop/status.h>
+
 #include <cstdint>
 #include <istream>
-
-#include <nop/status.h>
 
 namespace nop {
 
@@ -34,23 +34,23 @@ template <typename IStream>
 class StreamReader {
  public:
   template <typename... Args>
-  StreamReader(Args&&... args) : stream_{std::forward<Args>(args)...} {}
-  StreamReader(const StreamReader&) = default;
-  StreamReader& operator=(const StreamReader&) = default;
+  StreamReader(Args &&...args) : stream_{std::forward<Args>(args)...} {}
+  StreamReader(const StreamReader &) = default;
+  StreamReader &operator=(const StreamReader &) = default;
 
   Status<void> Ensure(std::size_t /*size*/) { return {}; }
 
-  Status<void> Read(std::uint8_t* byte) {
+  Status<void> Read(std::uint8_t *byte) {
     using CharType = typename IStream::char_type;
-    stream_.read(reinterpret_cast<CharType*>(byte), sizeof(std::uint8_t));
+    stream_.read(reinterpret_cast<CharType *>(byte), sizeof(std::uint8_t));
 
     return ReturnStatus();
   }
 
-  Status<void> Read(void* begin, void* end) {
+  Status<void> Read(void *begin, void *end) {
     using CharType = typename IStream::char_type;
-    CharType* begin_char = static_cast<CharType*>(begin);
-    CharType* end_char = static_cast<CharType*>(end);
+    CharType *begin_char = static_cast<CharType *>(begin);
+    CharType *end_char = static_cast<CharType *>(end);
 
     const std::size_t length_bytes = std::distance(begin_char, end_char);
     stream_.read(begin_char, length_bytes);
@@ -63,9 +63,9 @@ class StreamReader {
     return ReturnStatus();
   }
 
-  const IStream& stream() const { return stream_; }
-  IStream& stream() { return stream_; }
-  IStream&& take() { return std::move(stream_); }
+  const IStream &stream() const { return stream_; }
+  IStream &stream() { return stream_; }
+  IStream &&take() { return std::move(stream_); }
 
  private:
   Status<void> ReturnStatus() {
