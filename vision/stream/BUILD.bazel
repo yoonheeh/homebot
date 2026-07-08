@@ -1,0 +1,35 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//scripts:deploy.bzl", "deploy")
+load("//scripts:deploy_uv.bzl", "deploy_uv")
+
+cc_binary(
+    name = "stream",
+    srcs = ["publisher.cpp"],
+    copts = [
+        "-std=c++17",
+        "-O3",
+    ],
+    linkstatic = True,
+    deps = [
+        "//third_party/depthai:depthai-core",
+        "@cppzmq",
+        "@libzmq",
+        "@opencv",
+    ],
+)
+
+deploy(
+    name = "deploy_stream",
+    binary = ":stream",
+)
+
+deploy_uv(
+    name = "deploy_flask_server",
+    srcs = [
+        "server.py",
+        "//:pyproject.toml",
+        "//:uv.lock",
+    ],
+    main_script = "server.py",
+    remote_dir = "~/homebot/flask_stream",
+)
