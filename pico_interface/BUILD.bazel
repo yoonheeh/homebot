@@ -6,6 +6,9 @@ cc_library(
     hdrs = glob(["include/pico_interface/**/*.hpp"]),
     includes = ["include"],
     visibility = ["//visibility:public"],
+    deps = [
+        "@opentelemetry-cpp//api",
+    ],
 )
 
 cc_library(
@@ -13,18 +16,6 @@ cc_library(
     hdrs = glob(["include/pico_interface/**/*.hpp"]),
     includes = ["include"],
     visibility = ["//visibility:public"],
-)
-
-cc_binary(
-    name = "state_estimator",
-    srcs = ["main.cpp"],
-    copts = ["-std=c++20"],
-    linkopts = ["-pthread"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":pico_interface_lib",
-        "@opentelemetry-cpp//api",
-    ],
 )
 
 cc_test(
@@ -41,17 +32,6 @@ cc_test(
         "@opentelemetry-cpp//exporters/otlp:otlp_http_exporter",
         "@opentelemetry-cpp//sdk:headers",
         "@opentelemetry-cpp//sdk/src/metrics:metrics",
-    ],
-)
-
-cc_binary(
-    name = "test_suite",
-    srcs = ["test_suite.cpp"],
-    copts = ["-std=c++20"],
-    linkopts = ["-pthread"],
-    visibility = ["//visibility:public"],
-    deps = [
-        ":pico_interface_lib",
     ],
 )
 
@@ -108,11 +88,6 @@ cc_binary(
 deploy(
     name = "deploy_test_client",
     binary = ":test_client",
-)
-
-deploy(
-    name = "deploy_state_estimator",
-    binary = ":state_estimator",
 )
 
 deploy(
