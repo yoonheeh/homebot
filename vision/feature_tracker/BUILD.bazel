@@ -1,0 +1,21 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//scripts:deploy.bzl", "deploy")
+
+cc_binary(
+    name = "feature_tracker",
+    srcs = ["main.cpp"],
+    copts = [
+        "-std=c++17",
+        "-O3",
+    ],
+    linkstatic = True,
+    deps = [
+        "//third_party/depthai:depthai-core",
+        "@opencv",
+    ],
+)
+
+deploy(
+    name = "deploy_feature_tracker",
+    binary = ":feature_tracker",
+)
