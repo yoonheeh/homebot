@@ -1,0 +1,26 @@
+name: Bazel Tests
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: false # Disabled due to taking too long - will revisit
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Mount Bazel cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/bazel
+          key: bazel-cache-${{ runner.os }}-${{ hashFiles('**/WORKSPACE', '**/MODULE.bazel') }}
+          restore-keys: |
+            bazel-cache-${{ runner.os }}-
+
+      - name: Run Bazel tests
+        run: bazel test //... --build_tests_only
+

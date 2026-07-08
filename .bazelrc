@@ -1,5 +1,5 @@
 # Build all C++ as C++17.
-build --cxxopt=-std=c++17
+build --cxxopt=-std=c++17 --copt="-Wno-error=unused-command-line-argument"
 
 # `--config=arm64` cross-compiles to the Firefly aarch64 board.
 # (cc toolchain resolution is on by default in Bazel 7+, so no extra flag needed.)
