@@ -35,7 +35,7 @@ homebot/
 
 The pico_interface directory contains native Linux C++ applications to handle high-frequency sensor fusion (EKF) and pose streaming. It is fully integrated into the monorepo Bazel build graph (see Section 4), but can also be compiled standalone using CMake if desired.
 
-### Option A: Building with Bazel (Recommended)
+### Building with Bazel
 
 From the root directory of the workspace:
 <pre>
@@ -44,21 +44,6 @@ bazel build //pico_interface/...
 
 # Run the state estimator
 bazel run //pico_interface:pico_interface
-</pre>
-
-### Option B: Standalone Build with CMake (Legacy)
-
-To build the estimator standalone without Bazel:
-
-<pre>
-cd pico_interface
-
-# Create and enter build folder
-mkdir -p build && cd build
-
-# Configure and compile
-cmake ..
-make
 </pre>
 
 This generates four main executables inside the build/ folder:
