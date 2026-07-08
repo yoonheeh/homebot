@@ -60,3 +60,6 @@ bazel_dep(name = "googletest", version = "1.17.0.bcr.2")
 # ZeroMQ for IPC
 bazel_dep(name = "cppzmq", version = "4.10.0.bcr.2")
 bazel_dep(name = "libzmq", version = "4.3.5.bcr.5")
+
+# OpenCV
+bazel_dep(name = "opencv", version = "5.0.0")

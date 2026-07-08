@@ -1,0 +1,29 @@
+load("@rules_cc//cc:defs.bzl", "cc_import", "cc_library")
+
+package(default_visibility = ["//visibility:public"])
+
+cc_import(
+    name = "depthai_so",
+    # Only expose this shared library if the platform is aarch64
+    shared_library = select({
+        "@platforms//cpu:aarch64": "lib/libdepthai-core.so",
+        "//conditions:default": None,
+    }),
+)
+
+cc_library(
+    name = "depthai-core",
+    hdrs = glob([
+        "include/**/*.hpp",
+        "include/**/*.h",
+    ]),
+    strip_include_prefix = "include",
+    defines = [
+        "DEPTHAI_HAVE_OPENCV_SUPPORT=1", 
+        "DEPTHAI_TARGET_OPENCV=1"
+    ],
+    deps = select({
+        "@platforms//cpu:aarch64": [":depthai_so"],
+        "//conditions:default": [],
+    }),
+)
