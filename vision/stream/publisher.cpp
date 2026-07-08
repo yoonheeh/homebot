@@ -15,8 +15,9 @@ int main() {
   // Initialize ZeroMQ Context and Publisher Socket
   zmq::context_t context(1);
   zmq::socket_t publisher(context, ZMQ_PUB);
-  publisher.bind("tcp://*:5556");
-  std::cout << "ZeroMQ Publisher bound to tcp://*:5556" << std::endl;
+  constexpr const char* stream_addr = "ipc:///tmp/oakd_rgb_stream.ipc";
+  publisher.bind(stream_addr);
+  std::cout << "ZeroMQ Publisher bound to " << stream_addr << std::endl;
 
   std::vector<uchar> buffer;
   std::vector<int> params = {cv::IMWRITE_JPEG_QUALITY,

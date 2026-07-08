@@ -10,7 +10,7 @@ def generate_frames():
     subscriber = context.socket(zmq.SUB)
 
     # Connect to the local C++ publisher (use localhost since both are on Firefly)
-    subscriber.connect("tcp://127.0.0.1:5556")
+    subscriber.connect("ipc:///tmp/oakd_rgb_stream.ipc")
 
     # Subscribe to all messages (empty string means no topic filtering)
     subscriber.setsockopt_string(zmq.SUBSCRIBE, "")
