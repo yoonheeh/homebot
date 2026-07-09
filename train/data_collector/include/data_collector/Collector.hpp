@@ -69,10 +69,13 @@ class DataCollectorCore {
 
  private:
   cv::Mat processImage(const cv::Mat& src) {
-    if (src.empty()) return src;
+    if (src.empty()) {
+      return src;
+    }
 
     // Center crop
     int min_dim = std::min(src.cols, src.rows);
+
     cv::Rect roi((src.cols - min_dim) / 2, (src.rows - min_dim) / 2, min_dim,
                  min_dim);
     cv::Mat cropped = src(roi);
@@ -80,6 +83,7 @@ class DataCollectorCore {
     // Resize
     cv::Mat resized;
     cv::resize(cropped, resized, cv::Size(224, 224));
+
     return resized;
   }
 
