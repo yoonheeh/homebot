@@ -6,7 +6,7 @@
 #include <thread>
 #include <zmq.hpp>
 
-#include "Collector.hpp"
+#include "data_collector/Collector.hpp"
 
 namespace fs = std::filesystem;
 
@@ -43,7 +43,7 @@ void control_subscriber_thread(DataCollectorCore& core,
                                std::atomic<bool>& running) {
   zmq::context_t context(1);
   zmq::socket_t sub(context, zmq::socket_type::sub);
-  sub.connect("tcp://localhost:5556");
+  sub.connect("ipc:///tmp/control_command.ipc");
   sub.set(zmq::sockopt::subscribe, "");
   zmq::pollitem_t items[] = {{sub, 0, ZMQ_POLLIN, 0}};
 
@@ -72,7 +72,7 @@ void camera_subscriber_thread(DataCollectorCore& core,
                               std::atomic<bool>& running) {
   zmq::context_t context(1);
   zmq::socket_t sub(context, zmq::socket_type::sub);
-  sub.connect("tcp://localhost:5557");
+  sub.connect("ipc:///tmp/oakd_rgb_stream.ipc");
   sub.set(zmq::sockopt::subscribe, "");
   zmq::pollitem_t items[] = {{sub, 0, ZMQ_POLLIN, 0}};
 
@@ -84,9 +84,29 @@ void camera_subscriber_thread(DataCollectorCore& core,
         auto now = std::chrono::system_clock::now();
         double ts =
             std::chrono::duration<double>(now.time_since_epoch()).count();
-        cv::Mat raw_img(480, 640, CV_8UC3, msg.data());
 
-        core.onCameraMessage(raw_img, ts);  // Push to Core
+        size_t expected_raw_size = 640 * 480 * 3;  // 921,600 bytes
+        cv::Mat raw_img;
+
+        if (msg.size() == expected_raw_size) {
+          // It is a verified raw array. Safe to clone.
+          raw_img = cv::Mat(480, 640, CV_8UC3, msg.data()).clone();
+        } else if (msg.size() > 0) {
+          // The payload is smaller! DepthAI is sending a compressed JPEG.
+          // Step 1: Deep copy the ZMQ memory into a safe C++ vector FIRST
+          std::vector<uchar> safe_buffer((uchar*)msg.data(),
+                                         (uchar*)msg.data() + msg.size());
+
+          // Step 2: Dynamically decode the JPEG into an RGB Mat
+          raw_img = cv::imdecode(safe_buffer, cv::IMREAD_COLOR);
+        }
+
+        if (!raw_img.empty()) {
+          core.onCameraMessage(raw_img, ts);  // Push to Core safely
+        } else {
+          std::cerr << "[ZMQ ERROR] Could not decode image payload of size: "
+                    << msg.size() << " bytes.\n";
+        }
       }
     }
   }
