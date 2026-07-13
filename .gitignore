@@ -8,3 +8,6 @@ pico_firmware/build
 
 # pico_interface build files
 pico_interface/build
+
+# Training dataset
+train/data_converter/data
