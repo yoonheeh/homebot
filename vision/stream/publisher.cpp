@@ -34,12 +34,34 @@ int main() {
   dai::Pipeline pipeline(device);
 
   // Create nodes
-  auto cam = pipeline.create<dai::node::Camera>()->build();
+  // auto cam = pipeline.create<dai::node::Camera>()->build();
+  // Create nodes to disable auto-focusing
+  auto cam = pipeline.create<dai::node::Camera>()->build(
+      dai::CameraBoardSocket::CAM_A);
+  auto camQIn = cam->inputControl.createInputQueue();
   auto videoQueue =
       cam->requestOutput(std::make_pair(640, 400))->createOutputQueue();
 
   // Start pipeline
   pipeline.start();
+
+  // Disable auto focus, auto exposure and white balancing
+  uint16_t exposure_time_us = 20000;  // to reduce motion blur
+  uint32_t sensitivity_iso = 400;
+  int color_temperature_k = 4500;
+  auto ctrl = std::make_shared<dai::CameraControl>();
+  ctrl->setManualExposure(exposure_time_us, sensitivity_iso);
+  ctrl->setManualWhiteBalance(color_temperature_k);
+  ctrl->setManualFocus(80);  // manually tuned value
+  camQIn->send(ctrl);
+
+  // Read from the image queue and discard them for ~0.5 seconds
+  // to ensure the camera hardware has fully latched onto these settings.
+  for (int i = 0; i < 15; ++i) {  // 15 frames @ 30FPS = ~0.5 seconds
+    videoQueue->get<dai::ImgFrame>();
+  }
+
+  std::cout << "Camera ready for recording..." << std::endl;
 
   while (pipeline.isRunning() && !quitEvent) {
     auto videoIn = videoQueue->get<dai::ImgFrame>();
