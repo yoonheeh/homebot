@@ -5,17 +5,20 @@
 class RgbStreamer : public BaseStreamer {
  private:
   int stream_fps_;
+  uint16_t width_, height_;
 
  public:
-  // Fixed initialization order to resolve -Wreorder-ctor
   RgbStreamer(zmq::context_t& context, const std::string& endpoint,
-              int stream_fps)
-      : BaseStreamer(context, endpoint), stream_fps_(stream_fps) {}
+              int stream_fps, uint16_t width, uint16_t height)
+      : BaseStreamer(context, endpoint),
+        stream_fps_(stream_fps),
+        width_(width),
+        height_(height) {}
 
   void setupPipeline(dai::Pipeline& pipeline) override {
     auto cam = pipeline.create<dai::node::Camera>()->build();
-    auto videoQueue = cam->requestOutput(std::make_pair(640, 400), std::nullopt,
-                                         dai::ImgResizeMode::CROP,
+    auto videoQueue = cam->requestOutput(std::make_pair(width_, height_),
+                                         std::nullopt, dai::ImgResizeMode::CROP,
                                          (float)stream_fps_, std::nullopt)
                           ->createOutputQueue();
 

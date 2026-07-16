@@ -3,10 +3,13 @@
 #include <depthai/depthai.hpp>
 #include <iostream>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <zmq.hpp>
 
 #include "depth_streamer.hpp"
 #include "rgb_streamer.hpp"
+
+using json = nlohmann::json;
 
 std::atomic<bool> quitEvent(false);
 
@@ -21,12 +24,27 @@ int main() {
   std::shared_ptr<dai::Device> device = std::make_shared<dai::Device>();
   dai::Pipeline pipeline(device);
 
-  uint16_t rgb_fps{15};  // suitable for data collection for diffusion policy
-  uint16_t depth_fps{
-      5};  // TODO: may need to update based on obstacle detection results
-  RgbStreamer rgb(zmq_context, "ipc:///tmp/oakd_rgb_stream.ipc", rgb_fps);
-  DepthStreamer depth(zmq_context, "ipc:///tmp/oakd_depth_stream.ipc",
-                      depth_fps);
+  // Load config
+  std::ifstream f("vision_config.json");
+  if (!f.is_open()) {
+    std::cerr << "[Error] Could not find vision_config.json!" << std::endl;
+    return 1;
+  }
+
+  // Parse the file into the JSON object
+  json config = json::parse(f);
+
+  int rgb_width = config["rgb"]["width"];
+  int rgb_height = config["rgb"]["height"];
+  int depth_width = config["depth"]["width"];
+  int depth_height = config["depth"]["height"];
+  std::string rgb_ipc = config["pipeline"]["rgb_ipc"];
+  std::string depth_ipc = config["pipeline"]["depth_ipc"];
+  uint16_t rgb_fps = config["rgb"]["fps"];
+  uint16_t depth_fps = config["depth"]["fps"];
+  RgbStreamer rgb(zmq_context, rgb_ipc, rgb_fps, rgb_width, rgb_height);
+  DepthStreamer depth(zmq_context, depth_ipc, depth_fps, depth_width,
+                      depth_height);
 
   rgb.setupPipeline(pipeline);
   depth.setupPipeline(pipeline);

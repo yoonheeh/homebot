@@ -69,3 +69,7 @@ bazel_dep(name = "aspect_rules_lint", version = "1.12.0")
 # needed to resolve transitive dependency running formatter
 bazel_dep(name = "rules_nodejs", version = "6.7.5") 
 
+# Google benchmark
+bazel_dep(name = "google_benchmark", version = "1.8.5")
+
+bazel_dep(name = "nlohmann_json", version = "3.11.3")
