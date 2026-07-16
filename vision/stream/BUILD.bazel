@@ -1,10 +1,14 @@
-load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("//scripts:deploy.bzl", "deploy")
 load("//scripts:deploy_uv.bzl", "deploy_uv")
 
-cc_binary(
-    name = "stream",
-    srcs = ["publisher.cpp"],
+cc_library(
+    name = "streamers",
+    hdrs = [
+        "base_streamer.hpp",
+        "depth_streamer.hpp",
+        "rgb_streamer.hpp",
+    ],
     copts = [
         "-std=c++17",
         "-O3",
@@ -18,9 +22,26 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "oakd_streamer",
+    srcs = ["main.cpp"],
+    copts = [
+        "-std=c++17",
+        "-O3",
+    ],
+    linkopts = [
+        "-lpthread",
+        "-ldl",
+        "-lm",
+    ],
+    deps = [
+        ":streamers",
+    ],
+)
+
 deploy(
-    name = "deploy_stream",
-    binary = ":stream",
+    name = "deploy_oakd_streamer",
+    binary = ":oakd_streamer",
 )
 
 deploy_uv(
