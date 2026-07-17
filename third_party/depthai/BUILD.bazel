@@ -17,11 +17,11 @@ cc_library(
         "include/**/*.hpp",
         "include/**/*.h",
     ]),
-    strip_include_prefix = "include",
     defines = [
-        "DEPTHAI_HAVE_OPENCV_SUPPORT=1", 
-        "DEPTHAI_TARGET_OPENCV=1"
+        "DEPTHAI_HAVE_OPENCV_SUPPORT=1",
+        "DEPTHAI_TARGET_OPENCV=1",
     ],
+    strip_include_prefix = "include",
     deps = select({
         "@platforms//cpu:aarch64": [":depthai_so"],
         "//conditions:default": [],

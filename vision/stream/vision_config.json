@@ -1,0 +1,22 @@
+{
+    "pipeline": {
+        "rgb_ipc": "ipc:///tmp/oakd_rgb_stream.ipc",
+        "depth_ipc": "ipc:///tmp/oakd_depth_stream.ipc"
+    },
+    "rgb": {
+        "fps": 15,
+        "width": 640,
+        "height": 400,
+        "channels": 1.5,
+        "format": "NV12",
+        "dtype": "uint8"
+    },
+    "depth": {
+        "fps": 5,
+        "width": 640,
+        "height": 480,
+        "channels": 1,
+        "format": "RAW16",
+        "dtype": "uint16"
+    }
+}

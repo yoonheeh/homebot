@@ -1,6 +1,18 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
-load("//scripts:deploy.bzl", "deploy")
-load("//scripts:deploy_uv.bzl", "deploy_uv")
+load("//scripts:deploy.bzl", "deploy", "deploy_uv")
+load("//scripts:remote_test.bzl", "remote_cc_check")
+load("//scripts:foo.bzl", "foo_binary")
+
+foo_binary(
+    name = "foo",
+    binary = ":oakd_streamer",
+    data = [":config"],
+)
+
+filegroup(
+    name = "config",
+    srcs = ["vision_config.json"],
+)
 
 cc_library(
     name = "streamers",
@@ -13,6 +25,7 @@ cc_library(
         "-std=c++17",
         "-O3",
     ],
+    data = [":config"],
     linkstatic = True,
     deps = [
         "//third_party/depthai:depthai-core",
@@ -29,6 +42,7 @@ cc_binary(
         "-std=c++17",
         "-O3",
     ],
+    data = [":config"],
     linkopts = [
         "-lpthread",
         "-ldl",
@@ -36,12 +50,14 @@ cc_binary(
     ],
     deps = [
         ":streamers",
+        "@nlohmann_json//:json",
     ],
 )
 
 deploy(
     name = "deploy_oakd_streamer",
     binary = ":oakd_streamer",
+    data = [":config"],
 )
 
 deploy_uv(
@@ -53,4 +69,20 @@ deploy_uv(
     ],
     main_script = "server.py",
     remote_dir = "~/homebot/flask_stream",
+)
+
+cc_binary(
+    name = "streamer_benchmark_bin",
+    srcs = ["tests/streamer_benchmark.cpp"],
+    deps = [
+        "@google_benchmark//:benchmark",
+        "@google_benchmark//:benchmark_main",
+        # "//third_party:zmq", # Add this when benchmarking ZMQ
+    ],
+)
+
+remote_cc_check(
+    name = "streamer_benchmark",
+    binary = ":streamer_benchmark_bin",
+    remote_dir = "~/homebot/bin/benchmarks",
 )

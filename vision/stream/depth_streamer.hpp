@@ -5,11 +5,15 @@
 class DepthStreamer : public BaseStreamer {
  private:
   int stream_fps_;
+  uint16_t width_, height_;
 
  public:
   DepthStreamer(zmq::context_t& context, const std::string& endpoint,
-                int stream_fps)
-      : BaseStreamer(context, endpoint), stream_fps_(stream_fps) {}
+                int stream_fps, uint16_t width, uint16_t height)
+      : BaseStreamer(context, endpoint),
+        stream_fps_(stream_fps),
+        width_(width),
+        height_(height) {}
 
   void setupPipeline(dai::Pipeline& pipeline) override {
     auto monoLeft = pipeline.create<dai::node::Camera>()->build(
@@ -19,6 +23,7 @@ class DepthStreamer : public BaseStreamer {
 
     auto stereo = pipeline.create<dai::node::StereoDepth>();
 
+    // TODO: set custom width and height??
     auto monoLeftOut = monoLeft->requestFullResolutionOutput();
     auto monoRightOut = monoRight->requestFullResolutionOutput();
 

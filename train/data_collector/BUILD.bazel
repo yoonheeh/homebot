@@ -34,8 +34,8 @@ cc_test(
     ],
     deps = [
         ":collector_lib",
-        "@opencv",
         "@googletest//:gtest_main",
+        "@opencv",
     ],
 )
 
