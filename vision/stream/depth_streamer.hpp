@@ -24,9 +24,17 @@ class DepthStreamer : public BaseStreamer {
     auto stereo = pipeline.create<dai::node::StereoDepth>();
 
     // TODO: set custom width and height??
-    auto monoLeftOut = monoLeft->requestFullResolutionOutput();
-    auto monoRightOut = monoRight->requestFullResolutionOutput();
+    // auto monoLeftOut = monoLeft->requestFullResolutionOutput(std::nullopt,
+    // (float)stream_fps_, false); auto monoRightOut =
+    // monoRight->requestFullResolutionOutput(std::nullopt, (float)stream_fps_,
+    // false);
 
+    auto monoLeftOut = monoLeft->requestOutput(
+        std::make_pair(width_, height_), std::nullopt, dai::ImgResizeMode::CROP,
+        (float)stream_fps_, std::nullopt);
+    auto monoRightOut = monoRight->requestOutput(
+        std::make_pair(width_, height_), std::nullopt, dai::ImgResizeMode::CROP,
+        (float)stream_fps_, std::nullopt);
     monoLeftOut->link(stereo->left);
     monoRightOut->link(stereo->right);
 

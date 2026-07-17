@@ -1,13 +1,6 @@
 load("@rules_cc//cc:defs.bzl", "cc_binary", "cc_library")
 load("//scripts:deploy.bzl", "deploy", "deploy_uv")
-load("//scripts:remote_test.bzl", "remote_cc_check")
-load("//scripts:foo.bzl", "foo_binary")
-
-foo_binary(
-    name = "foo",
-    binary = ":oakd_streamer",
-    data = [":config"],
-)
+load("//scripts:remote_test.bzl", "remote_cc_check", "remote_hardware_check")
 
 filegroup(
     name = "config",
@@ -67,6 +60,7 @@ deploy_uv(
         "//:pyproject.toml",
         "//:uv.lock",
     ],
+    data = [":config"],
     main_script = "server.py",
     remote_dir = "~/homebot/flask_stream",
 )
@@ -84,5 +78,16 @@ cc_binary(
 remote_cc_check(
     name = "streamer_benchmark",
     binary = ":streamer_benchmark_bin",
+    data = [":config"],
     remote_dir = "~/homebot/bin/benchmarks",
+)
+
+remote_hardware_check(
+    name = "remote_hardware_check",
+    data = [
+        ":config",
+        "//:pyproject.toml",
+        "//:uv.lock",
+    ],
+    test_script = "test_vision_pipeline.py",
 )
