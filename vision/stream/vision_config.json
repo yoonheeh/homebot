@@ -12,10 +12,10 @@
         "dtype": "uint8"
     },
     "depth": {
-        "fps": 5,
+        "fps": 10,
         "width": 640,
         "height": 480,
-        "channels": 1,
+        "channels": 2,
         "format": "RAW16",
         "dtype": "uint16"
     }
