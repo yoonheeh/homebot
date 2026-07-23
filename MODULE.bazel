@@ -49,7 +49,7 @@ llvm.sysroot(
 use_repo(llvm, "llvm_toolchain")
 
 # Register the toolchains so Bazel can resolve them (incl. the aarch64 cross target).
-register_toolchains("@llvm_toolchain//:all")
+register_toolchains("@llvm_toolchain//:cc-toolchain-aarch64-linux")
 
 # OpenTelemetry SDK
 bazel_dep(name = "opentelemetry-cpp", version = "1.27.0")
