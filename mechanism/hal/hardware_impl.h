@@ -5,8 +5,8 @@
 
 #include <zmq.hpp>
 
-#include "interfaces.hpp"
-#include "pico_interface/TelemetryDefs.hpp"
+#include "hardware_interfaces.h"
+#include "mechanism/common/telemetry.h"
 
 class RawTerminalGuard {
  public:

@@ -1,0 +1,22 @@
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
+
+cc_library(
+    name = "teleop_controller_lib",
+    hdrs = ["teleop_controller.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mechanism/hal:hardware_interfaces",
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_test(
+    name = "test_controller",
+    srcs = ["tests/test_controller.cpp"],
+    copts = ["-std=c++20"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//infrastructure/teleop:teleop_controller_lib",
+        "@googletest//:gtest_main",
+    ],
+)

@@ -1,0 +1,33 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+# *_def indicate a message/struct type
+
+cc_library(
+    name = "telemetry_defs",
+    hdrs = ["telemetry.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_library(
+    name = "telemetry_queue_defs",
+    hdrs = ["telemetry_queue.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_library(
+    name = "robot_config_defs",
+    hdrs = ["robot_config.h"],
+    visibility = ["//visibility:public"],
+)
+
+cc_library(
+    name = "robot_config_io_lib",
+    hdrs = ["robot_config_io.h"],
+    visibility = ["//visibility:public"],
+    deps = [":robot_config_defs"],
+)

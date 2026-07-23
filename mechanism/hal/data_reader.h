@@ -6,10 +6,10 @@
 #include <string>
 #include <thread>
 
-#include "TelemetryDefs.hpp"
-#include "TelemetryQueue.hpp"
+#include "mechanism/common/telemetry.h"
+#include "mechanism/common/telemetry_queue.h"
 
-class PicoInterface {
+class DataReader {
  private:
   std::string port_name_;
   int fd_ = -1;
@@ -62,11 +62,11 @@ class PicoInterface {
   }
 
  public:
-  PicoInterface(const std::string &port_name,
-                TelemetryQueue<EncoderIMUTelemetry> &rx_queue)
+  DataReader(const std::string &port_name,
+             TelemetryQueue<EncoderIMUTelemetry> &rx_queue)
       : port_name_(port_name), rx_queue_(rx_queue) {}
 
-  ~PicoInterface() { stop(); }
+  ~DataReader() { stop(); }
 
   bool start() {
     fd_ = configure_serial(port_name_.c_str());
@@ -86,24 +86,5 @@ class PicoInterface {
       close(fd_);
       fd_ = -1;
     }
-  }
-
-  bool send_velocity_target(float left, float right) {
-    if (fd_ < 0) return false;
-
-    VelocityTarget msg;
-    msg.left_rad_sec = left;
-    msg.right_rad_sec = right;
-    msg.crc16 = calculate_crc16((uint8_t *)&msg, sizeof(float) * 2);
-
-    uint8_t struct_buffer[sizeof(VelocityTarget)];
-    uint8_t encoded_buffer[sizeof(VelocityTarget) + 2];
-
-    std::memcpy(struct_buffer, &msg, sizeof(VelocityTarget));
-    size_t encoded_len =
-        cobs_encode(struct_buffer, sizeof(VelocityTarget), encoded_buffer);
-
-    ssize_t bytes_written = write(fd_, encoded_buffer, encoded_len);
-    return bytes_written == static_cast<ssize_t>(encoded_len);
   }
 };

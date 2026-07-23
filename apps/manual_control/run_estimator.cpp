@@ -11,11 +11,13 @@
 #include <thread>
 #include <vector>
 
-#include "pico_interface/PicoInterface.hpp"
-#include "pico_interface/RobotConfigIO.hpp"
-#include "pico_interface/StateEstimator.hpp"
-#include "pico_interface/TelemetryDefs.hpp"
-#include "pico_interface/TelemetryQueue.hpp"
+#include "mechanism/common/robot_config_io.h"
+#include "mechanism/common/telemetry.h"
+#include "mechanism/common/telemetry_queue.h"
+#include "mechanism/estimation/state_estimator.h"
+#include "mechanism/hal/data_reader.h"
+
+// TODO: Clean this file up
 
 // Global flag to control program lifetime
 std::atomic<bool> run_program(true);
@@ -121,7 +123,7 @@ int main(int argc, char *argv[]) {
 
   // Instantiate thread-safe queue and interface objects
   TelemetryQueue<EncoderIMUTelemetry> telemetry_queue;
-  PicoInterface pico_interface(port_name, telemetry_queue);
+  DataReader data_reader(port_name, telemetry_queue);
   StateEstimator state_estimator(telemetry_queue, calib_config);
 
   std::clog << "Connecting to Pico on " << port_name
@@ -137,7 +139,7 @@ int main(int argc, char *argv[]) {
   std::clog << "  - Ticks / Rev        : " << calib_config.ticks_per_rev
             << "\n\n";
 
-  if (!pico_interface.start()) {
+  if (!data_reader.start()) {
     std::cerr << "Failed to initialize Pico interface. Exiting.\n";
     return 1;
   }
@@ -176,7 +178,7 @@ int main(int argc, char *argv[]) {
   }
 
   state_estimator.stop();
-  pico_interface.stop();
+  data_reader.stop();
 
   std::clog << "Shutdown complete. Safely stopped threads and closed serial "
                "interface.\n";

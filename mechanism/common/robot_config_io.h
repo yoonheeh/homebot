@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "StateEstimator.hpp"
+#include "mechanism/common/robot_config.h"
 
 // Simple persistent storage for RobotConfig calibration values.
 //
