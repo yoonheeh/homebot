@@ -1,0 +1,19 @@
+load("@rules_cc//cc:defs.bzl", "cc_binary")
+load("//scripts:deploy.bzl", "deploy")
+
+cc_binary(
+    name = "calibrate_encoders",
+    srcs = ["calibrate_encoders.cpp"],
+    copts = ["-std=c++20"],
+    linkopts = ["-pthread"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mechanism/common:robot_config_io_lib",
+        "//mechanism/common:telemetry_defs",
+    ],
+)
+
+deploy(
+    name = "deploy_calibrate_encoders",
+    binary = ":calibrate_encoders",
+)

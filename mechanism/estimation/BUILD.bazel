@@ -1,0 +1,13 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "state_estimator_lib",
+    hdrs = ["state_estimator.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mechanism/common:robot_config_defs",
+        "//mechanism/common:telemetry_defs",
+        "//mechanism/common:telemetry_queue_defs",
+        "@opentelemetry-cpp//api",
+    ],
+)

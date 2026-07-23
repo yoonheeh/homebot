@@ -12,8 +12,8 @@
 #include <thread>
 #include <vector>
 
-#include "pico_interface/RobotConfigIO.hpp"
-#include "pico_interface/TelemetryDefs.hpp"
+#include "mechanism/common/robot_config_io.h"
+#include "mechanism/common/telemetry.h"
 
 // Global control flag
 std::atomic<bool> run_calibration(true);
@@ -45,6 +45,8 @@ void print_usage(const char *prog_name) {
 
 // Locate the companion 'control' binary. Under Bazel it lives in the runfiles
 // tree; in a CMake/standalone build it is expected to sit next to this binary.
+// TODO: refactor this to be assembled in a separate main.cpp file by
+// instantiating object rather than calling the binary
 std::string find_control_binary(const char *argv0) {
   const char *runfiles_dir = getenv("RUNFILES_DIR");
   if (runfiles_dir) {

@@ -1,0 +1,30 @@
+load("@rules_cc//cc:defs.bzl", "cc_library")
+
+cc_library(
+    name = "hardware_impl_lib",
+    hdrs = ["hardware_impl.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mechanism/hal:hardware_interfaces",
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_library(
+    name = "hardware_interfaces",
+    hdrs = ["hardware_interfaces.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "@opentelemetry-cpp//api",
+    ],
+)
+
+cc_library(
+    name = "data_reader_lib",
+    hdrs = ["data_reader.h"],
+    visibility = ["//visibility:public"],
+    deps = [
+        "//mechanism/common:telemetry_defs",
+        "//mechanism/common:telemetry_queue_defs",
+    ],
+)

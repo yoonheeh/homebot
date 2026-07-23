@@ -1,9 +1,9 @@
 // main.cpp
 #include <iostream>
 
-#include "pico_interface/HardwareImpl.hpp"
-#include "pico_interface/TelemetryDefs.hpp"
-#include "pico_interface/TeleopController.hpp"
+#include "infrastructure/teleop/teleop_controller.h"
+#include "mechanism/common/telemetry_defs.h"
+#include "mechanism/hal/hardware_impl.h"  // includes RawTerminalGuard, KeyboardINput, SerialMotorDriver
 
 int main(int argc, char *argv[]) {
   int fd = configure_serial("/dev/ttyACM0");  // Handle errors appropriately

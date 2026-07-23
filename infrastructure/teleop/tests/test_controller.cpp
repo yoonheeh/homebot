@@ -1,7 +1,7 @@
 // test_controller.cpp
 #include <gtest/gtest.h>
 
-#include "pico_interface/TeleopController.hpp"
+#include "infrastructure/teleop/teleop_controller.h"
 
 // Simple Mocks
 class MockInput : public IInputProvider {

@@ -1,6 +1,6 @@
 // TeleopController.hpp
 #pragma once
-#include "interfaces.hpp"
+#include "mechanism/hal/hardware_interfaces.h"
 
 class TeleopController {
  public:
