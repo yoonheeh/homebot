@@ -20,7 +20,7 @@ class StateEstimator {
   TelemetryQueue<EncoderIMUTelemetry> &rx_queue_;
   std::atomic<bool> run_consumer_{false};
   std::thread consumer_thread_;
-  RobotConfig config_;
+  config::KinematicParameters config_;
 
   // Estimated State and thread-safety
   RobotPose pose_;
@@ -63,8 +63,8 @@ class StateEstimator {
 
  public:
   explicit StateEstimator(TelemetryQueue<EncoderIMUTelemetry> &rx_queue,
-                          RobotConfig config = RobotConfig{})
-      : rx_queue_(rx_queue), config_(config) {
+                          config::RobotParameters config = config::RobotParameters{})
+      : rx_queue_(rx_queue), config_(config.kinematics) {
     auto provider = opentelemetry::trace::Provider::GetTracerProvider();
     tracer_ = provider->GetTracer("state_estimator");
   }

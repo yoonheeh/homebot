@@ -12,6 +12,7 @@
 #include <vector>
 
 #include "mechanism/common/robot_config_io.h"
+#include "mechanism/common/robot_config.h"
 #include "mechanism/common/telemetry.h"
 #include "mechanism/common/telemetry_queue.h"
 #include "mechanism/estimation/state_estimator.h"
@@ -110,13 +111,14 @@ int main(int argc, char *argv[]) {
   std::string calib_file = (argc > 1) ? argv[1] : "data/robot_calibration.txt";
 
   // Configure robot physical calibration parameters
-  RobotConfig calib_config;
+  config::RobotParameters robot_parameters;
+  auto calib_config = robot_parameters.kinematics;
   calib_config.wheel_radius = 0.0325;   // 32.5mm calibrated radius
   calib_config.wheel_base = 0.16;       // 160mm default track width
   calib_config.ticks_per_rev = 4320.0;  // Default to 4X Quadrature
 
   std::clog << "Loading calibration from: " << calib_file << "\n";
-  if (!load_robot_config(calib_file, calib_config)) {
+  if (!load_robot_config(calib_file, robot_parameters)) {
     std::clog
         << "WARNING: failed to load calibration file. Using default values.\n";
   }
@@ -124,7 +126,7 @@ int main(int argc, char *argv[]) {
   // Instantiate thread-safe queue and interface objects
   TelemetryQueue<EncoderIMUTelemetry> telemetry_queue;
   DataReader data_reader(port_name, telemetry_queue);
-  StateEstimator state_estimator(telemetry_queue, calib_config);
+  StateEstimator state_estimator(telemetry_queue, robot_parameters);
 
   std::clog << "Connecting to Pico on " << port_name
             << " in passive estimation-only mode...\n";

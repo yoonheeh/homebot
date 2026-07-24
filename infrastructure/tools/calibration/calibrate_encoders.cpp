@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "mechanism/common/robot_config_io.h"
+#include "mechanism/common/robot_config.h"
 #include "mechanism/common/telemetry.h"
 
 // Global control flag
@@ -95,7 +96,8 @@ int main(int argc, char *argv[]) {
     return 0;
   }
 
-  RobotConfig config;
+  config::RobotParameters robot_parameters;
+  auto config = robot_parameters.kinematics;
   config.wheel_radius = (argc > 1) ? std::stod(argv[1]) : 0.0325;
   config.wheel_base = (argc > 2) ? std::stod(argv[2]) : 0.16;
   config.ticks_per_rev = (argc > 3) ? std::stod(argv[3]) : 4320.0;

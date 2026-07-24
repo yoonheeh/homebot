@@ -12,7 +12,7 @@
 
 #include "mechanism/common/robot_config.h"
 
-// Simple persistent storage for RobotConfig calibration values.
+// Simple persistent storage for RobotParameters.kinematics calibration values.
 //
 // Format (one key=value per line):
 //   wheel_radius=0.0325
@@ -20,11 +20,11 @@
 //   ticks_per_rev=4320.0
 //
 // Unrecognized keys are ignored. Missing keys leave the corresponding
-// RobotConfig field unchanged, so callers can set sensible defaults before
+// RobotParameters.kinematics field unchanged, so callers can set sensible defaults before
 // loading.
 
 inline bool save_robot_config(const std::string &path,
-                              const RobotConfig &config) {
+                              const config::RobotParameters &config) {
   // Create parent directory if needed.
   size_t last_slash = path.find_last_of("/\\");
   if (last_slash != std::string::npos) {
@@ -42,14 +42,14 @@ inline bool save_robot_config(const std::string &path,
   }
 
   file << std::fixed << std::setprecision(6);
-  file << "wheel_radius=" << config.wheel_radius << "\n";
-  file << "wheel_base=" << config.wheel_base << "\n";
-  file << "ticks_per_rev=" << config.ticks_per_rev << "\n";
-  file << "scale_factor=" << config.scale_factor << "\n";
+  file << "wheel_radius=" << config.kinematics.wheel_radius << "\n";
+  file << "wheel_base=" << config.kinematics.wheel_base << "\n";
+  file << "ticks_per_rev=" << config.kinematics.ticks_per_rev << "\n";
+  file << "scale_factor=" << config.kinematics.scale_factor << "\n";
   return file.good();
 }
 
-inline bool load_robot_config(const std::string &path, RobotConfig &config) {
+inline bool load_robot_config(const std::string &path, config::RobotParameters &config) {
   std::ifstream file(path);
   if (!file.is_open()) {
     std::cerr << "ERROR: cannot open calibration file for reading: " << path
@@ -83,13 +83,13 @@ inline bool load_robot_config(const std::string &path, RobotConfig &config) {
 
     try {
       if (key == "wheel_radius") {
-        config.wheel_radius = std::stod(value);
+        config.kinematics.wheel_radius = std::stod(value);
       } else if (key == "wheel_base") {
-        config.wheel_base = std::stod(value);
+        config.kinematics.wheel_base = std::stod(value);
       } else if (key == "ticks_per_rev") {
-        config.ticks_per_rev = std::stod(value);
+        config.kinematics.ticks_per_rev = std::stod(value);
       } else if (key == "scale_factor") {
-        config.scale_factor = std::stod(value);
+        config.kinematics.scale_factor = std::stod(value);
       }
     } catch (const std::exception &e) {
       std::cerr << "WARNING: failed to parse '" << key
