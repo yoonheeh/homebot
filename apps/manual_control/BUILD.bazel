@@ -34,6 +34,25 @@ cc_binary(
     ],
 )
 
+cc_binary(
+    name = "oakd_streamer",
+    srcs = ["run_oakd_streamer.cpp"],
+    copts = [
+        "-std=c++17",
+        "-O3",
+    ],
+    data = ["//mechanism/perception/stream:config"],
+    linkopts = [
+        "-lpthread",
+        "-ldl",
+        "-lm",
+    ],
+    deps = [
+        "//mechanism/perception/stream:streamer_lib",
+        "@nlohmann_json//:json",
+    ],
+)
+
 cc_test(
     name = "test_controller",
     srcs = ["tests/test_controller.cpp"],
