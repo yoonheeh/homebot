@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base_streamer.hpp"
+#include "base_streamer.h"
 
 class RgbStreamer : public BaseStreamer {
  private:

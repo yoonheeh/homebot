@@ -1,6 +1,6 @@
 #pragma once
 
-#include "base_streamer.hpp"
+#include "base_streamer.h"
 
 class DepthStreamer : public BaseStreamer {
  private:

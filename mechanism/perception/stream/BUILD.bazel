@@ -5,14 +5,15 @@ load("//scripts:remote_test.bzl", "remote_cc_check", "remote_hardware_check")
 filegroup(
     name = "config",
     srcs = ["vision_config.json"],
+    visibility = ["//apps:__subpackages__"],
 )
 
 cc_library(
-    name = "streamers",
+    name = "streamer_lib",
     hdrs = [
-        "base_streamer.hpp",
-        "depth_streamer.hpp",
-        "rgb_streamer.hpp",
+        "base_streamer.h",
+        "depth_streamer.h",
+        "rgb_streamer.h",
     ],
     copts = [
         "-std=c++17",
@@ -20,30 +21,12 @@ cc_library(
     ],
     data = [":config"],
     linkstatic = True,
+    visibility = ["//apps:__subpackages__"],
     deps = [
         "//third_party/depthai:depthai-core",
         "@cppzmq",
         "@libzmq",
         "@opencv",
-    ],
-)
-
-cc_binary(
-    name = "oakd_streamer",
-    srcs = ["main.cpp"],
-    copts = [
-        "-std=c++17",
-        "-O3",
-    ],
-    data = [":config"],
-    linkopts = [
-        "-lpthread",
-        "-ldl",
-        "-lm",
-    ],
-    deps = [
-        ":streamers",
-        "@nlohmann_json//:json",
     ],
 )
 

@@ -6,8 +6,8 @@
 #include <nlohmann/json.hpp>
 #include <zmq.hpp>
 
-#include "depth_streamer.hpp"
-#include "rgb_streamer.hpp"
+#include "mechanism/perception/stream/depth_streamer.h"
+#include "mechanism/perception/stream/rgb_streamer.h"
 
 using json = nlohmann::json;
 
