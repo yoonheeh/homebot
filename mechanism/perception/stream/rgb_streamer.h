@@ -1,19 +1,23 @@
 #pragma once
 
 #include "base_streamer.h"
+#include "mechanism/common/camera_config.h"
 
 class RgbStreamer : public BaseStreamer {
  private:
   int stream_fps_;
   uint16_t width_, height_;
+  CameraIntrinsics intrinsics_;
 
  public:
   RgbStreamer(zmq::context_t& context, const std::string& endpoint,
-              int stream_fps, uint16_t width, uint16_t height)
+              int stream_fps, uint16_t width, uint16_t height,
+              const CameraIntrinsics& cam_intrinsics)
       : BaseStreamer(context, endpoint),
         stream_fps_(stream_fps),
         width_(width),
-        height_(height) {}
+        height_(height),
+        intrinsics_(cam_intrinsics) {}
 
   void setupPipeline(dai::Pipeline& pipeline) override {
     auto cam = pipeline.create<dai::node::Camera>()->build();
@@ -30,9 +34,10 @@ class RgbStreamer : public BaseStreamer {
     loop_function_ = [this, videoQueue,
                       controlQueue](dai::Pipeline* current_pipeline) {
       auto ctrl = std::make_shared<dai::CameraControl>();
-      ctrl->setManualExposure(20000, 400);
-      ctrl->setManualWhiteBalance(4500);
-      ctrl->setManualFocus(80);
+      ctrl->setManualExposure(intrinsics_.exposure_time_us,
+                              intrinsics_.sensitivity_iso);
+      ctrl->setManualWhiteBalance(intrinsics_.color_temperature_k);
+      ctrl->setManualFocus(intrinsics_.focus);
       controlQueue->send(ctrl);
 
       std::cout << "RGB Camera ready at " << stream_fps_ << " FPS..."

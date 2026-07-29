@@ -49,6 +49,7 @@ cc_binary(
     ],
     deps = [
         "//mechanism/perception/stream:streamer_lib",
+        "//mechanism/common:camera_config_defs",
         "@nlohmann_json//:json",
     ],
 )

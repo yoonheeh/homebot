@@ -20,8 +20,8 @@
 //   ticks_per_rev=4320.0
 //
 // Unrecognized keys are ignored. Missing keys leave the corresponding
-// RobotParameters.kinematics field unchanged, so callers can set sensible defaults before
-// loading.
+// RobotParameters.kinematics field unchanged, so callers can set sensible
+// defaults before loading.
 
 inline bool save_robot_config(const std::string &path,
                               const config::RobotParameters &config) {
@@ -49,7 +49,8 @@ inline bool save_robot_config(const std::string &path,
   return file.good();
 }
 
-inline bool load_robot_config(const std::string &path, config::RobotParameters &config) {
+inline bool load_robot_config(const std::string &path,
+                              config::RobotParameters &config) {
   std::ifstream file(path);
   if (!file.is_open()) {
     std::cerr << "ERROR: cannot open calibration file for reading: " << path

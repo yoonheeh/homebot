@@ -1,19 +1,23 @@
 #pragma once
 
 #include "base_streamer.h"
+#include "mechanism/common/camera_config.h"
 
 class DepthStreamer : public BaseStreamer {
  private:
   int stream_fps_;
   uint16_t width_, height_;
+  CameraIntrinsics intrinsics_;
 
  public:
   DepthStreamer(zmq::context_t& context, const std::string& endpoint,
-                int stream_fps, uint16_t width, uint16_t height)
+                int stream_fps, uint16_t width, uint16_t height,
+                const CameraIntrinsics& cam_intrinsics)
       : BaseStreamer(context, endpoint),
         stream_fps_(stream_fps),
         width_(width),
-        height_(height) {}
+        height_(height),
+        intrinsics_(cam_intrinsics) {}
 
   void setupPipeline(dai::Pipeline& pipeline) override {
     auto monoLeft = pipeline.create<dai::node::Camera>()->build(

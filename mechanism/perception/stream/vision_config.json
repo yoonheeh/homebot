@@ -18,5 +18,11 @@
         "channels": 2,
         "format": "RAW16",
         "dtype": "uint16"
+    },
+    "camera_intrinsics": {
+        "exposure_time_us": 20000,
+        "sensitivity_iso": 400,
+        "color_temperature_k": 4500,
+        "focus": 80, 
     }
 }

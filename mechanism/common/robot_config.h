@@ -23,12 +23,22 @@ struct Transform6DOF {
     double cr = std::cos(roll);
     double sr = std::sin(roll);
 
-    return {
-      cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr, x,
-      sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr, y,
-      -sp,     cp * sr,                cp * cr,                z,
-      0.0,     0.0,                    0.0,                    1.0
-    };
+    return {cy * cp,
+            cy * sp * sr - sy * cr,
+            cy * sp * cr + sy * sr,
+            x,
+            sy * cp,
+            sy * sp * sr + cy * cr,
+            sy * sp * cr - cy * sr,
+            y,
+            -sp,
+            cp * sr,
+            cp * cr,
+            z,
+            0.0,
+            0.0,
+            0.0,
+            1.0};
   }
 };
 
@@ -46,7 +56,7 @@ struct KinematicParameters {
 struct RobotParameters {
   KinematicParameters kinematics;
   Transform6DOF camera_to_base_footprint;
-  
+
   // As your hardware stack grows, append here:
   // Transform6DOF imu_to_base_footprint;
   // NetworkParameters networking;

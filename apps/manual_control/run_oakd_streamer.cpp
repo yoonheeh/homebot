@@ -6,6 +6,7 @@
 #include <nlohmann/json.hpp>
 #include <zmq.hpp>
 
+#include "mechanism/common/camera_config.h"
 #include "mechanism/perception/stream/depth_streamer.h"
 #include "mechanism/perception/stream/rgb_streamer.h"
 
@@ -42,9 +43,20 @@ int main() {
   std::string depth_ipc = config["pipeline"]["depth_ipc"];
   uint16_t rgb_fps = config["rgb"]["fps"];
   uint16_t depth_fps = config["depth"]["fps"];
-  RgbStreamer rgb(zmq_context, rgb_ipc, rgb_fps, rgb_width, rgb_height);
+
+  // Populate camera intrinsics
+  CameraIntrinsics cam_intrinsics;
+  cam_intrinsics.exposure_time_us =
+      config["camera_intrinsics"]["exposure_time_us"];
+  cam_intrinsics.sensitivity_iso =
+      config["camera_intrinsics"]["sensitivity_iso"];
+  cam_intrinsics.color_temperature_k =
+      config["camera_intrinsics"]["color_temperature_k"];
+  cam_intrinsics.focus = config["camera_intrinsics"]["focus"];
+  RgbStreamer rgb(zmq_context, rgb_ipc, rgb_fps, rgb_width, rgb_height,
+                  cam_intrinsics);
   DepthStreamer depth(zmq_context, depth_ipc, depth_fps, depth_width,
-                      depth_height);
+                      depth_height, cam_intrinsics);
 
   rgb.setupPipeline(pipeline);
   depth.setupPipeline(pipeline);

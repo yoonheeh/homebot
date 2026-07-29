@@ -12,8 +12,8 @@
 #include <thread>
 #include <vector>
 
-#include "mechanism/common/robot_config_io.h"
 #include "mechanism/common/robot_config.h"
+#include "mechanism/common/robot_config_io.h"
 #include "mechanism/common/telemetry.h"
 
 // Global control flag

@@ -11,8 +11,8 @@
 #include <thread>
 #include <vector>
 
-#include "mechanism/common/robot_config_io.h"
 #include "mechanism/common/robot_config.h"
+#include "mechanism/common/robot_config_io.h"
 #include "mechanism/common/telemetry.h"
 #include "mechanism/common/telemetry_queue.h"
 #include "mechanism/estimation/state_estimator.h"

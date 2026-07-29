@@ -24,6 +24,7 @@ cc_library(
     visibility = ["//apps:__subpackages__"],
     deps = [
         "//third_party/depthai:depthai-core",
+        "//mechanism/common:camera_config_defs",
         "@cppzmq",
         "@libzmq",
         "@opencv",

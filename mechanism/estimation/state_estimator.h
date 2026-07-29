@@ -62,8 +62,9 @@ class StateEstimator {
   opentelemetry::nostd::shared_ptr<opentelemetry::trace::Tracer> tracer_;
 
  public:
-  explicit StateEstimator(TelemetryQueue<EncoderIMUTelemetry> &rx_queue,
-                          config::RobotParameters config = config::RobotParameters{})
+  explicit StateEstimator(
+      TelemetryQueue<EncoderIMUTelemetry> &rx_queue,
+      config::RobotParameters config = config::RobotParameters{})
       : rx_queue_(rx_queue), config_(config.kinematics) {
     auto provider = opentelemetry::trace::Provider::GetTracerProvider();
     tracer_ = provider->GetTracer("state_estimator");
