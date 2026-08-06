@@ -55,8 +55,6 @@ class TeleopController {
       right_target += TURN_SPEED;
     }
 
-    left_target *= -1.0f;  // Motor rotating direction inversion
-
     motors_.sendVelocityCommand(left_target, right_target);
     telemetry_.publishAction(left_target, right_target);
   }
