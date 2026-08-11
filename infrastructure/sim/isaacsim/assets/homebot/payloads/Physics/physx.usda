@@ -1,0 +1,59 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "homebot"
+    doc = """Generated from Composed Stage of root layer /tmp/tmp2t8sc99n/homebot.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_homebot_f4j2exn9/usdex_homebot/homebot.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_homebot_f4j2exn9/temp_homebot/homebot.usd
+
+
+Generated from Composed Stage of root layer /home/yoonhee/homebot/urdf/homebot/payloads/base.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    subLayers = [
+        @./physics.usda@
+    ]
+    upAxis = "Z"
+)
+
+over "homebot"
+{
+    over "Physics"
+    {
+        over "front_left_wheel_joint" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+            float physxJoint:maxJointVelocity = inf
+        }
+
+        over "front_right_wheel_joint" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+            float physxJoint:maxJointVelocity = inf
+        }
+
+        over "rear_left_wheel_joint" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+            float physxJoint:maxJointVelocity = inf
+        }
+
+        over "rear_right_wheel_joint" (
+            prepend apiSchemas = ["PhysxJointAPI"]
+        )
+        {
+            float physxJoint:maxJointVelocity = inf
+        }
+    }
+}
+

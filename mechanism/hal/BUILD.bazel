@@ -1,11 +1,14 @@
-load("@rules_cc//cc:defs.bzl", "cc_library")
+load("@rules_cc//cc:defs.bzl", "cc_library", "cc_test")
 
 cc_library(
     name = "hardware_impl_lib",
     hdrs = ["hardware_impl.h"],
     visibility = ["//visibility:public"],
     deps = [
+        "//mechanism/common:telemetry_defs",
         "//mechanism/hal:hardware_interfaces",
+        "@cppzmq",
+        "@libzmq",
         "@opentelemetry-cpp//api",
     ],
 )
@@ -26,5 +29,17 @@ cc_library(
     deps = [
         "//mechanism/common:telemetry_defs",
         "//mechanism/common:telemetry_queue_defs",
+    ],
+)
+
+cc_test(
+    name = "test_socket_comm",
+    srcs = [
+        "tests/test_socket_comm.cpp",
+    ],
+    deps = [
+        ":hardware_impl_lib",
+        ":hardware_interfaces",
+        "@googletest//:gtest_main",
     ],
 )

@@ -1,0 +1,128 @@
+#usda 1.0
+(
+    customLayerData = {
+        string creator = "URDF USD Converter v0.1.3"
+    }
+    defaultPrim = "homebot"
+    doc = """Generated from Composed Stage of root layer /tmp/tmp2t8sc99n/homebot.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_homebot_f4j2exn9/usdex_homebot/homebot.usdc
+
+
+Generated from Composed Stage of root layer /tmp/urdf_import_homebot_f4j2exn9/temp_homebot/homebot.usd
+"""
+    kilogramsPerUnit = 1
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+over "homebot" (
+    prepend apiSchemas = ["IsaacRobotAPI"]
+)
+{
+    prepend rel isaac:physics:robotJoints = [
+        </homebot/Physics/base_joint>,
+        </homebot/Physics/front_left_wheel_joint>,
+        </homebot/Physics/front_right_wheel_joint>,
+        </homebot/Physics/rear_left_wheel_joint>,
+        </homebot/Physics/rear_right_wheel_joint>,
+        </homebot/Physics/camera_joint>,
+    ]
+    prepend rel isaac:physics:robotLinks = [
+        </homebot/Geometry/world/base_footprint>,
+        </homebot/Geometry/world/base_footprint/base_link>,
+        </homebot/Geometry/world/base_footprint/base_link/front_left_wheel>,
+        </homebot/Geometry/world/base_footprint/base_link/front_right_wheel>,
+        </homebot/Geometry/world/base_footprint/base_link/rear_left_wheel>,
+        </homebot/Geometry/world/base_footprint/base_link/rear_right_wheel>,
+        </homebot/Geometry/world/base_footprint/base_link/camera_link>,
+    ]
+    token isaac:robotType = "Default"
+
+    over "Geometry"
+    {
+        over "world"
+        {
+            over "base_footprint" (
+                prepend apiSchemas = ["IsaacLinkAPI"]
+            )
+            {
+                over "base_link" (
+                    prepend apiSchemas = ["IsaacLinkAPI"]
+                )
+                {
+                    over "front_left_wheel" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+
+                    over "front_right_wheel" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+
+                    over "rear_left_wheel" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+
+                    over "rear_right_wheel" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+
+                    over "camera_link" (
+                        prepend apiSchemas = ["IsaacLinkAPI"]
+                    )
+                    {
+                    }
+                }
+            }
+        }
+    }
+
+    over "Physics"
+    {
+        over "base_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "front_left_wheel_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "front_right_wheel_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "rear_left_wheel_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "rear_right_wheel_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+
+        over "camera_joint" (
+            prepend apiSchemas = ["IsaacJointAPI"]
+        )
+        {
+        }
+    }
+}
+
