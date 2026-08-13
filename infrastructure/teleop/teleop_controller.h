@@ -13,10 +13,10 @@ class TeleopController {
   void step() {
     char ch;
     bool w_pressed = false, s_pressed = false, a_pressed = false,
-         d_pressed = false;
+         d_pressed = false, q_pressed = false, e_pressed = false;
 
     while (input_.readChar(ch)) {
-      if (ch == 'q' || ch == 'Q') running_ = false;
+      if (ch == 'x' || ch == 'X') running_ = false;
       if (ch == 'w' || ch == 'W') {
         w_pressed = true;
         s_pressed = false;
@@ -32,6 +32,20 @@ class TeleopController {
       if (ch == 'd' || ch == 'D') {
         d_pressed = true;
         a_pressed = false;
+      }
+      if (ch == 'q' || ch == 'Q') {
+        q_pressed = true;
+        e_pressed = false;
+        a_pressed = false;
+        w_pressed = false;
+        s_pressed = false;
+      }
+      if (ch == 'e' || ch == 'E') {
+        e_pressed = true;
+        q_pressed = false;
+        a_pressed = false;
+        w_pressed = false;
+        s_pressed = false;
       }
       if (ch == ' ') w_pressed = s_pressed = a_pressed = d_pressed = false;
     }
@@ -55,6 +69,14 @@ class TeleopController {
       right_target += TURN_SPEED;
     }
 
+    if (q_pressed) {
+      left_target = LINEAR_SPEED - TURN_SPEED;
+      right_target = LINEAR_SPEED + TURN_SPEED;
+    } else if (e_pressed) {
+      left_target = LINEAR_SPEED + TURN_SPEED;
+      right_target = LINEAR_SPEED - TURN_SPEED;
+    }
+
     motors_.sendVelocityCommand(left_target, right_target);
     telemetry_.publishAction(left_target, right_target);
   }
@@ -67,6 +89,6 @@ class TeleopController {
   ITelemetryPublisher &telemetry_;
   bool running_;
 
-  static constexpr float LINEAR_SPEED = 9.0f;
-  static constexpr float TURN_SPEED = 8.5f;
+  static constexpr float LINEAR_SPEED = 10.0f;
+  static constexpr float TURN_SPEED = 9.5f;
 };
